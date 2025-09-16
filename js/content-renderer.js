@@ -83,24 +83,24 @@ class ContentRenderer {
         const content = `
             <div class="welcome-section fade-in">
                 <div class="welcome-header">
-                    <i class="fas fa-home"></i>
+                    <span class="icon icon-home"></span>
                     <h2>도로관리 행정매뉴얼에 오신 것을 환영합니다</h2>
                 </div>
                 <div class="welcome-content">
                     <p>좌측 메뉴에서 원하시는 업무 분류를 선택하여 관련 매뉴얼을 확인하실 수 있습니다.</p>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <i class="fas fa-building"></i>
+                            <span class="icon icon-building"></span>
                             <h3>부서</h3>
                             <span id="department-count">${stats.departments}</span>
                         </div>
                         <div class="stat-card">
-                            <i class="fas fa-list"></i>
+                            <span class="icon icon-list"></span>
                             <h3>카테고리</h3>
                             <span id="category-count">${stats.categories}</span>
                         </div>
                         <div class="stat-card">
-                            <i class="fas fa-file-alt"></i>
+                            <span class="icon icon-file"></span>
                             <h3>프로세스</h3>
                             <span id="process-count">${stats.processes}</span>
                         </div>
@@ -138,12 +138,12 @@ class ContentRenderer {
             <div class="department-content fade-in">
                 <div class="department-header">
                     <div class="department-title">
-                        <i class="fas fa-building"></i>
+                        <span class="icon icon-building"></span>
                         <h2>${Utils.escapeHtml(department.name)}</h2>
                     </div>
                     <div class="department-meta">
-                        <span><i class="fas fa-list"></i> ${categories.length}개 카테고리</span>
-                        <span><i class="fas fa-file-alt"></i> ${totalProcesses}개 프로세스</span>
+                        <span><span class="icon icon-list"></span> ${categories.length}개 카테고리</span>
+                        <span><span class="icon icon-file"></span> ${totalProcesses}개 프로세스</span>
                     </div>
                 </div>
                 
@@ -182,12 +182,12 @@ class ContentRenderer {
             <div class="category-content fade-in">
                 <div class="category-header">
                     <div class="category-title">
-                        <i class="fas fa-list"></i>
+                        <span class="icon icon-list"></span>
                         <h2>${Utils.escapeHtml(category.name)}</h2>
                     </div>
                     <div class="category-meta">
-                        <span><i class="fas fa-building"></i> ${Utils.escapeHtml(department?.name || '')}</span>
-                        <span><i class="fas fa-file-alt"></i> ${processes.length}개 프로세스</span>
+                        <span><span class="icon icon-building"></span> ${Utils.escapeHtml(department?.name || '')}</span>
+                        <span><span class="icon icon-file"></span> ${processes.length}개 프로세스</span>
                     </div>
                 </div>
                 
@@ -230,9 +230,9 @@ class ContentRenderer {
                 <div class="process-header">
                     <h2>${Utils.escapeHtml(process.title)}</h2>
                     <div class="process-meta">
-                        <span><i class="fas fa-building"></i> ${Utils.escapeHtml(department?.name || '')}</span>
-                        <span><i class="fas fa-list"></i> ${Utils.escapeHtml(category?.name || '')}</span>
-                        <span><i class="fas fa-calendar"></i> ${Utils.formatDate(process.updatedAt)}</span>
+                        <span><span class="icon icon-building"></span> ${Utils.escapeHtml(department?.name || '')}</span>
+                        <span><span class="icon icon-list"></span> ${Utils.escapeHtml(category?.name || '')}</span>
+                        <span><span class="icon icon-calendar"></span> ${Utils.formatDate(process.updatedAt)}</span>
                     </div>
                 </div>
                 
@@ -289,10 +289,10 @@ class ContentRenderer {
                 
                 <div class="process-actions mt-3">
                     <button class="btn-secondary" onclick="window.print()">
-                        <i class="fas fa-print"></i> 인쇄
+                        <span class="icon icon-print"></span> 인쇄
                     </button>
                     <button class="btn-secondary" onclick="contentRenderer.exportProcess('${processId}')">
-                        <i class="fas fa-download"></i> 내보내기
+                        <span class="icon icon-download"></span> 내보내기
                     </button>
                 </div>
             </div>
@@ -311,13 +311,13 @@ class ContentRenderer {
         return `
             <div class="category-card" data-category-id="${category.id}">
                 <div class="card-header">
-                    <i class="fas fa-list"></i>
+                    <span class="icon icon-list"></span>
                     <h4>${Utils.escapeHtml(category.name)}</h4>
                 </div>
                 <div class="card-body">
                     <p>${Utils.escapeHtml(category.description)}</p>
                     <div class="card-meta">
-                        <span><i class="fas fa-file-alt"></i> ${processCount}개 프로세스</span>
+                        <span><span class="icon icon-file"></span> ${processCount}개 프로세스</span>
                     </div>
                 </div>
             </div>
@@ -333,14 +333,14 @@ class ContentRenderer {
         return `
             <div class="process-card" data-process-id="${process.id}">
                 <div class="card-header">
-                    <i class="fas fa-file-alt"></i>
+                    <span class="icon icon-file"></span>
                     <h4>${Utils.escapeHtml(process.title)}</h4>
                 </div>
                 <div class="card-body">
                     <p>${Utils.escapeHtml(process.description)}</p>
                     <div class="card-meta">
-                        <span><i class="fas fa-list-ol"></i> ${stepsCount}개 단계</span>
-                        <span><i class="fas fa-calendar"></i> ${Utils.formatDate(process.updatedAt)}</span>
+                        <span><span class="icon icon-list"></span> ${stepsCount}개 단계</span>
+                        <span><span class="icon icon-calendar"></span> ${Utils.formatDate(process.updatedAt)}</span>
                     </div>
                     ${process.tags && process.tags.length > 0 ? `
                         <div class="card-tags">
@@ -395,7 +395,7 @@ class ContentRenderer {
             return `
                 <div class="recent-item" data-process-id="${process.id}">
                     <div class="recent-title">
-                        <i class="fas fa-file-alt"></i>
+                        <span class="icon icon-file"></span>
                         <span>${Utils.escapeHtml(process.title)}</span>
                     </div>
                     <div class="recent-path">
@@ -419,7 +419,7 @@ class ContentRenderer {
                 <h3>오류가 발생했습니다</h3>
                 <p>${Utils.escapeHtml(message)}</p>
                 <button class="btn-primary" onclick="location.reload()">
-                    <i class="fas fa-refresh"></i> 새로고침
+                    <span class="icon icon-refresh"></span> 새로고침
                 </button>
             </div>
         `;

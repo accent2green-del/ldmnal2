@@ -548,7 +548,7 @@ class Application {
         
         const errorMessage = `
             <div class="initialization-error">
-                <i class="fas fa-exclamation-triangle"></i>
+                <span class="icon icon-exclamation"></span>
                 <h2>애플리케이션 초기화 실패</h2>
                 <p>애플리케이션을 시작하는 중 오류가 발생했습니다.</p>
                 <details>
@@ -556,7 +556,7 @@ class Application {
                     <pre>${error.message}</pre>
                 </details>
                 <button onclick="location.reload()" class="btn-primary">
-                    <i class="fas fa-redo"></i> 다시 시도
+                    <span class="icon icon-refresh"></span> 다시 시도
                 </button>
             </div>
         `;

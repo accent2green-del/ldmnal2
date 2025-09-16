@@ -105,8 +105,8 @@ class NavigationManager {
             <div class="tree-node department-node" data-type="department" data-id="${department.id}">
                 <div class="tree-item department ${isAdminMode ? 'admin-mode' : ''} ${this.currentSelection?.type === 'department' && this.currentSelection?.id === department.id ? 'active' : ''}"
                      data-type="department" data-id="${department.id}">
-                    ${hasCategories ? `<i class="fas fa-chevron-right tree-expand ${isExpanded ? 'expanded' : ''}" data-department-id="${department.id}"></i>` : '<span class="tree-expand"></span>'}
-                    <i class="fas fa-building tree-icon"></i>
+                    ${hasCategories ? `<span class="icon icon-chevron-right tree-expand ${isExpanded ? 'expanded' : ''}" data-department-id="${department.id}"></span>` : '<span class="tree-expand"></span>'}
+                    <span class="icon icon-building tree-icon"></span>
                     <span class="tree-label">${Utils.escapeHtml(department.name)}</span>
                     ${isAdminMode ? this.createInlineControls('department', department.id, true, true, true) : ''}
                 </div>
@@ -130,8 +130,8 @@ class NavigationManager {
             <div class="tree-node category-node" data-type="category" data-id="${category.id}">
                 <div class="tree-item category ${isAdminMode ? 'admin-mode' : ''} ${this.currentSelection?.type === 'category' && this.currentSelection?.id === category.id ? 'active' : ''}"
                      data-type="category" data-id="${category.id}">
-                    ${hasProcesses ? `<i class="fas fa-chevron-right tree-expand ${isExpanded ? 'expanded' : ''}" data-category-id="${category.id}"></i>` : '<span class="tree-expand"></span>'}
-                    <i class="fas fa-list tree-icon"></i>
+                    ${hasProcesses ? `<span class="icon icon-chevron-right tree-expand ${isExpanded ? 'expanded' : ''}" data-category-id="${category.id}"></span>` : '<span class="tree-expand"></span>'}
+                    <span class="icon icon-list tree-icon"></span>
                     <span class="tree-label">${Utils.escapeHtml(category.name)}</span>
                     ${isAdminMode ? this.createInlineControls('category', category.id, true, true, true) : ''}
                 </div>
@@ -153,7 +153,7 @@ class NavigationManager {
                 <div class="tree-item process ${isAdminMode ? 'admin-mode' : ''} ${this.currentSelection?.type === 'process' && this.currentSelection?.id === process.id ? 'active' : ''}"
                      data-type="process" data-id="${process.id}">
                     <span class="tree-expand"></span>
-                    <i class="fas fa-file-alt tree-icon"></i>
+                    <span class="icon icon-file tree-icon"></span>
                     <span class="tree-label">${Utils.escapeHtml(process.title)}</span>
                     ${isAdminMode ? this.createInlineControls('process', process.id, false, true, true) : ''}
                 </div>
@@ -169,19 +169,19 @@ class NavigationManager {
         
         if (showAdd) {
             controls.push(`<button class="btn-inline btn-add" data-action="add" data-type="${type}" data-id="${id}" title="추가">
-                <i class="fas fa-plus"></i>
+                <span class="icon icon-plus"></span>
             </button>`);
         }
         
         if (showEdit) {
             controls.push(`<button class="btn-inline btn-edit" data-action="edit" data-type="${type}" data-id="${id}" title="수정">
-                <i class="fas fa-edit"></i>
+                <span class="icon icon-edit"></span>
             </button>`);
         }
         
         if (showDelete) {
             controls.push(`<button class="btn-inline btn-delete" data-action="delete" data-type="${type}" data-id="${id}" title="삭제">
-                <i class="fas fa-trash"></i>
+                <span class="icon icon-trash"></span>
             </button>`);
         }
         
@@ -597,6 +597,73 @@ class NavigationManager {
         this.renderNavigation();
         
         Logger.navigation('🔄 네비게이션 초기화 완료');
+    }
+    
+    /**
+     * 모바일 오버레이 생성
+     */
+    createMobileOverlay() {
+        const existingOverlay = document.querySelector('.sidebar-overlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+        
+        overlay.addEventListener('click', () => {
+            this.hideSidebar();
+        });
+    }
+    
+    /**
+     * 터치 제스처 추가
+     */
+    addTouchGestures() {
+        let touchStartX = 0;
+        
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        document.addEventListener('touchend', (e) => {
+            if (window.innerWidth <= 768) {
+                const touchEndX = e.changedTouches[0].clientX;
+                const deltaX = touchEndX - touchStartX;
+                
+                if (deltaX > 100 && touchStartX < 50) {
+                    this.showSidebar();
+                } else if (deltaX < -100 && this.isSidebarOpen()) {
+                    this.hideSidebar();
+                }
+            }
+        }, { passive: true });
+    }
+    
+    /**
+     * 사이드바 표시
+     */
+    showSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        
+        if (sidebar) {
+            sidebar.classList.add('show');
+            
+            if (window.innerWidth <= 768 && overlay) {
+                overlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+    }
+    
+    /**
+     * 사이드바 열림 상태 확인
+     */
+    isSidebarOpen() {
+        const sidebar = document.getElementById('sidebar');
+        return sidebar && sidebar.classList.contains('show');
     }
 }
 

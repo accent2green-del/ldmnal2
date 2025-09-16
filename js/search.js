@@ -172,7 +172,7 @@ class SearchManager {
         if (results.length === 0) {
             resultsContainer.innerHTML = `
                 <div class="no-results">
-                    <i class="fas fa-search"></i>
+                    <span class="icon icon-search"></span>
                     <p>${AppConfig.MESSAGES.NO_SEARCH_RESULTS}</p>
                     ${!isRealtime ? `<p>검색어: "${Utils.escapeHtml(query)}"</p>` : ''}
                 </div>
@@ -212,7 +212,7 @@ class SearchManager {
                     <div class="result-title">${highlightedTitle}</div>
                     <div class="result-description">${highlightedDescription}</div>
                     <div class="result-path">
-                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="icon icon-map"></span>
                         ${Utils.escapeHtml(result.path)}
                     </div>
                     <div class="result-meta">
@@ -221,7 +221,7 @@ class SearchManager {
                     </div>
                 </div>
                 <div class="result-action">
-                    <i class="fas fa-chevron-right"></i>
+                    <span class="icon icon-chevron-right"></span>
                 </div>
             </div>
         `;
@@ -232,12 +232,12 @@ class SearchManager {
      */
     getResultIcon(type) {
         const icons = {
-            'department': '<i class="fas fa-building"></i>',
-            'category': '<i class="fas fa-list"></i>',
-            'process': '<i class="fas fa-file-alt"></i>'
+            'department': '<span class="icon icon-building"></span>',
+            'category': '<span class="icon icon-list"></span>',
+            'process': '<span class="icon icon-file"></span>'
         };
         
-        return icons[type] || '<i class="fas fa-file"></i>';
+        return icons[type] || '<span class="icon icon-file"></span>';
     }
     
     /**
@@ -355,13 +355,13 @@ class SearchManager {
                 <div class="search-history-header">
                     <h4>최근 검색어</h4>
                     <button class="clear-history-btn" onclick="searchManager.clearSearchHistory()">
-                        <i class="fas fa-trash"></i> 전체 삭제
+                        <span class="icon icon-trash"></span> 전체 삭제
                     </button>
                 </div>
                 <div class="search-history-list">
                     ${this.searchHistory.slice(0, 10).map(item => `
                         <div class="search-history-item" onclick="searchManager.selectHistoryItem('${Utils.escapeHtml(item.query)}')">
-                            <i class="fas fa-history"></i>
+                            <span class="icon icon-history"></span>
                             <span class="history-query">${Utils.escapeHtml(item.query)}</span>
                             <span class="history-date">${Utils.formatDate(item.timestamp)}</span>
                         </div>
@@ -457,7 +457,7 @@ class SearchManager {
         if (resultsContainer) {
             resultsContainer.innerHTML = `
                 <div class="search-error">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <span class="icon icon-exclamation"></span>
                     <p>${Utils.escapeHtml(message)}</p>
                 </div>
             `;

@@ -208,11 +208,15 @@ window.Utils = {
     },
     
     /**
-     * 로딩 상태 표시/숨김
+     * 로딩 상태 표시/숨김 (개선된 버전)
      */
-    showLoading: function() {
+    showLoading: function(message = '처리 중...') {
         const loadingOverlay = document.getElementById('loading-overlay');
         if (loadingOverlay) {
+            const spinner = loadingOverlay.querySelector('.spinner p');
+            if (spinner) {
+                spinner.textContent = message;
+            }
             loadingOverlay.classList.add('show');
         }
     },
@@ -225,18 +229,171 @@ window.Utils = {
     },
     
     /**
-     * 알림 표시
+     * 고급 알림 시스템 (Toast Notification)
      */
-    showNotification: function(message, type = 'info') {
-        // 간단한 알림 구현
-        alert(message);
+    showNotification: function(message, type = 'info', duration = 4000) {
+        // 기존 toast 제거
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+        
+        // 새 toast 생성
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        // 아이콘 선택
+        let icon = '';
+        switch (type) {
+            case 'success': icon = '<span class="icon icon-check"></span>'; break;
+            case 'error': icon = '<span class="icon icon-exclamation"></span>'; break;
+            case 'warning': icon = '<span class="icon icon-exclamation"></span>'; break;
+            case 'info': icon = '<span class="icon icon-info"></span>'; break;
+            default: icon = '<span class="icon icon-bell"></span>';
+        }
+        
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                ${icon}
+                <span>${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" style="
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 1.2rem;
+                    cursor: pointer;
+                    margin-left: auto;
+                    opacity: 0.7;
+                    padding: 0;
+                ">&times;</button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // 애니메이션
+        setTimeout(() => toast.classList.add('show'), 100);
+        
+        // 자동 삭제
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.remove();
+                    }
+                }, 300);
+            }
+        }, duration);
     },
     
     /**
-     * 확인 대화상자
+     * 버튼 로딩 상태 설정
      */
-    confirm: function(message) {
-        return confirm(message);
+    setButtonLoading: function(button, loading = true) {
+        if (loading) {
+            button.classList.add('loading');
+            button.disabled = true;
+        } else {
+            button.classList.remove('loading');
+            button.disabled = false;
+        }
+    },
+    
+    /**
+     * 입력 필드 오류 표시
+     */
+    showFieldError: function(field, message) {
+        field.classList.add('error');
+        field.classList.remove('success');
+        
+        // 오류 메시지 생성 또는 업데이트
+        let errorMsg = field.parentElement.querySelector('.error-message');
+        if (!errorMsg) {
+            errorMsg = document.createElement('div');
+            errorMsg.className = 'error-message';
+            field.parentElement.appendChild(errorMsg);
+        }
+        
+        errorMsg.textContent = message;
+        errorMsg.classList.add('show');
+        
+        // 입력 시 오류 상태 제거
+        const removeError = () => {
+            field.classList.remove('error');
+            errorMsg.classList.remove('show');
+            field.removeEventListener('input', removeError);
+        };
+        
+        field.addEventListener('input', removeError);
+    },
+    
+    /**
+     * 입력 필드 성공 표시
+     */
+    showFieldSuccess: function(field) {
+        field.classList.add('success');
+        field.classList.remove('error');
+        
+        const errorMsg = field.parentElement.querySelector('.error-message');
+        if (errorMsg) {
+            errorMsg.classList.remove('show');
+        }
+    },
+    
+    /**
+     * 고급 확인 대화상자
+     */
+    confirm: function(message, title = '확인') {
+        return new Promise((resolve) => {
+            // 모달 생성
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.innerHTML = `
+                <div class="modal-content bounce-in" style="max-width: 400px;">
+                    <div class="modal-header">
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 2rem; line-height: 1.6;">${message}</p>
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button class="btn-secondary confirm-cancel">취소</button>
+                            <button class="btn-primary confirm-ok">확인</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 이벤트 바인딩
+            modal.querySelector('.confirm-ok').addEventListener('click', () => {
+                modal.remove();
+                resolve(true);
+            });
+            
+            modal.querySelector('.confirm-cancel').addEventListener('click', () => {
+                modal.remove();
+                resolve(false);
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                    resolve(false);
+                }
+            });
+        });
+    },
+    
+    /**
+     * 엘리먼트에 애니메이션 추가
+     */
+    addAnimation: function(element, animationClass, duration = 600) {
+        element.classList.add(animationClass);
+        setTimeout(() => {
+            element.classList.remove(animationClass);
+        }, duration);
     }
 };
 

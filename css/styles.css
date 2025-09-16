@@ -1,3 +1,170 @@
+/* =====================================
+ * 순수 CSS 아이콘 시스템 (Font Awesome 대체)
+ * Pure CSS Icon System (Font Awesome Replacement)
+ * ===================================== */
+
+/* 아이콘 담고 을래스 */
+.icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    position: relative;
+    vertical-align: middle;
+}
+
+/* 기본 아이콘들 - Basic Icons */
+.icon-road::before {
+    content: "🛷️";
+}
+
+.icon-cog::before {
+    content: "⚙️";
+}
+
+.icon-search::before {
+    content: "🔍";
+}
+
+.icon-sign-out::before {
+    content: "🚪";
+}
+
+.icon-bars::before {
+    content: "☰";
+}
+
+.icon-spinner {
+    animation: spin 1s linear infinite;
+}
+
+.icon-spinner::before {
+    content: "◔";
+}
+
+.icon-home::before {
+    content: "🏠";
+}
+
+.icon-building::before {
+    content: "🏢";
+}
+
+.icon-list::before {
+    content: "📝";
+}
+
+.icon-file::before {
+    content: "📄";
+}
+
+.icon-chevron-right {
+    transition: transform 0.2s ease;
+}
+
+.icon-chevron-right::before {
+    content: "▶";
+    font-size: 0.75em;
+}
+
+.icon-chevron-right.expanded {
+    transform: rotate(90deg);
+}
+
+.icon-plus::before {
+    content: "➕";
+}
+
+.icon-edit::before {
+    content: "✏️";
+}
+
+.icon-trash::before {
+    content: "🗑️";
+}
+
+.icon-times::before {
+    content: "❌";
+}
+
+.icon-check::before {
+    content: "✓";
+}
+
+.icon-exclamation::before {
+    content: "⚠️";
+}
+
+.icon-info::before {
+    content: "ℹ️";
+}
+
+.icon-bell::before {
+    content: "🔔";
+}
+
+.icon-print::before {
+    content: "🖨️";
+}
+
+.icon-download::before {
+    content: "⬇️";
+}
+
+.icon-upload::before {
+    content: "⬆️";
+}
+
+.icon-user-cog::before {
+    content: "👥⚙️";
+}
+
+.icon-calendar::before {
+    content: "📅";
+}
+
+.icon-map::before {
+    content: "🗺️";
+}
+
+.icon-history::before {
+    content: "🕰️";
+}
+
+.icon-code::before {
+    content: "💻";
+}
+
+.icon-layers::before {
+    content: "🗃️";
+}
+
+.icon-refresh::before {
+    content: "🔄";
+}
+
+.icon-save::before {
+    content: "💾";
+}
+
+/* 아이콘 스타일링 */
+.tree-icon {
+    opacity: 0.8;
+}
+
+.tree-expand {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.tree-expand.expanded {
+    transform: rotate(90deg);
+}
+
+.icon:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
 /* CSS Reset and Base Styles */
 * {
     margin: 0;
@@ -117,7 +284,8 @@ body {
 }
 
 .admin-button,
-.search-button {
+.search-button,
+.logout-button {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -134,16 +302,33 @@ body {
 }
 
 .admin-button:hover,
-.search-button:hover {
+.search-button:hover,
+.logout-button:hover {
     background: rgba(255, 255, 255, 0.25);
     border-color: rgba(255, 255, 255, 0.4);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
+.logout-button {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.logout-button:hover {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+}
+
 .search-button {
     padding: 0.6rem;
     min-width: 44px;
+}
+
+.logout-button {
+    padding: 0.6rem 1rem;
 }
 
 /* Main Container */
@@ -238,6 +423,8 @@ body {
     background: #f1f5f9;
     color: #334155;
     border-left-color: #cbd5e1;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tree-item.active {
@@ -245,6 +432,8 @@ body {
     color: #667eea;
     border-left-color: #667eea;
     font-weight: 600;
+    transform: translateX(8px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
 .tree-item.department {
@@ -320,8 +509,8 @@ body {
 }
 
 .btn-inline:hover {
-    transform: translateY(-1px) scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px) scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
 .btn-inline.btn-add:hover {
@@ -451,8 +640,8 @@ body {
 }
 
 .stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .stat-card i {
@@ -815,6 +1004,58 @@ body {
     50% { transform: scale(1.05); }
 }
 
+/* 추가 애니메이션 */
+@keyframes slideInFromTop {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInFromLeft {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+@keyframes glow {
+    0% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
+}
+
 .admin-header {
     display: flex;
     align-items: center;
@@ -1078,8 +1319,8 @@ body {
 
 .category-card:hover,
 .process-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
     border-color: #667eea;
 }
 
@@ -1335,11 +1576,46 @@ body {
 
 /* Animation Classes */
 .fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.5s ease-in-out;
 }
 
 .slide-in {
-    animation: slideIn 0.3s ease-in-out;
+    animation: slideIn 0.4s ease-in-out;
+}
+
+.slide-in-top {
+    animation: slideInFromTop 0.6s ease-out;
+}
+
+.slide-in-left {
+    animation: slideInFromLeft 0.5s ease-out;
+}
+
+.bounce-in {
+    animation: bounceIn 0.6s ease-out;
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+.glow {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* 모든 엘리먼트에 부드러운 전환 효과 */
+* {
+    transition: all 0.2s ease;
+}
+
+/* 빠른 전환이 필요한 요소들 */
+button, .tree-item, .card, input, select {
+    transition: all 0.15s ease;
+}
+
+/* 느린 전환이 필요한 요소들 */
+.modal, .sidebar {
+    transition: all 0.3s ease;
 }
 
 @keyframes fadeIn {
@@ -1359,6 +1635,152 @@ body {
     to {
         transform: translateX(0);
         opacity: 1;
+    }
+}
+
+/* Enhanced Loading & Feedback */
+.loading-overlay {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+}
+
+.spinner {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+.spinner i {
+    color: #667eea;
+    text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+    z-index: 10001;
+    transform: translateX(400px);
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.toast.error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9));
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.toast.info {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.toast.warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.9));
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Form Feedback */
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15);
+    transform: scale(1.02);
+}
+
+input.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    animation: shake 0.5s ease-in-out;
+}
+
+input.success {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Button States */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+button.loading {
+    pointer-events: none;
+    opacity: 0.8;
+    position: relative;
+    color: transparent;
+}
+
+button.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    color: white;
+}
+
+/* Accessibility & Touch */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+.tree-item:focus {
+    outline: none;
+    background: #f1f5f9;
+    border-left-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+button:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Touch Optimization */
+@media (hover: none) and (pointer: coarse) {
+    .tree-item {
+        min-height: 48px;
+        padding: 0.875rem 1.5rem;
+    }
+    
+    .btn-inline {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .tree-item:hover {
+        transform: none;
+        box-shadow: none;
     }
 }
 

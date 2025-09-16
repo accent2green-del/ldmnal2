@@ -35,6 +35,14 @@ class AdminManager {
                 });
             }
             
+            // 로그아웃 버튼 클릭
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    this.showLogoutConfirmation();
+                });
+            }
+            
             // 로그인 모달 이벤트
             this.bindLoginModalEvents();
             
@@ -137,24 +145,46 @@ class AdminManager {
     }
     
     /**
+     * 로그아웃 확인 대화상자 표시
+     */
+    showLogoutConfirmation() {
+        const confirmed = confirm('정말로 로그아웃하시겠습니까?\n\n모든 관리자 기능이 비활성화됩니다.');
+        
+        if (confirmed) {
+            this.handleLogout();
+        }
+    }
+    
+    /**
      * 로그아웃 처리
      */
     handleLogout() {
-        this.isLoggedIn = false;
-        this.sessionToken = null;
-        this.currentEditItem = null;
+        // 로극 애니메이션
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.innerHTML = '<span class="icon icon-spinner"></span> 로그아웃 중...';
+            logoutBtn.disabled = true;
+        }
         
-        // 세션 삭제
-        Utils.removeFromStorage(AppConfig.STORAGE_KEYS.ADMIN_SESSION);
-        
-        // UI 업데이트
-        this.updateAdminButtonState();
-        
-        // 홈으로 이동
-        EventEmitter.emit('navigation:itemSelected', { type: 'home', id: null });
-        
-        Utils.showNotification('로그아웃되었습니다.', 'info');
-        Logger.info('🔓 관리자 로그아웃');
+        // 짧은 딸레이 후 로그아웃 실행
+        setTimeout(() => {
+            this.isLoggedIn = false;
+            this.sessionToken = null;
+            this.currentEditItem = null;
+            
+            // 세션 삭제
+            Utils.removeFromStorage(AppConfig.STORAGE_KEYS.ADMIN_SESSION);
+            
+            // UI 업데이트
+            this.updateAdminButtonState();
+            
+            // 홈으로 이동
+            EventEmitter.emit('navigation:itemSelected', { type: 'home', id: null });
+            
+            // 로그아웃 성공 메시지
+            Utils.showNotification('로그아웃이 완료되었습니다. 안전하게 나가셔주세요.', 'success');
+            Logger.info('🔓 관리자 로그아웃 완료');
+        }, 1000);
     }
     
     /**
@@ -213,17 +243,30 @@ class AdminManager {
      */
     updateAdminButtonState() {
         const adminBtn = document.getElementById('admin-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        
         if (adminBtn) {
             if (this.isLoggedIn) {
-                adminBtn.innerHTML = '<i class="fas fa-user-cog"></i> 관리자 모드';
+                adminBtn.innerHTML = '<span class="icon icon-user-cog"></span> 관리자 모드';
                 adminBtn.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
                 adminBtn.style.borderColor = 'rgba(16, 185, 129, 0.4)';
                 adminBtn.style.color = 'white';
             } else {
-                adminBtn.innerHTML = '<i class="fas fa-cog"></i> 관리자';
+                adminBtn.innerHTML = '<span class="icon icon-cog"></span> 관리자';
                 adminBtn.style.backgroundColor = '';
                 adminBtn.style.borderColor = '';
                 adminBtn.style.color = '';
+            }
+        }
+        
+        // 로그아웃 버튼 표시/숨김
+        if (logoutBtn) {
+            if (this.isLoggedIn) {
+                logoutBtn.classList.remove('hidden');
+                logoutBtn.innerHTML = '<span class="icon icon-sign-out"></span> 로그아웃';
+                logoutBtn.disabled = false;
+            } else {
+                logoutBtn.classList.add('hidden');
             }
         }
         
@@ -303,7 +346,7 @@ class AdminManager {
             // 새 표시기 생성
             const indicator = document.createElement('div');
             indicator.className = 'admin-mode-indicator';
-            indicator.innerHTML = '<i class="fas fa-tools"></i> 관리자 모드 활성';
+            indicator.innerHTML = '<span class="icon icon-cog"></span> 관리자 모드 활성';
             document.body.appendChild(indicator);
         }
     }
@@ -447,16 +490,16 @@ class AdminManager {
         const content = `
             <div class="admin-panel fade-in">
                 <div class="admin-header">
-                    <h2><i class="fas fa-user-cog"></i> 관리자 패널</h2>
+                    <h2><span class="icon icon-user-cog"></span> 관리자 패널</h2>
                     <div class="admin-actions">
                         <button class="btn-secondary" onclick="adminManager.exportData()">
-                            <i class="fas fa-download"></i> 데이터 내보내기
+                            <span class="icon icon-download"></span> 데이터 내보내기
                         </button>
                         <button class="btn-secondary" onclick="adminManager.showImportModal()">
-                            <i class="fas fa-upload"></i> 데이터 가져오기
+                            <span class="icon icon-upload"></span> 데이터 가져오기
                         </button>
                         <button class="btn-secondary" onclick="adminManager.handleLogout()">
-                            <i class="fas fa-sign-out-alt"></i> 로그아웃
+                            <span class="icon icon-sign-out"></span> 로그아웃
                         </button>
                     </div>
                 </div>
@@ -464,17 +507,17 @@ class AdminManager {
                 <div class="admin-stats mb-3">
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <i class="fas fa-building"></i>
+                            <span class="icon icon-building"></span>
                             <h3>부서</h3>
                             <span>${stats.departments}</span>
                         </div>
                         <div class="stat-card">
-                            <i class="fas fa-list"></i>
+                            <span class="icon icon-list"></span>
                             <h3>카테고리</h3>
                             <span>${stats.categories}</span>
                         </div>
                         <div class="stat-card">
-                            <i class="fas fa-file-alt"></i>
+                            <span class="icon icon-file"></span>
                             <h3>프로세스</h3>
                             <span>${stats.processes}</span>
                         </div>
@@ -484,13 +527,13 @@ class AdminManager {
                 <div class="admin-tabs">
                     <div class="tab-buttons">
                         <button class="tab-button active" data-tab="departments">
-                            <i class="fas fa-building"></i> 부서 관리
+                            <span class="icon icon-building"></span> 부서 관리
                         </button>
                         <button class="tab-button" data-tab="categories">
-                            <i class="fas fa-list"></i> 카테고리 관리
+                            <span class="icon icon-list"></span> 카테고리 관리
                         </button>
                         <button class="tab-button" data-tab="processes">
-                            <i class="fas fa-file-alt"></i> 프로세스 관리
+                            <span class="icon icon-file"></span> 프로세스 관리
                         </button>
                     </div>
                     
@@ -527,7 +570,7 @@ class AdminManager {
                 <div class="section-header">
                     <h3>부서 관리</h3>
                     <button class="btn-primary" onclick="adminManager.showAddModal('department')">
-                        <i class="fas fa-plus"></i> 부서 추가
+                        <span class="icon icon-plus"></span> 부서 추가
                     </button>
                 </div>
                 <div class="data-table">
@@ -539,10 +582,10 @@ class AdminManager {
                             </div>
                             <div class="table-actions">
                                 <button class="btn-edit" onclick="adminManager.showEditModal('department', '${dept.id}')">
-                                    <i class="fas fa-edit"></i>
+                                    <span class="icon icon-edit"></span>
                                 </button>
                                 <button class="btn-delete" onclick="adminManager.confirmDelete('department', '${dept.id}', '${Utils.escapeHtml(dept.name)}')">
-                                    <i class="fas fa-trash"></i>
+                                    <span class="icon icon-trash"></span>
                                 </button>
                             </div>
                         </div>
@@ -564,7 +607,7 @@ class AdminManager {
                 <div class="section-header">
                     <h3>카테고리 관리</h3>
                     <button class="btn-primary" onclick="adminManager.showAddModal('category')">
-                        <i class="fas fa-plus"></i> 카테고리 추가
+                        <span class="icon icon-plus"></span> 카테고리 추가
                     </button>
                 </div>
                 <div class="data-table">
@@ -579,10 +622,10 @@ class AdminManager {
                                 </div>
                                 <div class="table-actions">
                                     <button class="btn-edit" onclick="adminManager.showEditModal('category', '${cat.id}')">
-                                        <i class="fas fa-edit"></i>
+                                        <span class="icon icon-edit"></span>
                                     </button>
                                     <button class="btn-delete" onclick="adminManager.confirmDelete('category', '${cat.id}', '${Utils.escapeHtml(cat.name)}')">
-                                        <i class="fas fa-trash"></i>
+                                        <span class="icon icon-trash"></span>
                                     </button>
                                 </div>
                             </div>
@@ -606,7 +649,7 @@ class AdminManager {
                 <div class="section-header">
                     <h3>프로세스 관리</h3>
                     <button class="btn-primary" onclick="adminManager.showAddModal('process')">
-                        <i class="fas fa-plus"></i> 프로세스 추가
+                        <span class="icon icon-plus"></span> 프로세스 추가
                     </button>
                 </div>
                 <div class="data-table">
@@ -624,10 +667,10 @@ class AdminManager {
                                 </div>
                                 <div class="table-actions">
                                     <button class="btn-edit" onclick="adminManager.showEditModal('process', '${proc.id}')">
-                                        <i class="fas fa-edit"></i>
+                                        <span class="icon icon-edit"></span>
                                     </button>
                                     <button class="btn-delete" onclick="adminManager.confirmDelete('process', '${proc.id}', '${Utils.escapeHtml(proc.title)}')">
-                                        <i class="fas fa-trash"></i>
+                                        <span class="icon icon-trash"></span>
                                     </button>
                                 </div>
                             </div>
@@ -828,7 +871,7 @@ class AdminManager {
                             ${item && item.steps ? item.steps.map((step, index) => this.generateStepHTML(step, index)).join('') : this.generateStepHTML(null, 0)}
                         </div>
                         <button type="button" class="btn-secondary" onclick="adminManager.addStep()">
-                            <i class="fas fa-plus"></i> 단계 추가
+                            <span class="icon icon-plus"></span> 단계 추가
                         </button>
                     </div>
                 `;
@@ -841,7 +884,7 @@ class AdminManager {
                     <div class="modal-header">
                         <h3>${title}</h3>
                         <button class="modal-close" id="edit-modal-close">
-                            <i class="fas fa-times"></i>
+                            <span class="icon icon-times"></span>
                         </button>
                     </div>
                     <div class="modal-body">
@@ -849,7 +892,7 @@ class AdminManager {
                             ${formFields}
                             <div class="form-actions">
                                 <button type="submit" class="btn-primary">
-                                    <i class="fas fa-save"></i> ${isNew ? '추가' : '저장'}
+                                    <span class="icon icon-check"></span> ${isNew ? '추가' : '저장'}
                                 </button>
                                 <button type="button" class="btn-secondary" onclick="adminManager.closeEditModal()">
                                     취소
@@ -871,7 +914,7 @@ class AdminManager {
                 <div class="step-header">
                     <span class="step-number">${index + 1}</span>
                     <button type="button" class="btn-delete" onclick="adminManager.removeStep(${index})" ${index === 0 ? 'style="display:none"' : ''}>
-                        <i class="fas fa-trash"></i>
+                        <span class="icon icon-trash"></span>
                     </button>
                 </div>
                 <div class="form-group">
@@ -1207,7 +1250,7 @@ class AdminManager {
                     <div class="modal-header">
                         <h3>데이터 가져오기</h3>
                         <button class="modal-close" onclick="adminManager.closeImportModal()">
-                            <i class="fas fa-times"></i>
+                            <span class="icon icon-times"></span>
                         </button>
                     </div>
                     <div class="modal-body">
@@ -1215,13 +1258,13 @@ class AdminManager {
                             <p>가져올 데이터 형식을 선택하세요:</p>
                             
                             <div class="option-card" onclick="adminManager.selectImportType('standard')">
-                                <i class="fas fa-file-code"></i>
+                                <span class="icon icon-code"></span>
                                 <h4>표준 형식 JSON</h4>
                                 <p>기존 시스템에서 내보낸 JSON 파일</p>
                             </div>
                             
                             <div class="option-card" onclick="adminManager.selectImportType('new')">
-                                <i class="fas fa-layer-group"></i>
+                                <span class="icon icon-layers"></span>
                                 <h4>새 형식 JSON</h4>
                                 <p>5단계 계층 구조로 된 JSON 파일</p>
                                 <small>1단계(부서) → 2단계(업무) → 3단계(메타정보) → 4단계(프로세스) → 5단계(상세)</small>
