@@ -120,7 +120,7 @@ class ContentRenderer {
     }
     
     /**
-     * 부서 상세 화면 렌더링
+     * 부서 상세 화면 렌더링 (실제 데이터 내용 표시)
      */
     renderDepartment(departmentId) {
         const department = dataManager.getDepartmentById(departmentId);
@@ -134,6 +134,17 @@ class ContentRenderer {
             return sum + dataManager.getProcessesByCategory(cat.id).length;
         }, 0);
         
+        // 부서의 모든 프로세스에서 법적근거 추출
+        const allProcesses = categories.flatMap(cat => dataManager.getProcessesByCategory(cat.id));
+        const allLegalBasis = [...new Set(
+            allProcesses.flatMap(process => process.legalBasis || [])
+        )].filter(basis => basis);
+        
+        // 부서의 주요 태그 추출
+        const allTags = [...new Set(
+            allProcesses.flatMap(process => process.tags || [])
+        )].filter(tag => tag);
+        
         const content = `
             <div class="department-content fade-in">
                 <div class="department-header">
@@ -144,18 +155,45 @@ class ContentRenderer {
                     <div class="department-meta">
                         <span><span class="icon icon-list"></span> ${categories.length}개 카테고리</span>
                         <span><span class="icon icon-file"></span> ${totalProcesses}개 프로세스</span>
+                        <span><span class="icon icon-calendar"></span> ${Utils.formatDate(department.updatedAt)}</span>
                     </div>
                 </div>
                 
-                <div class="department-description mb-3">
+                <div class="department-description">
+                    <h3>부서 개요</h3>
                     <p>${Utils.escapeHtml(department.description || '부서 설명이 없습니다.')}</p>
                 </div>
                 
-                <div class="categories-grid">
-                    <h3>업무 카테고리</h3>
-                    <div class="category-cards">
-                        ${categories.map(category => this.renderCategoryCard(category)).join('')}
+                ${allLegalBasis.length > 0 ? `
+                    <div class="department-legal">
+                        <h3>관련 법적근거</h3>
+                        <ul class="legal-list">
+                            ${allLegalBasis.slice(0, 10).map(legal => `<li>${Utils.escapeHtml(legal)}</li>`).join('')}
+                            ${allLegalBasis.length > 10 ? '<li class="more-items">외 ' + (allLegalBasis.length - 10) + '건 더...</li>' : ''}
+                        </ul>
                     </div>
+                ` : ''}
+                
+                ${allTags.length > 0 ? `
+                    <div class="department-tags">
+                        <h3>주요 업무 분야</h3>
+                        <div class="tag-list">
+                            ${allTags.slice(0, 15).map(tag => `<span class="tag">${Utils.escapeHtml(tag)}</span>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="department-categories">
+                    <h3>업무 카테고리 목록</h3>
+                    <div class="category-summary-list">
+                        ${categories.map(category => this.renderCategorySummaryCard(category)).join('')}
+                    </div>
+                </div>
+                
+                <div class="department-actions">
+                    <button class="btn-secondary" onclick="contentRenderer.exportDepartmentData('${departmentId}')">
+                        <span class="icon icon-download"></span> 부서 정보 내보내기
+                    </button>
                 </div>
             </div>
         `;
@@ -166,7 +204,7 @@ class ContentRenderer {
     }
     
     /**
-     * 카테고리 상세 화면 렌더링
+     * 카테고리 상세 화면 렌더링 (실제 데이터 내용 표시)
      */
     renderCategory(categoryId) {
         const category = dataManager.getCategoryById(categoryId);
@@ -178,6 +216,26 @@ class ContentRenderer {
         const department = dataManager.getDepartmentById(category.departmentId);
         const processes = dataManager.getProcessesByCategory(categoryId);
         
+        // 카테고리의 모든 법적근거 추출
+        const allLegalBasis = [...new Set(
+            processes.flatMap(process => process.legalBasis || [])
+        )].filter(basis => basis);
+        
+        // 카테고리의 모든 산출물 추출
+        const allOutputs = [...new Set(
+            processes.flatMap(process => process.outputs || [])
+        )].filter(output => output);
+        
+        // 카테고리의 태그 추출
+        const allTags = [...new Set(
+            processes.flatMap(process => process.tags || [])
+        )].filter(tag => tag);
+        
+        // 최근 업데이트된 프로세스
+        const recentProcesses = processes
+            .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+            .slice(0, 3);
+        
         const content = `
             <div class="category-content fade-in">
                 <div class="category-header">
@@ -188,21 +246,58 @@ class ContentRenderer {
                     <div class="category-meta">
                         <span><span class="icon icon-building"></span> ${Utils.escapeHtml(department?.name || '')}</span>
                         <span><span class="icon icon-file"></span> ${processes.length}개 프로세스</span>
+                        <span><span class="icon icon-calendar"></span> ${Utils.formatDate(category.updatedAt)}</span>
                     </div>
                 </div>
                 
-                <div class="category-description mb-3">
+                <div class="category-description">
+                    <h3>카테고리 개요</h3>
                     <p>${Utils.escapeHtml(category.description || '카테고리 설명이 없습니다.')}</p>
                 </div>
                 
-                <div class="processes-list">
-                    <h3>업무 프로세스</h3>
+                ${allLegalBasis.length > 0 ? `
+                    <div class="category-legal">
+                        <h3>관련 법적근거</h3>
+                        <ul class="legal-list">
+                            ${allLegalBasis.slice(0, 8).map(legal => `<li>${Utils.escapeHtml(legal)}</li>`).join('')}
+                            ${allLegalBasis.length > 8 ? '<li class="more-items">외 ' + (allLegalBasis.length - 8) + '건 더...</li>' : ''}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${allOutputs.length > 0 ? `
+                    <div class="category-outputs">
+                        <h3>주요 산출물</h3>
+                        <ul class="outputs-list">
+                            ${allOutputs.slice(0, 10).map(output => `<li>${Utils.escapeHtml(output)}</li>`).join('')}
+                            ${allOutputs.length > 10 ? '<li class="more-items">외 ' + (allOutputs.length - 10) + '건 더...</li>' : ''}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${allTags.length > 0 ? `
+                    <div class="category-tags">
+                        <h3>관련 태그</h3>
+                        <div class="tag-list">
+                            ${allTags.slice(0, 12).map(tag => `<span class="tag">${Utils.escapeHtml(tag)}</span>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="category-processes">
+                    <h3>업무 프로세스 목록</h3>
                     ${processes.length > 0 ? 
-                        `<div class="process-cards">
-                            ${processes.map(process => this.renderProcessCard(process)).join('')}
+                        `<div class="process-summary-list">
+                            ${processes.map(process => this.renderProcessSummaryCard(process)).join('')}
                         </div>` :
                         '<div class="no-data">등록된 프로세스가 없습니다.</div>'
                     }
+                </div>
+                
+                <div class="category-actions">
+                    <button class="btn-secondary" onclick="contentRenderer.exportCategoryData('${categoryId}')">
+                        <span class="icon icon-download"></span> 카테고리 정보 내보내기
+                    </button>
                 </div>
             </div>
         `;
@@ -442,7 +537,16 @@ class ContentRenderer {
      * 카테고리 카드 이벤트 등록
      */
     attachCategoryCardEvents() {
+        // 기존 카테고리 카드 이벤트
         document.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const categoryId = card.dataset.categoryId;
+                navigationManager.navigateToItem('category', categoryId);
+            });
+        });
+        
+        // 새로운 카테고리 요약 카드 이벤트
+        document.querySelectorAll('.category-summary-card').forEach(card => {
             card.addEventListener('click', () => {
                 const categoryId = card.dataset.categoryId;
                 navigationManager.navigateToItem('category', categoryId);
@@ -462,7 +566,16 @@ class ContentRenderer {
      * 프로세스 카드 이벤트 등록
      */
     attachProcessCardEvents() {
+        // 기존 프로세스 카드 이벤트
         document.querySelectorAll('.process-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const processId = card.dataset.processId;
+                navigationManager.navigateToItem('process', processId);
+            });
+        });
+        
+        // 새로운 프로세스 요약 카드 이벤트
+        document.querySelectorAll('.process-summary-card').forEach(card => {
             card.addEventListener('click', () => {
                 const processId = card.dataset.processId;
                 navigationManager.navigateToItem('process', processId);
@@ -518,6 +631,174 @@ class ContentRenderer {
      */
     getCurrentContent() {
         return this.currentContent;
+    }
+    
+    /**
+     * 카테고리 요약 카드 렌더링 (부서 뷰용)
+     */
+    renderCategorySummaryCard(category) {
+        const processCount = dataManager.getProcessesByCategory(category.id).length;
+        
+        return `
+            <div class="category-summary-card" data-category-id="${category.id}">
+                <div class="summary-header">
+                    <span class="icon icon-list"></span>
+                    <h4>${Utils.escapeHtml(category.name)}</h4>
+                    <span class="process-count">${processCount}</span>
+                </div>
+                <div class="summary-description">
+                    <p>${Utils.escapeHtml((category.description || '').substring(0, 100))}${(category.description || '').length > 100 ? '...' : ''}</p>
+                </div>
+                <div class="summary-footer">
+                    <span class="view-details">자세히 보기 →</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * 프로세스 요약 카드 렌더링 (카테고리 뷰용)
+     */
+    renderProcessSummaryCard(process) {
+        const stepsCount = process.steps ? process.steps.length : 0;
+        
+        return `
+            <div class="process-summary-card" data-process-id="${process.id}">
+                <div class="summary-header">
+                    <span class="icon icon-file"></span>
+                    <h4>${Utils.escapeHtml(process.title)}</h4>
+                    <span class="steps-count">${stepsCount} 단계</span>
+                </div>
+                <div class="summary-description">
+                    <p>${Utils.escapeHtml((process.description || '').substring(0, 120))}${(process.description || '').length > 120 ? '...' : ''}</p>
+                </div>
+                <div class="summary-meta">
+                    <span><span class="icon icon-calendar"></span> ${Utils.formatDate(process.updatedAt)}</span>
+                    ${process.tags && process.tags.length > 0 ? 
+                        `<span class="tag-small">${Utils.escapeHtml(process.tags[0])}</span>` : ''
+                    }
+                </div>
+                <div class="summary-footer">
+                    <span class="view-details">프로세스 보기 →</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * 부서 데이터 내보내기
+     */
+    exportDepartmentData(departmentId) {
+        try {
+            const department = dataManager.getDepartmentById(departmentId);
+            if (!department) {
+                Utils.showNotification('부서를 찾을 수 없습니다.', 'error');
+                return;
+            }
+            
+            const categories = dataManager.getCategoriesByDepartment(departmentId);
+            const allProcesses = categories.flatMap(cat => dataManager.getProcessesByCategory(cat.id));
+            
+            const exportData = {
+                department: {
+                    name: department.name,
+                    description: department.description,
+                    createdAt: department.createdAt,
+                    updatedAt: department.updatedAt
+                },
+                categories: categories.map(cat => ({
+                    name: cat.name,
+                    description: cat.description,
+                    processCount: dataManager.getProcessesByCategory(cat.id).length
+                })),
+                processes: allProcesses.map(proc => ({
+                    title: proc.title,
+                    description: proc.description,
+                    category: categories.find(cat => cat.id === proc.categoryId)?.name,
+                    stepsCount: proc.steps ? proc.steps.length : 0,
+                    tags: proc.tags
+                })),
+                summary: {
+                    totalCategories: categories.length,
+                    totalProcesses: allProcesses.length,
+                    exportDate: new Date().toISOString()
+                }
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `부서_${department.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            Utils.showNotification('부서 정보를 성공적으로 내보냈습니다.', 'success');
+            Logger.info(`📤 부서 데이터 내보내기 완료: ${department.name}`);
+            
+        } catch (error) {
+            Logger.error('부서 데이터 내보내기 실패:', error);
+            Utils.showNotification('부서 데이터 내보내기 중 오류가 발생했습니다.', 'error');
+        }
+    }
+    
+    /**
+     * 카테고리 데이터 내보내기
+     */
+    exportCategoryData(categoryId) {
+        try {
+            const category = dataManager.getCategoryById(categoryId);
+            if (!category) {
+                Utils.showNotification('카테고리를 찾을 수 없습니다.', 'error');
+                return;
+            }
+            
+            const department = dataManager.getDepartmentById(category.departmentId);
+            const processes = dataManager.getProcessesByCategory(categoryId);
+            
+            const exportData = {
+                category: {
+                    name: category.name,
+                    description: category.description,
+                    department: department?.name,
+                    createdAt: category.createdAt,
+                    updatedAt: category.updatedAt
+                },
+                processes: processes.map(proc => ({
+                    title: proc.title,
+                    description: proc.description,
+                    steps: proc.steps,
+                    tags: proc.tags,
+                    legalBasis: proc.legalBasis,
+                    outputs: proc.outputs,
+                    references: proc.references,
+                    updatedAt: proc.updatedAt
+                })),
+                summary: {
+                    totalProcesses: processes.length,
+                    exportDate: new Date().toISOString()
+                }
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `카테고리_${category.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            Utils.showNotification('카테고리 정보를 성공적으로 내보냈습니다.', 'success');
+            Logger.info(`📤 카테고리 데이터 내보내기 완료: ${category.name}`);
+            
+        } catch (error) {
+            Logger.error('카테고리 데이터 내보내기 실패:', error);
+            Utils.showNotification('카테고리 데이터 내보내기 중 오류가 발생했습니다.', 'error');
+        }
     }
 }
 
