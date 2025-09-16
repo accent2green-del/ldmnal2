@@ -63,9 +63,7 @@
                     <span class="icon icon-cog"></span>
                     관리자
                 </button>
-                <button id="search-btn" class="search-button">
-                    <span class="icon icon-search"></span>
-                </button>
+
             </div>
         </div>
     </header>
@@ -93,6 +91,26 @@
                     <span class="icon icon-bars"></span>
                 </button>
             </div>
+            
+            <!-- 실시간 검색 영역 (Real-time Search Section) -->
+            <div class="sidebar-search" id="sidebar-search">
+                <div class="search-input-container">
+                    <span class="icon icon-search search-icon"></span>
+                    <input type="text" id="sidebar-search-input" placeholder="프로세스 검색..." autocomplete="off">
+                    <button class="search-clear" id="search-clear" style="display: none;">
+                        <span class="icon icon-times"></span>
+                    </button>
+                </div>
+                <div class="search-results" id="search-results" style="display: none;">
+                    <div class="search-results-header">
+                        <span class="results-count">0</span>개 결과
+                    </div>
+                    <div class="search-results-list" id="search-results-list">
+                        <!-- 검색 결과가 여기에 표시됩니다 (Search results will be displayed here) -->
+                    </div>
+                </div>
+            </div>
+            
             <div class="navigation-tree" id="navigation-tree">
                 <div class="tree-loading">
                     <span class="icon icon-spinner"></span>

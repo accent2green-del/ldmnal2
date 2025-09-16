@@ -1,12 +1,15 @@
 /**
- * 검색 기능 모듈
- * 전체 텍스트 검색, 결과 필터링, 검색 히스토리
+ * 사이드바 실시간 검색 기능 모듈
+ * 전체 텍스트 검색, 실시간 결과 표시, 검색 히스토리
  */
 
 class SearchManager {
     constructor() {
         this.searchHistory = [];
         this.currentResults = [];
+        this.currentQuery = '';
+        this.selectedIndex = -1;
+        this.searchTimeout = null;
         
         // 이벤트 바인딩
         this.bindEvents();
@@ -14,6 +17,7 @@ class SearchManager {
         // 검색 히스토리 복원
         this.loadSearchHistory();
         
+        Logger.info('📚 검색 히스토리 로드: ' + this.searchHistory.length + '개 항목');
         Logger.info('SearchManager 초기화 완료');
     }
     
@@ -22,267 +26,221 @@ class SearchManager {
      */
     bindEvents() {
         document.addEventListener('DOMContentLoaded', () => {
-            // 검색 버튼 클릭
-            const searchBtn = document.getElementById('search-btn');
-            if (searchBtn) {
-                searchBtn.addEventListener('click', () => {
-                    this.showSearchModal();
-                });
-            }
-            
-            // 검색 모달 이벤트
-            this.bindSearchModalEvents();
+            // 사이드바 검색 이벤트 바인딩
+            this.bindSidebarSearchEvents();
             
             // 키보드 단축키 (Ctrl+K 또는 Cmd+K)
             document.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                     e.preventDefault();
-                    this.showSearchModal();
+                    this.focusSearchInput();
                 }
             });
         });
     }
     
     /**
-     * 검색 모달 이벤트 바인딩
+     * 사이드바 검색 이벤트 바인딩
      */
-    bindSearchModalEvents() {
-        const searchModal = document.getElementById('search-modal');
-        const searchForm = document.getElementById('search-form');
-        const searchInput = document.getElementById('search-input');
-        const closeBtn = document.getElementById('search-modal-close');
+    bindSidebarSearchEvents() {
+        const searchInput = document.getElementById('sidebar-search-input');
+        const searchClear = document.getElementById('search-clear');
+        const searchResults = document.getElementById('search-results');
         
-        if (searchForm) {
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleSearch();
+        if (!searchInput) return;
+        
+        // 실시간 검색 입력 이벤트
+        searchInput.addEventListener('input', (e) => {
+            this.handleSearchInput(e.target.value);
+        });
+        
+        // 키보드 네비게이션
+        searchInput.addEventListener('keydown', (e) => {
+            this.handleKeyboardNavigation(e);
+        });
+        
+        // 검색 지우기 버튼
+        if (searchClear) {
+            searchClear.addEventListener('click', () => {
+                this.clearSearch();
             });
         }
         
-        if (searchInput) {
-            // 실시간 검색 (디바운스 적용)
-            searchInput.addEventListener('input', Utils.debounce(() => {
-                const query = searchInput.value.trim();
-                if (query.length >= 2) {
-                    this.performSearch(query, true);
-                } else if (query.length === 0) {
-                    this.clearResults();
-                }
-            }, AppConfig.UI.DEBOUNCE_DELAY));
-            
-            // 키보드 네비게이션
-            searchInput.addEventListener('keydown', (e) => {
-                this.handleKeyboardNavigation(e);
-            });
-        }
-        
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                this.hideSearchModal();
-            });
-        }
-        
-        if (searchModal) {
-            searchModal.addEventListener('click', (e) => {
-                if (e.target === searchModal) {
-                    this.hideSearchModal();
+        // 검색 결과 클릭 이벤트
+        if (searchResults) {
+            searchResults.addEventListener('click', (e) => {
+                const resultItem = e.target.closest('.search-result-item');
+                if (resultItem) {
+                    this.selectSearchResult(resultItem);
                 }
             });
         }
-    }
-    
-    /**
-     * 검색 모달 표시
-     */
-    showSearchModal() {
-        const modal = document.getElementById('search-modal');
-        const searchInput = document.getElementById('search-input');
         
-        if (modal) {
-            modal.classList.add('show');
-            if (searchInput) {
-                searchInput.value = '';
-                setTimeout(() => searchInput.focus(), 100);
+        // 검색 영역 외부 클릭 시 결과 숨기기
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.sidebar-search')) {
+                this.hideSearchResults();
             }
-            
-            // 최근 검색어 표시
-            this.showSearchHistory();
-        }
-        
-        Logger.info('🔍 검색 모달 표시');
+        });
     }
     
     /**
-     * 검색 모달 숨김
+     * 검색 입력 처리
      */
-    hideSearchModal() {
-        const modal = document.getElementById('search-modal');
-        if (modal) {
-            modal.classList.remove('show');
+    handleSearchInput(query) {
+        // 이전 타이머 취소
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout);
         }
         
-        // 결과 초기화
-        this.clearResults();
-    }
-    
-    /**
-     * 검색 처리
-     */
-    handleSearch() {
-        const searchInput = document.getElementById('search-input');
-        const query = searchInput ? searchInput.value.trim() : '';
+        this.currentQuery = query.trim();
         
-        if (query.length < 2) {
-            Utils.showNotification('검색어는 2자 이상 입력해주세요.', 'warning');
+        // 검색어가 비어있으면 결과 숨김
+        if (this.currentQuery === '') {
+            this.hideSearchResults();
+            this.updateClearButton(false);
             return;
         }
         
-        this.performSearch(query);
-        this.addToHistory(query);
+        // 검색어가 있으면 지우기 버튼 표시
+        this.updateClearButton(true);
+        
+        // 300ms 딜레이 후 검색 실행 (타이핑 딜레이)
+        this.searchTimeout = setTimeout(() => {
+            this.performSearch(this.currentQuery);
+        }, 300);
     }
     
     /**
-     * 검색 실행
+     * 검색 수행
      */
-    performSearch(query, isRealtime = false) {
-        Logger.info(`🔍 검색 실행: "${query}" (실시간: ${isRealtime})`);
+    performSearch(query) {
+        Logger.info(`🔍 실시간 검색 수행: "${query}"`);
+        
+        // 로딩 상태 표시
+        this.showSearchLoading();
         
         try {
-            // 데이터 매니저를 통해 검색
-            const results = dataManager.search(query);
-            
+            // 데이터 매니저에서 검색 수행
+            const results = dataManager.searchAll(query);
             this.currentResults = results;
-            this.renderSearchResults(results, query, isRealtime);
+            this.selectedIndex = -1;
             
-            Logger.info(`✅ 검색 완료: ${results.length}개 결과 발견`);
+            // 결과 표시
+            this.displaySearchResults(results, query);
+            
+            // 검색 히스토리에 추가
+            this.addToSearchHistory(query);
+            
+            Logger.info(`✨ 검색 완료: ${results.length}개 결과`);
             
         } catch (error) {
-            Logger.error('검색 중 오류 발생:', error);
-            this.renderError('검색 중 오류가 발생했습니다.');
+            Logger.error('검색 오류:', error);
+            this.showSearchError('검색 중 오류가 발생했습니다.');
         }
     }
     
     /**
-     * 검색 결과 렌더링
+     * 검색 결과 표시
      */
-    renderSearchResults(results, query, isRealtime) {
-        const resultsContainer = document.getElementById('search-results');
-        if (!resultsContainer) return;
+    displaySearchResults(results, query) {
+        const searchResults = document.getElementById('search-results');
+        const searchResultsList = document.getElementById('search-results-list');
+        const resultsCount = document.querySelector('.results-count');
+        
+        if (!searchResults || !searchResultsList || !resultsCount) return;
+        
+        // 결과 개수 업데이트
+        resultsCount.textContent = results.length;
         
         if (results.length === 0) {
-            resultsContainer.innerHTML = `
-                <div class="no-results">
+            searchResultsList.innerHTML = `
+                <div class="search-no-results">
                     <span class="icon icon-search"></span>
-                    <p>${AppConfig.MESSAGES.NO_SEARCH_RESULTS}</p>
-                    ${!isRealtime ? `<p>검색어: "${Utils.escapeHtml(query)}"</p>` : ''}
+                    <p>"${Utils.escapeHtml(query)}"에 대한 결과가 없습니다.</p>
+                    <small>다른 검색어를 시도해보세요.</small>
                 </div>
             `;
-            return;
+        } else {
+            searchResultsList.innerHTML = results.map((result, index) => 
+                this.createSearchResultItem(result, index, query)
+            ).join('');
         }
         
-        const resultHTML = `
-            <div class="search-results-header">
-                <h4>${results.length}개의 결과</h4>
-                ${!isRealtime ? `<p>검색어: "${Utils.escapeHtml(query)}"</p>` : ''}
-            </div>
-            <div class="search-results-list">
-                ${results.map((result, index) => this.renderSearchResultItem(result, index, query)).join('')}
-            </div>
-        `;
-        
-        resultsContainer.innerHTML = resultHTML;
-        
-        // 이벤트 연결
-        this.attachSearchResultEvents();
+        // 결과 표시
+        searchResults.style.display = 'block';
     }
     
     /**
-     * 검색 결과 아이템 렌더링
+     * 검색 결과 아이템 생성
      */
-    renderSearchResultItem(result, index, query) {
-        const highlightedTitle = Utils.highlightText(result.title, query);
-        const highlightedDescription = Utils.highlightText(result.description, query);
-        
-        return `
-            <div class="search-result-item" data-index="${index}" data-type="${result.type}" data-id="${result.id}">
-                <div class="result-icon">
-                    ${this.getResultIcon(result.type)}
-                </div>
-                <div class="result-content">
-                    <div class="result-title">${highlightedTitle}</div>
-                    <div class="result-description">${highlightedDescription}</div>
-                    <div class="result-path">
-                        <span class="icon icon-map"></span>
-                        ${Utils.escapeHtml(result.path)}
-                    </div>
-                    <div class="result-meta">
-                        <span class="result-type">${this.getResultTypeText(result.type)}</span>
-                        <span class="result-score">일치도: ${result.score}</span>
-                    </div>
-                </div>
-                <div class="result-action">
-                    <span class="icon icon-chevron-right"></span>
-                </div>
-            </div>
-        `;
-    }
-    
-    /**
-     * 결과 타입별 아이콘 반환
-     */
-    getResultIcon(type) {
-        const icons = {
-            'department': '<span class="icon icon-building"></span>',
-            'category': '<span class="icon icon-list"></span>',
-            'process': '<span class="icon icon-file"></span>'
+    createSearchResultItem(result, index, query) {
+        const typeIcons = {
+            'department': 'icon-building',
+            'category': 'icon-list', 
+            'process': 'icon-file'
         };
         
-        return icons[type] || '<span class="icon icon-file"></span>';
-    }
-    
-    /**
-     * 결과 타입별 텍스트 반환
-     */
-    getResultTypeText(type) {
-        const typeTexts = {
+        const typeNames = {
             'department': '부서',
             'category': '카테고리',
             'process': '프로세스'
         };
         
-        return typeTexts[type] || '기타';
+        // 검색어 하이라이트
+        const highlightedTitle = this.highlightSearchTerm(result.title, query);
+        const highlightedDescription = this.highlightSearchTerm(result.description, query);
+        
+        return `
+            <div class="search-result-item" data-type="${result.type}" data-id="${result.id}" data-index="${index}">
+                <div class="search-result-title">
+                    <span class="icon ${typeIcons[result.type]}"></span>
+                    ${highlightedTitle}
+                    <span class="result-type-badge ${result.type}">${typeNames[result.type]}</span>
+                </div>
+                <div class="search-result-description">
+                    ${highlightedDescription}
+                </div>
+                <div class="search-result-path">
+                    <span class="icon icon-home"></span>
+                    ${Utils.escapeHtml(result.path)}
+                </div>
+            </div>
+        `;
     }
     
     /**
-     * 검색 결과 이벤트 연결
+     * 검색어 하이라이트
      */
-    attachSearchResultEvents() {
-        document.querySelectorAll('.search-result-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const type = item.dataset.type;
-                const id = item.dataset.id;
-                
-                this.selectSearchResult(type, id);
-            });
-            
-            // 호버 효과
-            item.addEventListener('mouseenter', () => {
-                this.highlightSearchResult(item);
-            });
-        });
+    highlightSearchTerm(text, searchTerm) {
+        if (!text || !searchTerm) return Utils.escapeHtml(text || '');
+        
+        const escapedText = Utils.escapeHtml(text);
+        const escapedSearchTerm = Utils.escapeHtml(searchTerm);
+        
+        const regex = new RegExp(`(${escapedSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return escapedText.replace(regex, '<mark>$1</mark>');
     }
     
     /**
-     * 검색 결과 선택 처리
+     * 검색 결과 선택
      */
-    selectSearchResult(type, id) {
+    selectSearchResult(resultItem) {
+        const type = resultItem.dataset.type;
+        const id = resultItem.dataset.id;
+        
         Logger.info(`🎯 검색 결과 선택: ${type} - ${id}`);
         
-        // 모달 닫기
-        this.hideSearchModal();
-        
-        // 해당 아이템으로 네비게이션
+        // 네비게이션 이동
         navigationManager.navigateToItem(type, id);
+        
+        // 검색 지우기 및 숨김
+        this.clearSearch();
+        
+        // 모바일에서 사이드바 닫기
+        if (window.innerWidth <= 768) {
+            navigationManager.hideSidebar();
+        }
     }
     
     /**
@@ -290,455 +248,186 @@ class SearchManager {
      */
     handleKeyboardNavigation(e) {
         const results = document.querySelectorAll('.search-result-item');
-        const currentHighlighted = document.querySelector('.search-result-item.keyboard-highlighted');
-        
-        let currentIndex = -1;
-        if (currentHighlighted) {
-            currentIndex = parseInt(currentHighlighted.dataset.index);
-        }
+        if (results.length === 0) return;
         
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
-                this.highlightSearchResult(results[Math.min(currentIndex + 1, results.length - 1)]);
+                this.selectedIndex = Math.min(this.selectedIndex + 1, results.length - 1);
+                this.updateKeyboardSelection(results);
                 break;
                 
             case 'ArrowUp':
                 e.preventDefault();
-                this.highlightSearchResult(results[Math.max(currentIndex - 1, 0)]);
+                this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                this.updateKeyboardSelection(results);
                 break;
                 
             case 'Enter':
-                if (currentHighlighted) {
-                    e.preventDefault();
-                    currentHighlighted.click();
+                e.preventDefault();
+                if (this.selectedIndex >= 0 && results[this.selectedIndex]) {
+                    this.selectSearchResult(results[this.selectedIndex]);
                 }
                 break;
                 
             case 'Escape':
                 e.preventDefault();
-                this.hideSearchModal();
+                this.clearSearch();
                 break;
         }
     }
     
     /**
-     * 검색 결과 하이라이트
+     * 키보드 선택 상태 업데이트
      */
-    highlightSearchResult(element) {
-        // 기존 하이라이트 제거
-        document.querySelectorAll('.search-result-item.keyboard-highlighted').forEach(item => {
-            item.classList.remove('keyboard-highlighted');
+    updateKeyboardSelection(results) {
+        results.forEach((result, index) => {
+            result.classList.remove('keyboard-focused');
+            if (index === this.selectedIndex) {
+                result.classList.add('keyboard-focused');
+                result.scrollIntoView({ block: 'nearest' });
+            }
         });
-        
-        // 새 하이라이트 적용
-        if (element) {
-            element.classList.add('keyboard-highlighted');
-            element.scrollIntoView({ block: 'nearest' });
+    }
+    
+    /**
+     * 검색 초기화
+     */
+    focusSearchInput() {
+        const searchInput = document.getElementById('sidebar-search-input');
+        if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
         }
     }
     
     /**
-     * 검색 히스토리 표시
+     * 검색 지우기
      */
-    showSearchHistory() {
-        if (this.searchHistory.length === 0) {
-            this.clearResults();
-            return;
+    clearSearch() {
+        const searchInput = document.getElementById('sidebar-search-input');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
         }
         
-        const resultsContainer = document.getElementById('search-results');
-        if (!resultsContainer) return;
+        this.currentQuery = '';
+        this.currentResults = [];
+        this.selectedIndex = -1;
         
-        const historyHTML = `
-            <div class="search-history">
-                <div class="search-history-header">
-                    <h4>최근 검색어</h4>
-                    <button class="clear-history-btn" onclick="searchManager.clearSearchHistory()">
-                        <span class="icon icon-trash"></span> 전체 삭제
-                    </button>
-                </div>
-                <div class="search-history-list">
-                    ${this.searchHistory.slice(0, 10).map(item => `
-                        <div class="search-history-item" onclick="searchManager.selectHistoryItem('${Utils.escapeHtml(item.query)}')">
-                            <span class="icon icon-history"></span>
-                            <span class="history-query">${Utils.escapeHtml(item.query)}</span>
-                            <span class="history-date">${Utils.formatDate(item.timestamp)}</span>
-                        </div>
-                    `).join('')}
-                </div>
+        this.hideSearchResults();
+        this.updateClearButton(false);
+    }
+    
+    /**
+     * 검색 결과 숨김
+     */
+    hideSearchResults() {
+        const searchResults = document.getElementById('search-results');
+        if (searchResults) {
+            searchResults.style.display = 'none';
+        }
+    }
+    
+    /**
+     * 지우기 버튼 상태 업데이트
+     */
+    updateClearButton(show) {
+        const clearButton = document.getElementById('search-clear');
+        if (clearButton) {
+            clearButton.style.display = show ? 'flex' : 'none';
+        }
+    }
+    
+    /**
+     * 검색 로딩 상태 표시
+     */
+    showSearchLoading() {
+        const searchResults = document.getElementById('search-results');
+        const searchResultsList = document.getElementById('search-results-list');
+        const resultsCount = document.querySelector('.results-count');
+        
+        if (!searchResults || !searchResultsList || !resultsCount) return;
+        
+        resultsCount.textContent = '0';
+        searchResultsList.innerHTML = `
+            <div class="search-loading">
+                <span class="icon icon-spinner"></span>
+                검색 중...
             </div>
         `;
         
-        resultsContainer.innerHTML = historyHTML;
+        searchResults.style.display = 'block';
     }
     
     /**
-     * 히스토리 아이템 선택
+     * 검색 오류 표시
      */
-    selectHistoryItem(query) {
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) {
-            searchInput.value = query;
-            searchInput.focus();
-            this.performSearch(query);
-        }
+    showSearchError(message) {
+        const searchResults = document.getElementById('search-results');
+        const searchResultsList = document.getElementById('search-results-list');
+        const resultsCount = document.querySelector('.results-count');
+        
+        if (!searchResults || !searchResultsList || !resultsCount) return;
+        
+        resultsCount.textContent = '0';
+        searchResultsList.innerHTML = `
+            <div class="search-no-results">
+                <span class="icon icon-exclamation-triangle"></span>
+                <p>${Utils.escapeHtml(message)}</p>
+            </div>
+        `;
+        
+        searchResults.style.display = 'block';
     }
     
     /**
      * 검색 히스토리에 추가
      */
-    addToHistory(query) {
+    addToSearchHistory(query) {
+        if (!query || query.length < 2) return;
+        
         // 중복 제거
-        this.searchHistory = this.searchHistory.filter(item => item.query !== query);
+        this.searchHistory = this.searchHistory.filter(item => item !== query);
         
-        // 새 항목 추가 (최상단)
-        this.searchHistory.unshift({
-            query: query,
-            timestamp: new Date().toISOString()
-        });
+        // 맨 앞에 추가
+        this.searchHistory.unshift(query);
         
-        // 최대 20개까지만 보관
+        // 최대 20개로 제한
         if (this.searchHistory.length > 20) {
             this.searchHistory = this.searchHistory.slice(0, 20);
         }
         
-        // 저장
+        // 로컬 스토리지에 저장
         this.saveSearchHistory();
-        
-        Logger.info(`📝 검색어 히스토리 추가: "${query}"`);
     }
     
     /**
      * 검색 히스토리 저장
      */
     saveSearchHistory() {
-        Utils.setToStorage('search_history', this.searchHistory);
+        try {
+            Utils.setToStorage(AppConfig.STORAGE_KEYS.SEARCH_HISTORY, this.searchHistory);
+            Logger.info('📚 검색 히스토리 저장 완료');
+        } catch (error) {
+            Logger.error('검색 히스토리 저장 실패:', error);
+        }
     }
     
     /**
      * 검색 히스토리 로드
      */
     loadSearchHistory() {
-        this.searchHistory = Utils.getFromStorage('search_history', []);
-        Logger.info(`📚 검색 히스토리 로드: ${this.searchHistory.length}개 항목`);
-    }
-    
-    /**
-     * 검색 히스토리 삭제
-     */
-    clearSearchHistory() {
-        if (Utils.confirm('모든 검색 히스토리를 삭제하시겠습니까?')) {
+        try {
+            const history = Utils.getFromStorage(AppConfig.STORAGE_KEYS.SEARCH_HISTORY) || [];
+            this.searchHistory = Array.isArray(history) ? history : [];
+            Logger.info(`📚 검색 히스토리 로드: ${this.searchHistory.length}개 항목`);
+        } catch (error) {
+            Logger.error('검색 히스토리 로드 실패:', error);
             this.searchHistory = [];
-            this.saveSearchHistory();
-            this.showSearchHistory();
-            Utils.showNotification('검색 히스토리가 삭제되었습니다.', 'info');
-            Logger.info('🗑️ 검색 히스토리 삭제 완료');
         }
-    }
-    
-    /**
-     * 검색 결과 초기화
-     */
-    clearResults() {
-        const resultsContainer = document.getElementById('search-results');
-        if (resultsContainer) {
-            resultsContainer.innerHTML = '';
-        }
-        
-        this.currentResults = [];
-    }
-    
-    /**
-     * 오류 표시
-     */
-    renderError(message) {
-        const resultsContainer = document.getElementById('search-results');
-        if (resultsContainer) {
-            resultsContainer.innerHTML = `
-                <div class="search-error">
-                    <span class="icon icon-exclamation"></span>
-                    <p>${Utils.escapeHtml(message)}</p>
-                </div>
-            `;
-        }
-    }
-    
-    /**
-     * 고급 검색 기능 (향후 확장용)
-     */
-    advancedSearch(options) {
-        const {
-            query,
-            type = null,        // 'department', 'category', 'process'
-            departmentId = null,
-            categoryId = null,
-            tags = [],
-            dateRange = null
-        } = options;
-        
-        // 기본 검색 실행
-        let results = dataManager.search(query);
-        
-        // 추가 필터 적용
-        if (type) {
-            results = results.filter(result => result.type === type);
-        }
-        
-        if (departmentId) {
-            results = results.filter(result => {
-                if (result.type === 'process') {
-                    const process = dataManager.getProcessById(result.id);
-                    return process && process.departmentId === departmentId;
-                }
-                return true;
-            });
-        }
-        
-        if (categoryId) {
-            results = results.filter(result => {
-                if (result.type === 'process') {
-                    const process = dataManager.getProcessById(result.id);
-                    return process && process.categoryId === categoryId;
-                }
-                return true;
-            });
-        }
-        
-        if (tags.length > 0) {
-            results = results.filter(result => {
-                if (result.type === 'process') {
-                    const process = dataManager.getProcessById(result.id);
-                    return process && process.tags && 
-                           tags.some(tag => process.tags.includes(tag));
-                }
-                return true;
-            });
-        }
-        
-        return results;
-    }
-    
-    /**
-     * 검색 통계 정보 반환
-     */
-    getSearchStats() {
-        return {
-            historyCount: this.searchHistory.length,
-            currentResultsCount: this.currentResults.length,
-            totalSearchableItems: dataManager.getDataSummary()
-        };
     }
 }
-
-// 검색 관련 CSS 추가
-const searchStyles = `
-    .search-results-header {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-        background: var(--surface-color);
-    }
-    
-    .search-results-header h4 {
-        font-size: var(--font-size-lg);
-        font-weight: var(--font-weight-semibold);
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
-    }
-    
-    .search-results-header p {
-        font-size: var(--font-size-sm);
-        color: var(--text-secondary);
-    }
-    
-    .search-results-list {
-        max-height: 400px;
-        overflow-y: auto;
-    }
-    
-    .search-result-item {
-        display: flex;
-        align-items: center;
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-    
-    .search-result-item:hover,
-    .search-result-item.keyboard-highlighted {
-        background: var(--surface-color);
-        border-color: var(--primary-color);
-    }
-    
-    .result-icon {
-        margin-right: 1rem;
-        color: var(--primary-color);
-        font-size: 1.25rem;
-    }
-    
-    .result-content {
-        flex: 1;
-    }
-    
-    .result-title {
-        font-weight: var(--font-weight-semibold);
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
-    }
-    
-    .result-title mark {
-        background: var(--primary-color);
-        color: white;
-        padding: 0.125rem 0.25rem;
-        border-radius: 2px;
-    }
-    
-    .result-description {
-        color: var(--text-secondary);
-        font-size: var(--font-size-sm);
-        margin-bottom: 0.5rem;
-    }
-    
-    .result-description mark {
-        background: var(--warning-color);
-        color: white;
-        padding: 0.125rem 0.25rem;
-        border-radius: 2px;
-    }
-    
-    .result-path {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-size: var(--font-size-sm);
-        color: var(--text-muted);
-        margin-bottom: 0.25rem;
-    }
-    
-    .result-meta {
-        display: flex;
-        gap: 1rem;
-        font-size: var(--font-size-sm);
-    }
-    
-    .result-type {
-        color: var(--primary-color);
-        font-weight: var(--font-weight-medium);
-    }
-    
-    .result-score {
-        color: var(--text-muted);
-    }
-    
-    .result-action {
-        margin-left: 1rem;
-        color: var(--text-muted);
-    }
-    
-    .no-results,
-    .search-error {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-muted);
-    }
-    
-    .no-results i,
-    .search-error i {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-        display: block;
-    }
-    
-    .search-history {
-        padding: 1rem;
-    }
-    
-    .search-history-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .search-history-header h4 {
-        font-size: var(--font-size-lg);
-        font-weight: var(--font-weight-semibold);
-        color: var(--text-primary);
-    }
-    
-    .clear-history-btn {
-        background: none;
-        border: none;
-        color: var(--text-muted);
-        cursor: pointer;
-        font-size: var(--font-size-sm);
-        transition: var(--transition);
-    }
-    
-    .clear-history-btn:hover {
-        color: var(--error-color);
-    }
-    
-    .search-history-item {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        transition: var(--transition);
-        margin-bottom: 0.25rem;
-    }
-    
-    .search-history-item:hover {
-        background: var(--surface-color);
-    }
-    
-    .search-history-item i {
-        margin-right: 0.75rem;
-        color: var(--text-muted);
-    }
-    
-    .history-query {
-        flex: 1;
-        font-weight: var(--font-weight-medium);
-        color: var(--text-primary);
-    }
-    
-    .history-date {
-        font-size: var(--font-size-sm);
-        color: var(--text-muted);
-    }
-    
-    @media (max-width: 480px) {
-        .search-result-item {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .result-icon {
-            margin-right: 0;
-            margin-bottom: 0.5rem;
-        }
-        
-        .result-action {
-            margin-left: 0;
-            margin-top: 0.5rem;
-        }
-        
-        .search-history-item {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.25rem;
-        }
-    }
-`;
-
-const searchStyleSheet = document.createElement('style');
-searchStyleSheet.textContent = searchStyles;
-document.head.appendChild(searchStyleSheet);
 
 // 전역 인스턴스 생성
 window.searchManager = new SearchManager();
