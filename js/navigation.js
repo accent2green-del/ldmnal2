@@ -99,14 +99,16 @@ class NavigationManager {
         const categories = dataManager.getCategoriesByDepartment(department.id);
         const hasCategories = categories.length > 0;
         const isExpanded = this.expandedDepartments.has(department.id);
+        const isAdminMode = adminManager && adminManager.isAdminLoggedIn();
         
         return `
             <div class="tree-node department-node" data-type="department" data-id="${department.id}">
-                <div class="tree-item department ${this.currentSelection?.type === 'department' && this.currentSelection?.id === department.id ? 'active' : ''}"
+                <div class="tree-item department ${isAdminMode ? 'admin-mode' : ''} ${this.currentSelection?.type === 'department' && this.currentSelection?.id === department.id ? 'active' : ''}"
                      data-type="department" data-id="${department.id}">
                     ${hasCategories ? `<i class="fas fa-chevron-right tree-expand ${isExpanded ? 'expanded' : ''}" data-department-id="${department.id}"></i>` : '<span class="tree-expand"></span>'}
                     <i class="fas fa-building tree-icon"></i>
                     <span class="tree-label">${Utils.escapeHtml(department.name)}</span>
+                    ${isAdminMode ? this.createInlineControls('department', department.id, true, true, true) : ''}
                 </div>
                 <div class="tree-children ${isExpanded ? 'expanded' : ''}" id="dept-${department.id}-children">
                     ${categories.map(category => this.createCategoryNode(category)).join('')}
@@ -122,14 +124,16 @@ class NavigationManager {
         const processes = dataManager.getProcessesByCategory(category.id);
         const hasProcesses = processes.length > 0;
         const isExpanded = this.expandedCategories.has(category.id);
+        const isAdminMode = adminManager && adminManager.isAdminLoggedIn();
         
         return `
             <div class="tree-node category-node" data-type="category" data-id="${category.id}">
-                <div class="tree-item category ${this.currentSelection?.type === 'category' && this.currentSelection?.id === category.id ? 'active' : ''}"
+                <div class="tree-item category ${isAdminMode ? 'admin-mode' : ''} ${this.currentSelection?.type === 'category' && this.currentSelection?.id === category.id ? 'active' : ''}"
                      data-type="category" data-id="${category.id}">
                     ${hasProcesses ? `<i class="fas fa-chevron-right tree-expand ${isExpanded ? 'expanded' : ''}" data-category-id="${category.id}"></i>` : '<span class="tree-expand"></span>'}
                     <i class="fas fa-list tree-icon"></i>
                     <span class="tree-label">${Utils.escapeHtml(category.name)}</span>
+                    ${isAdminMode ? this.createInlineControls('category', category.id, true, true, true) : ''}
                 </div>
                 <div class="tree-children ${isExpanded ? 'expanded' : ''}" id="cat-${category.id}-children">
                     ${processes.map(process => this.createProcessNode(process)).join('')}
@@ -142,16 +146,46 @@ class NavigationManager {
      * 프로세스 노드 생성
      */
     createProcessNode(process) {
+        const isAdminMode = adminManager && adminManager.isAdminLoggedIn();
+        
         return `
             <div class="tree-node process-node" data-type="process" data-id="${process.id}">
-                <div class="tree-item process ${this.currentSelection?.type === 'process' && this.currentSelection?.id === process.id ? 'active' : ''}"
+                <div class="tree-item process ${isAdminMode ? 'admin-mode' : ''} ${this.currentSelection?.type === 'process' && this.currentSelection?.id === process.id ? 'active' : ''}"
                      data-type="process" data-id="${process.id}">
                     <span class="tree-expand"></span>
                     <i class="fas fa-file-alt tree-icon"></i>
                     <span class="tree-label">${Utils.escapeHtml(process.title)}</span>
+                    ${isAdminMode ? this.createInlineControls('process', process.id, false, true, true) : ''}
                 </div>
             </div>
         `;
+    }
+    
+    /**
+     * 인라인 관리자 컨트롤 생성
+     */
+    createInlineControls(type, id, showAdd = true, showEdit = true, showDelete = true) {
+        const controls = [];
+        
+        if (showAdd) {
+            controls.push(`<button class="btn-inline btn-add" data-action="add" data-type="${type}" data-id="${id}" title="추가">
+                <i class="fas fa-plus"></i>
+            </button>`);
+        }
+        
+        if (showEdit) {
+            controls.push(`<button class="btn-inline btn-edit" data-action="edit" data-type="${type}" data-id="${id}" title="수정">
+                <i class="fas fa-edit"></i>
+            </button>`);
+        }
+        
+        if (showDelete) {
+            controls.push(`<button class="btn-inline btn-delete" data-action="delete" data-type="${type}" data-id="${id}" title="삭제">
+                <i class="fas fa-trash"></i>
+            </button>`);
+        }
+        
+        return `<div class="tree-item-controls">${controls.join('')}</div>`;
     }
     
     /**
@@ -164,6 +198,14 @@ class NavigationManager {
         // 클릭 이벤트 위임
         treeContainer.addEventListener('click', (e) => {
             const target = e.target;
+            
+            // 인라인 관리자 버튼 클릭
+            const inlineBtn = target.closest('.btn-inline');
+            if (inlineBtn) {
+                e.stopPropagation();
+                this.handleInlineAction(inlineBtn);
+                return;
+            }
             
             // 확장/축소 아이콘 클릭
             if (target.classList.contains('tree-expand')) {
@@ -178,6 +220,64 @@ class NavigationManager {
                 this.handleItemClick(treeItem);
             }
         });
+    }
+    
+    /**
+     * 인라인 관리자 액션 처리
+     */
+    handleInlineAction(button) {
+        const action = button.dataset.action;
+        const type = button.dataset.type;
+        const id = button.dataset.id;
+        
+        Logger.navigation(`🔧 관리자 액션: ${action} - ${type}:${id}`);
+        
+        // AdminManager로 액션 전달
+        if (adminManager) {
+            switch (action) {
+                case 'add':
+                    this.handleInlineAdd(type, id);
+                    break;
+                case 'edit':
+                    this.handleInlineEdit(type, id);
+                    break;
+                case 'delete':
+                    this.handleInlineDelete(type, id);
+                    break;
+            }
+        }
+    }
+    
+    /**
+     * 인라인 추가 처리
+     */
+    handleInlineAdd(parentType, parentId) {
+        let targetType;
+        if (parentType === 'department') {
+            targetType = 'category';
+        } else if (parentType === 'category') {
+            targetType = 'process';
+        }
+        
+        if (targetType) {
+            EventEmitter.emit('admin:showAddForm', { type: targetType, parentType, parentId });
+        }
+    }
+    
+    /**
+     * 인라인 수정 처리
+     */
+    handleInlineEdit(type, id) {
+        EventEmitter.emit('admin:showEditForm', { type, id });
+    }
+    
+    /**
+     * 인라인 삭제 처리
+     */
+    handleInlineDelete(type, id) {
+        if (confirm(`정말로 이 ${type === 'department' ? '부서' : type === 'category' ? '카테고리' : '프로세스'}를 삭제하시겠습니까?`)) {
+            EventEmitter.emit('admin:deleteItem', { type, id });
+        }
     }
     
     /**
@@ -223,6 +323,13 @@ class NavigationManager {
         
         // 상태 저장
         this.saveNavigationState();
+    }
+    
+    /**
+     * 관리자 모드 업데이트 (네비게이션 다시 렌더링)
+     */
+    updateAdminMode() {
+        this.renderNavigation();
     }
     
     /**

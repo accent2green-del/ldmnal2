@@ -41,6 +41,19 @@ class AdminManager {
             // 관리자 패널 이벤트
             this.bindAdminPanelEvents();
         });
+        
+        // 인라인 관리자 액션 이벤트
+        EventEmitter.on('admin:showAddForm', (data) => {
+            this.showInlineAddForm(data);
+        });
+        
+        EventEmitter.on('admin:showEditForm', (data) => {
+            this.showInlineEditForm(data);
+        });
+        
+        EventEmitter.on('admin:deleteItem', (data) => {
+            this.handleInlineDelete(data);
+        });
     }
     
     /**
@@ -189,6 +202,13 @@ class AdminManager {
     }
     
     /**
+     * 로그인 상태 확인 메서드 (네비게이션에서 사용)
+     */
+    isAdminLoggedIn() {
+        return this.isLoggedIn;
+    }
+    
+    /**
      * 관리자 버튼 상태 업데이트
      */
     updateAdminButtonState() {
@@ -196,8 +216,8 @@ class AdminManager {
         if (adminBtn) {
             if (this.isLoggedIn) {
                 adminBtn.innerHTML = '<i class="fas fa-user-cog"></i> 관리자 모드';
-                adminBtn.style.backgroundColor = 'var(--success-color)';
-                adminBtn.style.borderColor = 'var(--success-color)';
+                adminBtn.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+                adminBtn.style.borderColor = 'rgba(16, 185, 129, 0.4)';
                 adminBtn.style.color = 'white';
             } else {
                 adminBtn.innerHTML = '<i class="fas fa-cog"></i> 관리자';
@@ -205,6 +225,14 @@ class AdminManager {
                 adminBtn.style.borderColor = '';
                 adminBtn.style.color = '';
             }
+        }
+        
+        // 관리자 모드 표시기 업데이트
+        this.updateAdminModeIndicator();
+        
+        // 네비게이션 업데이트 (인라인 컨트롤 표시/숨김)
+        if (window.navigationManager) {
+            window.navigationManager.updateAdminMode();
         }
     }
     
@@ -259,6 +287,155 @@ class AdminManager {
         }
         
         Logger.info('🛠️ 관리자 패널 표시');
+    }
+    
+    /**
+     * 관리자 모드 표시기 업데이트
+     */
+    updateAdminModeIndicator() {
+        // 기존 표시기 제거
+        const existingIndicator = document.querySelector('.admin-mode-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+        
+        if (this.isLoggedIn) {
+            // 새 표시기 생성
+            const indicator = document.createElement('div');
+            indicator.className = 'admin-mode-indicator';
+            indicator.innerHTML = '<i class="fas fa-tools"></i> 관리자 모드 활성';
+            document.body.appendChild(indicator);
+        }
+    }
+    
+    /**
+     * 인라인 추가 폼 표시
+     */
+    showInlineAddForm(data) {
+        const { type, parentType, parentId } = data;
+        
+        // 간단한 프롬프트를 사용하여 이름 입력받기
+        const name = prompt(`새 ${type === 'category' ? '카테고리' : '프로세스'} 이름을 입력하세요:`);
+        
+        if (name && name.trim()) {
+            if (type === 'category') {
+                this.addCategory(name.trim(), parentId);
+            } else if (type === 'process') {
+                this.addProcess(name.trim(), parentId);
+            }
+        }
+    }
+    
+    /**
+     * 인라인 수정 폼 표시
+     */
+    showInlineEditForm(data) {
+        const { type, id } = data;
+        
+        let item;
+        if (type === 'department') {
+            item = dataManager.getDepartmentById(id);
+        } else if (type === 'category') {
+            item = dataManager.getCategoryById(id);
+        } else if (type === 'process') {
+            item = dataManager.getProcessById(id);
+        }
+        
+        if (item) {
+            const currentName = item.name || item.title;
+            const newName = prompt(`${type === 'department' ? '부서' : type === 'category' ? '카테고리' : '프로세스'} 이름을 수정하세요:`, currentName);
+            
+            if (newName && newName.trim() && newName !== currentName) {
+                this.updateItem(type, id, { name: newName.trim(), title: newName.trim() });
+            }
+        }
+    }
+    
+    /**
+     * 인라인 삭제 처리
+     */
+    handleInlineDelete(data) {
+        const { type, id } = data;
+        
+        if (type === 'department') {
+            this.deleteDepartment(id);
+        } else if (type === 'category') {
+            this.deleteCategory(id);
+        } else if (type === 'process') {
+            this.deleteProcess(id);
+        }
+    }
+    
+    /**
+     * 카테고리 추가
+     */
+    addCategory(name, departmentId) {
+        const newCategory = {
+            id: `cat_${Date.now()}`,
+            name: name,
+            departmentId: departmentId
+        };
+        
+        dataManager.addCategory(newCategory);
+        Utils.showNotification('카테고리가 추가되었습니다.', 'success');
+    }
+    
+    /**
+     * 프로세스 추가
+     */
+    addProcess(title, categoryId) {
+        const newProcess = {
+            id: `proc_${Date.now()}`,
+            title: title,
+            categoryId: categoryId,
+            content: '새로 생성된 프로세스입니다. 내용을 편집해 주세요.',
+            steps: [],
+            legalBasis: '',
+            outputs: '',
+            references: ''
+        };
+        
+        dataManager.addProcess(newProcess);
+        Utils.showNotification('프로세스가 추가되었습니다.', 'success');
+    }
+    
+    /**
+     * 아이템 업데이트
+     */
+    updateItem(type, id, updates) {
+        if (type === 'department') {
+            dataManager.updateDepartment(id, updates);
+        } else if (type === 'category') {
+            dataManager.updateCategory(id, updates);
+        } else if (type === 'process') {
+            dataManager.updateProcess(id, updates);
+        }
+        
+        Utils.showNotification('항목이 수정되었습니다.', 'success');
+    }
+    
+    /**
+     * 부서 삭제
+     */
+    deleteDepartment(id) {
+        dataManager.deleteDepartment(id);
+        Utils.showNotification('부서가 삭제되었습니다.', 'success');
+    }
+    
+    /**
+     * 카테고리 삭제
+     */
+    deleteCategory(id) {
+        dataManager.deleteCategory(id);
+        Utils.showNotification('카테고리가 삭제되었습니다.', 'success');
+    }
+    
+    /**
+     * 프로세스 삭제
+     */
+    deleteProcess(id) {
+        dataManager.deleteProcess(id);
+        Utils.showNotification('프로세스가 삭제되었습니다.', 'success');
     }
     
     /**
