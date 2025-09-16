@@ -1,0 +1,305 @@
+{
+  "departments": [
+    {
+      "id": "dept_001",
+      "name": "공통(운영지원과)",
+      "description": "운영지원과 공통 업무",
+      "order": 1,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "dept_002",
+      "name": "시설안전관리과",
+      "description": "시설안전관리과 업무",
+      "order": 2,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "dept_003",
+      "name": "도로안전운영과",
+      "description": "도로안전운영과 업무",
+      "order": 3,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat_001",
+      "name": "문서관리",
+      "departmentId": "dept_001",
+      "description": "문서 작성 및 관리 업무",
+      "order": 1,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat_002",
+      "name": "회계업무",
+      "departmentId": "dept_001",
+      "description": "예산 및 회계 관련 업무",
+      "order": 2,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat_003",
+      "name": "인사관리",
+      "departmentId": "dept_001",
+      "description": "인사 관련 업무",
+      "order": 3,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat_004",
+      "name": "시설점검",
+      "departmentId": "dept_002",
+      "description": "도로시설 점검 업무",
+      "order": 1,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat_005",
+      "name": "안전관리",
+      "departmentId": "dept_002",
+      "description": "안전 관리 업무",
+      "order": 2,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat_006",
+      "name": "시설보수",
+      "departmentId": "dept_002",
+      "description": "시설 보수 및 유지관리",
+      "order": 3,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat_007",
+      "name": "교통관리",
+      "departmentId": "dept_003",
+      "description": "교통 관리 업무",
+      "order": 1,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat_008",
+      "name": "도로운영",
+      "departmentId": "dept_003",
+      "description": "도로 운영 업무",
+      "order": 2,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat_009",
+      "name": "사고대응",
+      "departmentId": "dept_003",
+      "description": "교통사고 대응 업무",
+      "order": 3,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "processes": [
+    {
+      "id": "proc_001",
+      "title": "공문서 작성 및 발송 프로세스",
+      "description": "공문서 작성부터 발송까지의 전체 프로세스",
+      "categoryId": "cat_001",
+      "departmentId": "dept_001",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "title": "공문서 양식 확인",
+          "description": "작성할 공문서의 양식과 규정을 확인합니다.",
+          "details": "공문서 작성 규정에 따라 적절한 양식을 선택하고, 필수 기재사항을 확인합니다."
+        },
+        {
+          "stepNumber": 2,
+          "title": "내용 작성 및 검토",
+          "description": "공문서 내용을 작성하고 내부 검토를 진행합니다.",
+          "details": "정확한 내용과 적절한 표현을 사용하여 작성하며, 상급자의 검토를 받습니다."
+        },
+        {
+          "stepNumber": 3,
+          "title": "결재 및 발송",
+          "description": "최종 결재를 받고 공문서를 발송합니다.",
+          "details": "결재권자의 승인을 받은 후 적절한 방법으로 수신처에 발송합니다."
+        }
+      ],
+      "tags": ["문서관리", "공문서", "업무프로세스"],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "order": 1
+    },
+    {
+      "id": "proc_002",
+      "title": "문서 보관 및 관리 프로세스",
+      "description": "완료된 문서의 보관 및 관리 절차",
+      "categoryId": "cat_001",
+      "departmentId": "dept_001",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "title": "문서 분류",
+          "description": "완료된 문서를 분류 기준에 따라 정리합니다.",
+          "details": "문서의 성격, 중요도, 보존기간 등을 고려하여 적절히 분류합니다."
+        },
+        {
+          "stepNumber": 2,
+          "title": "전자문서 등록",
+          "description": "문서관리시스템에 전자문서로 등록합니다.",
+          "details": "스캔 또는 전자파일을 시스템에 업로드하고 메타데이터를 입력합니다."
+        },
+        {
+          "stepNumber": 3,
+          "title": "물리적 보관",
+          "description": "원본 문서를 규정에 따라 보관합니다.",
+          "details": "보존기간과 중요도에 따라 적절한 장소에 체계적으로 보관합니다."
+        }
+      ],
+      "tags": ["문서관리", "보관", "전자문서"],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "order": 2
+    },
+    {
+      "id": "proc_003",
+      "title": "예산 계획 수립 프로세스",
+      "description": "연간 예산 계획 수립을 위한 절차",
+      "categoryId": "cat_002",
+      "departmentId": "dept_001",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "title": "사업 현황 분석",
+          "description": "전년도 예산 집행 현황과 사업 성과를 분석합니다.",
+          "details": "예산 집행률, 사업 효과성, 문제점 등을 종합적으로 검토합니다."
+        },
+        {
+          "stepNumber": 2,
+          "title": "예산 요구서 작성",
+          "description": "각 부서별 예산 요구서를 취합하고 검토합니다.",
+          "details": "사업별 소요 예산을 구체적으로 산정하고 타당성을 검증합니다."
+        },
+        {
+          "stepNumber": 3,
+          "title": "예산안 확정",
+          "description": "최종 예산안을 확정하고 관련 부서에 통보합니다.",
+          "details": "우선순위를 고려하여 예산을 배정하고 확정된 내용을 공유합니다."
+        }
+      ],
+      "tags": ["회계업무", "예산", "계획수립"],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "order": 1
+    },
+    {
+      "id": "proc_004",
+      "title": "도로시설 정기점검 프로세스",
+      "description": "도로시설의 정기적인 안전점검 절차",
+      "categoryId": "cat_004",
+      "departmentId": "dept_002",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "title": "점검 계획 수립",
+          "description": "점검 일정과 대상 시설을 선정합니다.",
+          "details": "시설별 점검 주기와 우선순위를 고려하여 체계적인 점검 계획을 수립합니다."
+        },
+        {
+          "stepNumber": 2,
+          "title": "현장 점검 실시",
+          "description": "전문 인력이 현장에서 직접 점검을 실시합니다.",
+          "details": "점검표를 활용하여 시설의 안전성, 기능성 등을 종합적으로 점검합니다."
+        },
+        {
+          "stepNumber": 3,
+          "title": "점검 결과 정리",
+          "description": "점검 결과를 취합하고 필요시 보수계획을 수립합니다.",
+          "details": "발견된 문제점을 등급별로 분류하고 긴급도에 따른 보수계획을 수립합니다."
+        }
+      ],
+      "tags": ["시설점검", "안전관리", "정기점검"],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "order": 1
+    },
+    {
+      "id": "proc_005",
+      "title": "교통신호 운영 관리 프로세스",
+      "description": "교통신호시스템의 운영 및 관리 절차",
+      "categoryId": "cat_007",
+      "departmentId": "dept_003",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "title": "교통량 분석",
+          "description": "교차로별 교통량과 패턴을 분석합니다.",
+          "details": "시간대별, 요일별 교통량 데이터를 수집하고 분석하여 최적 신호 운영 방안을 도출합니다."
+        },
+        {
+          "stepNumber": 2,
+          "title": "신호시간 조정",
+          "description": "분석 결과를 바탕으로 신호시간을 조정합니다.",
+          "details": "교통량에 맞춰 녹색시간, 황색시간 등을 적절히 조정하여 교통 흐름을 최적화합니다."
+        },
+        {
+          "stepNumber": 3,
+          "title": "효과 검증",
+          "description": "조정 후 교통 개선 효과를 검증합니다.",
+          "details": "신호 조정 전후의 교통 상황을 비교 분석하여 개선 효과를 측정합니다."
+        }
+      ],
+      "tags": ["교통관리", "신호운영", "교통최적화"],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "order": 1
+    },
+    {
+      "id": "proc_006",
+      "title": "교통사고 초기 대응 프로세스",
+      "description": "교통사고 발생시 초기 대응 및 처리 절차",
+      "categoryId": "cat_009",
+      "departmentId": "dept_003",
+      "steps": [
+        {
+          "stepNumber": 1,
+          "title": "사고 신고 접수",
+          "description": "사고 신고를 접수하고 기초 정보를 수집합니다.",
+          "details": "신고자 정보, 사고 위치, 피해 규모 등 기본 정보를 정확히 파악합니다."
+        },
+        {
+          "stepNumber": 2,
+          "title": "현장 출동",
+          "description": "담당자가 신속히 사고 현장에 출동합니다.",
+          "details": "사고 유형과 규모에 따라 적절한 인력과 장비를 동원하여 현장에 출동합니다."
+        },
+        {
+          "stepNumber": 3,
+          "title": "초기 조치",
+          "description": "현장에서 필요한 초기 조치를 시행합니다.",
+          "details": "교통 통제, 2차 사고 방지, 부상자 구호 등 긴급 조치를 우선적으로 시행합니다."
+        },
+        {
+          "stepNumber": 4,
+          "title": "관련 기관 연계",
+          "description": "필요시 경찰, 소방서 등 관련 기관과 연계합니다.",
+          "details": "사고 규모와 성격에 따라 적절한 관련 기관에 연락하여 협력 체계를 구축합니다."
+        }
+      ],
+      "tags": ["사고대응", "긴급대응", "교통안전"],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "order": 1
+    }
+  ]
+}

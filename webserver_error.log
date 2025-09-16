@@ -1,0 +1,12 @@
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET / HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /js/search.js HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /js/navigation.js HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /js/data-manager.js HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /js/admin.js HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /css/styles.css HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /js/config.js HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /js/app.js HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /js/content-renderer.js HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /data/manual-data.json HTTP/1.1" 200 -
+10.12.93.196 - - [16/Sep/2025 04:54:29] code 404, message File not found
+10.12.93.196 - - [16/Sep/2025 04:54:29] "GET /favicon.ico HTTP/1.1" 404 -
