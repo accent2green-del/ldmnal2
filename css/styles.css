@@ -458,72 +458,7 @@ body {
     color: #64748b;
 }
 
-/* Admin Mode Inline Controls */
-.tree-item.admin-mode {
-    position: relative;
-    padding-right: 4rem;
-}
 
-.tree-item-controls {
-    position: absolute;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    display: none;
-    gap: 0.25rem;
-    z-index: 5;
-}
-
-.tree-item.admin-mode:hover .tree-item-controls,
-.tree-item-controls.active {
-    display: flex;
-}
-
-.tree-item-controls .btn-inline {
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.btn-inline.btn-add {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
-}
-
-.btn-inline.btn-edit {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white;
-}
-
-.btn-inline.btn-delete {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
-}
-
-.btn-inline:hover {
-    transform: translateY(-2px) scale(1.1);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-}
-
-.btn-inline.btn-add:hover {
-    background: linear-gradient(135deg, #059669, #047857);
-}
-
-.btn-inline.btn-edit:hover {
-    background: linear-gradient(135deg, #d97706, #b45309);
-}
-
-.btn-inline.btn-delete:hover {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-}
 
 .tree-expand {
     margin-right: 0.5rem;
@@ -1773,10 +1708,7 @@ button:focus-visible {
         padding: 0.875rem 1.5rem;
     }
     
-    .btn-inline {
-        min-width: 44px;
-        min-height: 44px;
-    }
+
     
     .tree-item:hover {
         transform: none;
