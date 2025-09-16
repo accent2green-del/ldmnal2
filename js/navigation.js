@@ -165,12 +165,19 @@ class NavigationManager {
         treeContainer.addEventListener('click', (e) => {
             const target = e.target;
             
-
+            // 네비게이션 컨트롤 버튼 클릭
+            const controlBtn = target.closest('.nav-control-btn');
+            if (controlBtn) {
+                e.stopPropagation();
+                this.handleNavigationControl(controlBtn);
+                return;
+            }
             
             // 확장/축소 아이콘 클릭
-            if (target.classList.contains('tree-expand')) {
+            if (target.classList.contains('tree-expand') || target.classList.contains('icon-chevron-right')) {
                 e.stopPropagation();
-                this.handleExpandClick(target);
+                const expandElement = target.closest('.tree-expand') || target;
+                this.handleExpandClick(expandElement);
                 return;
             }
             
@@ -179,6 +186,11 @@ class NavigationManager {
             if (treeItem) {
                 this.handleItemClick(treeItem);
             }
+        });
+        
+        // 키보드 접근성 지원
+        treeContainer.addEventListener('keydown', (e) => {
+            this.handleKeyboardNavigation(e);
         });
     }
     
@@ -249,16 +261,27 @@ class NavigationManager {
         const isExpanded = this.expandedDepartments.has(departmentId);
         
         if (isExpanded) {
-            // 축소
+            // 축소 애니메이션
+            childrenContainer.classList.add('collapsing');
             this.expandedDepartments.delete(departmentId);
             expandIcon.classList.remove('expanded');
-            childrenContainer.classList.remove('expanded');
+            
+            setTimeout(() => {
+                childrenContainer.classList.remove('expanded', 'collapsing');
+            }, 300);
+            
             Logger.navigation(`➖ 부서 축소: ${departmentId}`);
         } else {
-            // 확장
+            // 확장 애니메이션
             this.expandedDepartments.add(departmentId);
             expandIcon.classList.add('expanded');
-            childrenContainer.classList.add('expanded');
+            childrenContainer.classList.add('expanding');
+            
+            setTimeout(() => {
+                childrenContainer.classList.add('expanded');
+                childrenContainer.classList.remove('expanding');
+            }, 50);
+            
             Logger.navigation(`➕ 부서 확장: ${departmentId}`);
         }
         
@@ -277,16 +300,27 @@ class NavigationManager {
         const isExpanded = this.expandedCategories.has(categoryId);
         
         if (isExpanded) {
-            // 축소
+            // 축소 애니메이션
+            childrenContainer.classList.add('collapsing');
             this.expandedCategories.delete(categoryId);
             expandIcon.classList.remove('expanded');
-            childrenContainer.classList.remove('expanded');
+            
+            setTimeout(() => {
+                childrenContainer.classList.remove('expanded', 'collapsing');
+            }, 300);
+            
             Logger.navigation(`➖ 카테고리 축소: ${categoryId}`);
         } else {
-            // 확장
+            // 확장 애니메이션
             this.expandedCategories.add(categoryId);
             expandIcon.classList.add('expanded');
-            childrenContainer.classList.add('expanded');
+            childrenContainer.classList.add('expanding');
+            
+            setTimeout(() => {
+                childrenContainer.classList.add('expanded');
+                childrenContainer.classList.remove('expanding');
+            }, 50);
+            
             Logger.navigation(`➕ 카테고리 확장: ${categoryId}`);
         }
         
@@ -544,6 +578,140 @@ class NavigationManager {
                 }
             }
         }, { passive: true });
+    }
+    
+    /**
+     * 네비게이션 컨트롤 생성 (확장/축소 버튼)
+     */
+    createNavigationControls() {
+        return `
+            <div class="navigation-controls">
+                <button class="nav-control-btn expand-all" title="모두 펼치기">모두 펼치기</button>
+                <button class="nav-control-btn collapse-all" title="모두 접기">모두 접기</button>
+            </div>
+        `;
+    }
+    
+    /**
+     * 네비게이션 컨트롤 처리
+     */
+    handleNavigationControl(button) {
+        if (button.classList.contains('expand-all')) {
+            this.expandAll();
+        } else if (button.classList.contains('collapse-all')) {
+            this.collapseAll();
+        }
+    }
+    
+    /**
+     * 모든 노드 확장
+     */
+    expandAll() {
+        Logger.navigation('📂 모든 네비게이션 노드 확장 시작');
+        
+        // 모든 부서 확장
+        const departments = dataManager.getDepartments();
+        departments.forEach(dept => {
+            this.expandedDepartments.add(dept.id);
+            
+            // 모든 카테고리 확장
+            const categories = dataManager.getCategoriesByDepartment(dept.id);
+            categories.forEach(cat => {
+                this.expandedCategories.add(cat.id);
+            });
+        });
+        
+        // UI 업데이트
+        this.updateExpandedUI();
+        this.saveNavigationState();
+        
+        // 성공 피드백
+        Utils.showNotification('모든 항목이 펼쳐졌습니다', 'success');
+        Logger.navigation('✅ 모든 네비게이션 노드 확장 완료');
+    }
+    
+    /**
+     * 모든 노드 축소
+     */
+    collapseAll() {
+        Logger.navigation('📁 모든 네비게이션 노드 축소 시작');
+        
+        // 모든 확장 상태 제거
+        this.expandedDepartments.clear();
+        this.expandedCategories.clear();
+        
+        // UI 업데이트
+        this.updateExpandedUI();
+        this.saveNavigationState();
+        
+        // 성공 피드백
+        Utils.showNotification('모든 항목이 접혔습니다', 'info');
+        Logger.navigation('✅ 모든 네비게이션 노드 축소 완료');
+    }
+    
+    /**
+     * 확장 상태에 따른 UI 업데이트
+     */
+    updateExpandedUI() {
+        // 부서 노드 업데이트
+        this.expandedDepartments.forEach(deptId => {
+            const expandIcon = document.querySelector(`[data-department-id="${deptId}"]`);
+            const childrenContainer = document.getElementById(`dept-${deptId}-children`);
+            if (expandIcon && childrenContainer) {
+                expandIcon.classList.add('expanded');
+                childrenContainer.classList.add('expanded');
+            }
+        });
+        
+        // 축소된 부서 노드 업데이트
+        document.querySelectorAll('[data-department-id]').forEach(expandIcon => {
+            const deptId = expandIcon.dataset.departmentId;
+            if (!this.expandedDepartments.has(deptId)) {
+                const childrenContainer = document.getElementById(`dept-${deptId}-children`);
+                if (childrenContainer) {
+                    expandIcon.classList.remove('expanded');
+                    childrenContainer.classList.remove('expanded');
+                }
+            }
+        });
+        
+        // 카테고리 노드 업데이트
+        this.expandedCategories.forEach(catId => {
+            const expandIcon = document.querySelector(`[data-category-id="${catId}"]`);
+            const childrenContainer = document.getElementById(`cat-${catId}-children`);
+            if (expandIcon && childrenContainer) {
+                expandIcon.classList.add('expanded');
+                childrenContainer.classList.add('expanded');
+            }
+        });
+        
+        // 축소된 카테고리 노드 업데이트
+        document.querySelectorAll('[data-category-id]').forEach(expandIcon => {
+            const catId = expandIcon.dataset.categoryId;
+            if (!this.expandedCategories.has(catId)) {
+                const childrenContainer = document.getElementById(`cat-${catId}-children`);
+                if (childrenContainer) {
+                    expandIcon.classList.remove('expanded');
+                    childrenContainer.classList.remove('expanded');
+                }
+            }
+        });
+    }
+    
+    /**
+     * 키보드 네비게이션 지원
+     */
+    handleKeyboardNavigation(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            const target = e.target;
+            if (target.classList.contains('tree-expand')) {
+                e.preventDefault();
+                this.handleExpandClick(target);
+            } else if (target.classList.contains('tree-item')) {
+                e.preventDefault();
+                this.handleItemClick(target);
+            }
+        }
     }
     
     /**

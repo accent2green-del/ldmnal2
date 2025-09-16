@@ -2165,3 +2165,329 @@ button:focus-visible {
         left: 1rem;
     }
 }
+
+/* =====================================
+ * Task 3: Enhanced Collapsible Navigation
+ * 작업 3: 1단계-2단계 레벨 네비게이션 접기/펼치기 기능 향상
+ * ===================================== */
+
+/* Enhanced Tree Structure with Smooth Animations */
+.tree-children {
+    display: none;
+    overflow: hidden;
+    transform-origin: top;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    max-height: 0;
+    padding-left: 1.5rem;
+}
+
+.tree-children.expanded {
+    display: block;
+    opacity: 1;
+    max-height: 2000px; /* Large enough to accommodate content */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced Expand/Collapse Icons */
+.tree-expand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    background: transparent;
+    border: none;
+    position: relative;
+}
+
+.tree-expand:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: scale(1.1);
+}
+
+.tree-expand.expanded:hover {
+    background: rgba(102, 126, 234, 0.15);
+}
+
+/* Enhanced Chevron Animation */
+.icon-chevron-right {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.icon-chevron-right.expanded {
+    transform: rotate(90deg);
+    color: #667eea;
+}
+
+.icon-chevron-right::before {
+    content: "▶";
+    display: block;
+    font-weight: 600;
+}
+
+/* Enhanced Tree Items with Better Visual Hierarchy */
+.tree-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    margin: 0.125rem 0;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    user-select: none;
+}
+
+.tree-item:hover {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    transform: translateX(4px);
+}
+
+.tree-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    transform: translateX(8px);
+}
+
+.tree-item.active .tree-expand,
+.tree-item.active .icon {
+    color: white !important;
+}
+
+/* Department Level Styling */
+.department-node .tree-item.department {
+    font-weight: 600;
+    font-size: 1rem;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.department-node .tree-item.department:hover {
+    border-left-color: #667eea;
+    background: linear-gradient(135deg, #f8fafc 0%, rgba(102, 126, 234, 0.05) 100%);
+}
+
+.department-node .tree-item.department.active {
+    border-left-color: white;
+}
+
+/* Category Level Styling */
+.category-node .tree-item.category {
+    font-weight: 500;
+    font-size: 0.9375rem;
+    margin-left: 0.5rem;
+    padding-left: 2rem;
+    position: relative;
+}
+
+.category-node .tree-item.category::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    width: 12px;
+    height: 1px;
+    background: #cbd5e1;
+    transform: translateY(-50%);
+}
+
+.category-node .tree-item.category:hover::before {
+    background: #667eea;
+}
+
+/* Process Level Styling */
+.process-node .tree-item.process {
+    font-weight: 400;
+    font-size: 0.875rem;
+    margin-left: 1rem;
+    padding-left: 2.5rem;
+    position: relative;
+    color: #64748b;
+}
+
+.process-node .tree-item.process::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    background: white;
+    transform: translateY(-50%);
+    transition: all 0.3s ease;
+}
+
+.process-node .tree-item.process:hover::before {
+    border-color: #667eea;
+    background: #667eea;
+}
+
+.process-node .tree-item.process.active::before {
+    border-color: white;
+    background: white;
+}
+
+/* Collapse All / Expand All Controls */
+.navigation-controls {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.nav-control-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-weight: 500;
+}
+
+.nav-control-btn:hover {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.nav-control-btn.collapse-all::before {
+    content: '📁';
+    font-size: 0.875rem;
+}
+
+.nav-control-btn.expand-all::before {
+    content: '📂';
+    font-size: 0.875rem;
+}
+
+/* Enhanced Loading States */
+.tree-item.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.tree-item.loading::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #e2e8f0;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Smooth Slide Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        max-height: 2000px;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        max-height: 2000px;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+}
+
+.tree-children.expanding {
+    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.tree-children.collapsing {
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Mobile Responsive Navigation */
+@media (max-width: 768px) {
+    .tree-item {
+        padding: 1rem;
+        margin: 0.25rem 0;
+    }
+    
+    .tree-expand {
+        width: 2rem;
+        height: 2rem;
+        margin-right: 0.75rem;
+    }
+    
+    .icon-chevron-right {
+        font-size: 1rem;
+    }
+    
+    .navigation-controls {
+        padding: 0.75rem;
+    }
+    
+    .nav-control-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        min-height: 44px; /* Touch target */
+    }
+    
+    .category-node .tree-item.category,
+    .process-node .tree-item.process {
+        margin-left: 0;
+        padding-left: 3rem;
+    }
+}
+
+/* Accessibility Enhancements */
+.tree-expand:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.tree-item:focus {
+    outline: 2px solid #667eea;
+    outline-offset: -2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    .tree-children,
+    .tree-expand,
+    .icon-chevron-right,
+    .tree-item {
+        transition: none !important;
+        animation: none !important;
+    }
+}
