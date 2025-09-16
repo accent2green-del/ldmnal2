@@ -241,6 +241,24 @@ class ContentRenderer {
                     <p>${Utils.escapeHtml(process.description)}</p>
                 </div>
                 
+                ${process.legalBasis && process.legalBasis.length > 0 ? `
+                    <div class="process-legal mb-3">
+                        <h3>법적 근거</h3>
+                        <ul class="legal-list">
+                            ${process.legalBasis.map(legal => `<li>${Utils.escapeHtml(legal)}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${process.outputs && process.outputs.length > 0 ? `
+                    <div class="process-outputs mb-3">
+                        <h3>산출물</h3>
+                        <ul class="outputs-list">
+                            ${process.outputs.map(output => `<li>${Utils.escapeHtml(output)}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
                 ${process.tags && process.tags.length > 0 ? `
                     <div class="process-tags mb-3">
                         <h3>태그</h3>
@@ -259,6 +277,15 @@ class ContentRenderer {
                         }
                     </div>
                 </div>
+                
+                ${process.references && process.references.length > 0 ? `
+                    <div class="process-references mt-3">
+                        <h3>참고자료</h3>
+                        <ul class="references-list">
+                            ${process.references.map(ref => `<li>${Utils.escapeHtml(ref)}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
                 
                 <div class="process-actions mt-3">
                     <button class="btn-secondary" onclick="window.print()">
@@ -615,6 +642,40 @@ const additionalStyles = `
     .recent-date {
         font-size: var(--font-size-sm);
         color: var(--text-secondary);
+    }
+    
+    .legal-list,
+    .outputs-list,
+    .references-list {
+        list-style-type: disc;
+        margin-left: 1.5rem;
+        margin-top: 0.75rem;
+    }
+    
+    .legal-list li,
+    .outputs-list li,
+    .references-list li {
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+        line-height: 1.6;
+    }
+    
+    .process-legal,
+    .process-outputs,
+    .process-references {
+        background: var(--surface-color);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        border-left: 4px solid var(--accent-color);
+    }
+    
+    .process-legal h3,
+    .process-outputs h3,
+    .process-references h3 {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
     }
     
     .no-data {

@@ -1024,37 +1024,125 @@ class AdminManager {
      * 데이터 가져오기 모달 표시
      */
     showImportModal() {
-        // 간단한 파일 선택기 구현
+        const modalHTML = `
+            <div class="modal" id="import-modal">
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h3>데이터 가져오기</h3>
+                        <button class="modal-close" onclick="adminManager.closeImportModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="import-options">
+                            <p>가져올 데이터 형식을 선택하세요:</p>
+                            
+                            <div class="option-card" onclick="adminManager.selectImportType('standard')">
+                                <i class="fas fa-file-code"></i>
+                                <h4>표준 형식 JSON</h4>
+                                <p>기존 시스템에서 내보낸 JSON 파일</p>
+                            </div>
+                            
+                            <div class="option-card" onclick="adminManager.selectImportType('new')">
+                                <i class="fas fa-layer-group"></i>
+                                <h4>새 형식 JSON</h4>
+                                <p>5단계 계층 구조로 된 JSON 파일</p>
+                                <small>1단계(부서) → 2단계(업무) → 3단계(메타정보) → 4단계(프로세스) → 5단계(상세)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 모달을 body에 추가
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHTML;
+        document.body.appendChild(modalContainer.firstElementChild);
+        
+        // 모달 표시
+        const modal = document.getElementById('import-modal');
+        if (modal) {
+            modal.classList.add('show');
+        }
+    }
+    
+    /**
+     * 가져오기 형식 선택
+     */
+    selectImportType(type) {
+        this.closeImportModal();
+        
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.json';
+        input.accept = '.json,.txt';
         input.addEventListener('change', (e) => {
-            this.handleImportFile(e.target.files[0]);
+            this.handleImportFile(e.target.files[0], type);
         });
         input.click();
     }
     
     /**
+     * 가져오기 모달 닫기
+     */
+    closeImportModal() {
+        const modal = document.getElementById('import-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    }
+    
+    /**
      * 가져오기 파일 처리
      */
-    handleImportFile(file) {
+    handleImportFile(file, type = 'standard') {
         if (!file) return;
+        
+        Utils.showLoading();
         
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const importData = JSON.parse(e.target.result);
                 
-                if (Utils.confirm('기존 데이터를 모두 덮어쓰시겠습니까?')) {
-                    if (dataManager.importData(importData)) {
-                        Utils.showNotification('데이터를 성공적으로 가져왔습니다.', 'success');
-                        Logger.info('📥 데이터 가져오기 완료');
-                    } else {
-                        Utils.showNotification('올바르지 않은 데이터 형식입니다.', 'error');
+                let success = false;
+                let message = '';
+                
+                if (type === 'new') {
+                    // 새 형식 JSON 처리
+                    message = `새 형식 JSON 데이터를 변환하여 가져오시겠습니까?\n\n발견된 데이터:\n- 총 ${importData.length}개 업무\n- 기존 데이터는 모두 삭제됩니다.`;
+                    
+                    if (Utils.confirm(message)) {
+                        success = dataManager.importNewFormatData(importData);
+                        if (success) {
+                            Utils.showNotification('새 형식 데이터를 성공적으로 변환하여 가져왔습니다.', 'success');
+                            Logger.info('📥 새 형식 데이터 가져오기 완료');
+                        } else {
+                            Utils.showNotification('새 형식 데이터 변환 중 오류가 발생했습니다.', 'error');
+                        }
+                    }
+                } else {
+                    // 기존 표준 형식 JSON 처리
+                    message = '기존 데이터를 모두 덮어쓰시겠습니까?';
+                    
+                    if (Utils.confirm(message)) {
+                        success = dataManager.importData(importData);
+                        if (success) {
+                            Utils.showNotification('데이터를 성공적으로 가져왔습니다.', 'success');
+                            Logger.info('📥 표준 형식 데이터 가져오기 완료');
+                        } else {
+                            Utils.showNotification('올바르지 않은 데이터 형식입니다.', 'error');
+                        }
                     }
                 }
                 
+                Utils.hideLoading();
+                
             } catch (error) {
+                Utils.hideLoading();
                 Logger.error('데이터 가져오기 실패:', error);
                 Utils.showNotification('데이터 파일을 읽는 중 오류가 발생했습니다.', 'error');
             }
@@ -1174,6 +1262,52 @@ const adminStyles = `
         margin-top: 2rem;
         padding-top: 1rem;
         border-top: 1px solid var(--border-color);
+    }
+    
+    .import-options {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .option-card {
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: var(--transition);
+        text-align: center;
+    }
+    
+    .option-card:hover {
+        border-color: var(--primary-color);
+        background: var(--surface-color);
+    }
+    
+    .option-card i {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+    
+    .option-card h4 {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .option-card p {
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .option-card small {
+        color: var(--text-muted);
+        font-size: var(--font-size-sm);
+        display: block;
+        margin-top: 0.5rem;
     }
 `;
 

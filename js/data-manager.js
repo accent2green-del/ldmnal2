@@ -500,6 +500,326 @@ class DataManager {
             return false;
         }
     }
+    
+    /**
+     * 새로운 JSON 형식 데이터 변환 및 가져오기
+     */
+    importNewFormatData(newFormatData) {
+        try {
+            Logger.info('새 형식 JSON 데이터 변환 시작...');
+            
+            // 새 형식이 배열인지 확인
+            if (!Array.isArray(newFormatData)) {
+                throw new Error('새 형식 데이터는 배열이어야 합니다.');
+            }
+            
+            const convertedData = this.convertNewFormatToStandard(newFormatData);
+            
+            if (this.validateData(convertedData)) {
+                this.data = convertedData;
+                this.saveToStorage();
+                EventEmitter.emit('data:updated', this.data);
+                Logger.info('새 형식 데이터 변환 및 가져오기 완료', this.getDataSummary());
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            Logger.error('새 형식 데이터 가져오기 실패:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * 새 JSON 형식을 기존 형식으로 변환
+     */
+    convertNewFormatToStandard(newFormatData) {
+        Logger.info('JSON 형식 변환 중...', { itemCount: newFormatData.length });
+        
+        const departments = [];
+        const categories = [];
+        const processes = [];
+        
+        // 부서별 카운터와 매핑
+        const departmentMap = new Map();
+        const categoryMap = new Map();
+        let departmentOrder = 1;
+        let categoryOrder = 1;
+        let processOrder = 1;
+        
+        newFormatData.forEach((item, itemIndex) => {
+            const departmentName = item['1단계'];
+            const categoryName = item['2단계'];
+            const metaInfo = item['3단계'] || {};
+            const processList = item['4단계'] || [];
+            
+            // 부서 처리
+            let departmentId = departmentMap.get(departmentName);
+            if (!departmentId) {
+                departmentId = Utils.generateId('dept');
+                departmentMap.set(departmentName, departmentId);
+                
+                departments.push({
+                    id: departmentId,
+                    name: departmentName,
+                    description: this.extractBusinessDefinition(metaInfo.업무정의),
+                    order: departmentOrder++,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+            }
+            
+            // 카테고리 처리
+            const categoryKey = `${departmentName}::${categoryName}`;
+            let categoryId = categoryMap.get(categoryKey);
+            if (!categoryId) {
+                categoryId = Utils.generateId('cat');
+                categoryMap.set(categoryKey, categoryId);
+                
+                categories.push({
+                    id: categoryId,
+                    name: categoryName,
+                    departmentId: departmentId,
+                    description: this.extractBusinessDefinition(metaInfo.업무정의) || `${categoryName} 관련 업무`,
+                    order: categoryOrder++,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+            }
+            
+            // 프로세스 처리
+            processList.forEach((processItem, processIndex) => {
+                const processName = processItem['프로세스'];
+                const processDetails = processItem['5단계'] || {};
+                
+                // 빈 프로세스나 중복 프로세스 필터링
+                if (!processName || processName.trim() === '') {
+                    return;
+                }
+                
+                // 동일한 프로세스명이 이미 해당 카테고리에 있는지 확인
+                const existingProcess = processes.find(p => 
+                    p.categoryId === categoryId && 
+                    p.title === processName.trim()
+                );
+                
+                if (existingProcess) {
+                    // 기존 프로세스가 있으면 세부 정보 업데이트
+                    this.updateExistingProcess(existingProcess, processDetails, metaInfo);
+                } else {
+                    // 새 프로세스 생성
+                    const newProcess = {
+                        id: Utils.generateId('proc'),
+                        title: processName.trim(),
+                        description: this.extractStepDescription(processDetails.단계설명) || `${processName} 관련 업무 프로세스`,
+                        categoryId: categoryId,
+                        departmentId: departmentId,
+                        steps: this.convertToSteps(processDetails),
+                        tags: this.extractTags(processDetails, metaInfo),
+                        legalBasis: this.extractLegalBasis(metaInfo.법적근거),
+                        references: this.extractReferences(processDetails.참고자료),
+                        outputs: processDetails.산출물 || [],
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        order: processOrder++
+                    };
+                    
+                    processes.push(newProcess);
+                }
+            });
+        });
+        
+        Logger.info('변환 완료', {
+            departments: departments.length,
+            categories: categories.length,
+            processes: processes.length
+        });
+        
+        return {
+            departments,
+            categories,
+            processes
+        };
+    }
+    
+    /**
+     * 업무정의에서 설명 추출
+     */
+    extractBusinessDefinition(definition) {
+        if (!definition || typeof definition !== 'string') {
+            return null;
+        }
+        
+        // 업무정의에서 첫 번째 라인 또는 주요 설명 추출
+        const lines = definition.split('\n').map(line => line.trim()).filter(line => line);
+        if (lines.length > 0) {
+            return lines[0].replace(/^-\s*/, ''); // 맨 앞의 - 기호 제거
+        }
+        
+        return definition.substring(0, 200).trim(); // 최대 200자로 제한
+    }
+    
+    /**
+     * 단계 설명에서 설명 추출
+     */
+    extractStepDescription(stepDescription) {
+        if (!stepDescription || typeof stepDescription !== 'string') {
+            return null;
+        }
+        
+        // 단계설명에서 주요 내용 추출
+        const lines = stepDescription.split('\n').map(line => line.trim()).filter(line => line);
+        const mainLines = lines.filter(line => !line.startsWith('- '));
+        
+        if (mainLines.length > 0) {
+            return mainLines.join(' ').substring(0, 200).trim();
+        }
+        
+        return stepDescription.substring(0, 200).trim();
+    }
+    
+    /**
+     * 5단계 정보를 steps 형식으로 변환
+     */
+    convertToSteps(processDetails) {
+        const steps = [];
+        const mainContents = processDetails.주요내용 || [];
+        const stepDescription = processDetails.단계설명 || '';
+        
+        if (mainContents.length > 0) {
+            // 주요내용을 단계별로 분할
+            mainContents.forEach((content, index) => {
+                steps.push({
+                    stepNumber: index + 1,
+                    title: content.replace(/^-\s*/, '').trim(),
+                    description: content,
+                    details: stepDescription
+                });
+            });
+        } else if (stepDescription) {
+            // 단계설명만 있는 경우
+            const descriptionLines = stepDescription.split('\n')
+                .map(line => line.trim())
+                .filter(line => line && line.startsWith('- '));
+            
+            if (descriptionLines.length > 0) {
+                descriptionLines.forEach((line, index) => {
+                    const content = line.replace(/^-\s*/, '').trim();
+                    steps.push({
+                        stepNumber: index + 1,
+                        title: content,
+                        description: content,
+                        details: stepDescription
+                    });
+                });
+            } else {
+                // 단계설명을 하나의 단계로 처리
+                steps.push({
+                    stepNumber: 1,
+                    title: '업무 실행',
+                    description: stepDescription,
+                    details: stepDescription
+                });
+            }
+        } else {
+            // 기본 단계 생성
+            steps.push({
+                stepNumber: 1,
+                title: '업무 처리',
+                description: '해당 업무를 수행합니다.',
+                details: '세부 절차는 관련 규정에 따라 진행합니다.'
+            });
+        }
+        
+        return steps;
+    }
+    
+    /**
+     * 태그 추출
+     */
+    extractTags(processDetails, metaInfo) {
+        const tags = [];
+        
+        // 산출물에서 태그 추출
+        if (processDetails.산출물 && Array.isArray(processDetails.산출물)) {
+            processDetails.산출물.forEach(output => {
+                if (output && typeof output === 'string') {
+                    if (output.includes('신청서')) tags.push('신청서');
+                    if (output.includes('허가')) tags.push('허가');
+                    if (output.includes('민원')) tags.push('민원');
+                    if (output.includes('계약')) tags.push('계약');
+                    if (output.includes('공사')) tags.push('공사');
+                    if (output.includes('설계')) tags.push('설계');
+                    if (output.includes('보상')) tags.push('보상');
+                }
+            });
+        }
+        
+        // 법적근거에서 태그 추출
+        if (metaInfo.법적근거 && Array.isArray(metaInfo.법적근거)) {
+            metaInfo.법적근거.forEach(legal => {
+                if (legal && typeof legal === 'string') {
+                    if (legal.includes('민원')) tags.push('민원');
+                    if (legal.includes('도로')) tags.push('도로');
+                    if (legal.includes('건설')) tags.push('건설');
+                    if (legal.includes('안전')) tags.push('안전');
+                    if (legal.includes('시설')) tags.push('시설');
+                }
+            });
+        }
+        
+        // 기본 태그
+        tags.push('업무프로세스');
+        
+        // 중복 제거 후 반환
+        return [...new Set(tags)];
+    }
+    
+    /**
+     * 법적근거 추출
+     */
+    extractLegalBasis(legalBasisArray) {
+        if (!Array.isArray(legalBasisArray)) {
+            return [];
+        }
+        
+        return legalBasisArray.filter(item => item && typeof item === 'string').map(item => item.trim());
+    }
+    
+    /**
+     * 참고자료 추출
+     */
+    extractReferences(referencesArray) {
+        if (!Array.isArray(referencesArray)) {
+            return [];
+        }
+        
+        return referencesArray.filter(item => item && typeof item === 'string').map(item => item.trim());
+    }
+    
+    /**
+     * 기존 프로세스 업데이트 (중복 방지)
+     */
+    updateExistingProcess(existingProcess, processDetails, metaInfo) {
+        // 더 상세한 정보가 있으면 업데이트
+        if (processDetails.단계설명 && !existingProcess.description) {
+            existingProcess.description = this.extractStepDescription(processDetails.단계설명);
+        }
+        
+        if (processDetails.주요내용 && processDetails.주요내용.length > 0 && existingProcess.steps.length <= 1) {
+            existingProcess.steps = this.convertToSteps(processDetails);
+        }
+        
+        if (processDetails.참고자료 && processDetails.참고자료.length > 0) {
+            existingProcess.references = this.extractReferences(processDetails.참고자료);
+        }
+        
+        if (processDetails.산출물 && processDetails.산출물.length > 0) {
+            existingProcess.outputs = processDetails.산출물;
+        }
+        
+        existingProcess.updatedAt = new Date().toISOString();
+    }
 }
 
 // 전역 인스턴스 생성
