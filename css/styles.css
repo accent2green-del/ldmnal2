@@ -599,16 +599,18 @@ body {
     display: block;
 }
 
-/* Process Content */
+/* Process Content - Enhanced for Readability */
 .process-content,
 .category-content,
 .department-content {
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    margin-bottom: 2rem;
     overflow: hidden;
+    line-height: 1.8;
 }
 
 .process-header,
@@ -616,36 +618,61 @@ body {
 .department-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 2.5rem 2rem;
+    padding: 3rem 2.5rem;
     text-align: center;
+    position: relative;
+}
+
+.process-header::before,
+.category-header::before,
+.department-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
 }
 
 .process-header h2,
 .category-header h2,
 .department-header h2 {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 700;
-    margin-bottom: 1rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 1.5rem;
+    text-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
 }
 
 .process-meta {
     display: flex;
     justify-content: center;
-    gap: 2rem;
+    gap: 1.5rem;
     flex-wrap: wrap;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
 }
 
 .process-meta span {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    opacity: 0.9;
+    gap: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0.95;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1.25rem;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
 }
-    align-items: center;
-    gap: 0.25rem;
+
+.process-meta span:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
 }
 
 .process-description {
@@ -1759,4 +1786,382 @@ button:focus-visible {
 
 .visible {
     display: block;
+}
+
+/* =====================================
+ * Task 2: Enhanced Detail Page Typography & Readability
+ * 작업 2: 상세 페이지 타이포그래피 및 가독성 향상
+ * ===================================== */
+
+/* Enhanced Process Description Section */
+.process-description {
+    background: #f8fafc;
+    padding: 2.5rem;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 0;
+}
+
+.process-description h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.process-description h3::before {
+    content: '📋';
+    font-size: 1.25rem;
+}
+
+.process-description p {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: #475569;
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+/* Enhanced Process Steps Section */
+.process-steps {
+    padding: 2.5rem;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.process-steps h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.process-steps h3::before {
+    content: '⚙️';
+    font-size: 1.25rem;
+}
+
+.steps-container {
+    position: relative;
+}
+
+.steps-container::before {
+    content: '';
+    position: absolute;
+    left: 1.5rem;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, #667eea, #764ba2);
+    border-radius: 2px;
+    z-index: 1;
+}
+
+/* Enhanced Step Items */
+.step-item {
+    background: white;
+    padding: 0;
+    border-radius: 16px;
+    border: 2px solid #f1f5f9;
+    margin-bottom: 2rem;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.step-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 0;
+}
+
+.step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.step-number::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    z-index: -1;
+    opacity: 0.3;
+}
+
+.step-title {
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.step-description {
+    padding: 2rem;
+    color: #475569;
+    line-height: 1.8;
+}
+
+.step-description p {
+    font-size: 1.0625rem;
+    margin: 1rem 0;
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+.step-description strong {
+    color: #1e293b;
+    font-weight: 600;
+    background: #f1f5f9;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.95em;
+}
+
+/* Enhanced Content Sections */
+.process-legal,
+.process-outputs,
+.process-references,
+.process-tags {
+    padding: 2.5rem;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.process-legal h3,
+.process-outputs h3,
+.process-references h3,
+.process-tags h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.process-legal h3::before {
+    content: '⚖️';
+    font-size: 1.25rem;
+}
+
+.process-outputs h3::before {
+    content: '📄';
+    font-size: 1.25rem;
+}
+
+.process-references h3::before {
+    content: '📚';
+    font-size: 1.25rem;
+}
+
+.process-tags h3::before {
+    content: '🏷️';
+    font-size: 1.25rem;
+}
+
+/* Enhanced Lists */
+.legal-list,
+.outputs-list,
+.references-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.legal-list li,
+.outputs-list li,
+.references-list li {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    color: #475569;
+    line-height: 1.7;
+    font-size: 1.0625rem;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.legal-list li:hover,
+.outputs-list li:hover,
+.references-list li:hover {
+    background: white;
+    border-color: #667eea;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.legal-list li::before {
+    content: '⚖️';
+    margin-right: 0.75rem;
+    font-size: 1.125rem;
+}
+
+.outputs-list li::before {
+    content: '📄';
+    margin-right: 0.75rem;
+    font-size: 1.125rem;
+}
+
+.references-list li::before {
+    content: '🔗';
+    margin-right: 0.75rem;
+    font-size: 1.125rem;
+}
+
+/* Enhanced Tags */
+.tag, .tag-small {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    margin-right: 0.75rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.tag:hover, .tag-small:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+/* Enhanced Process Actions */
+.process-actions {
+    padding: 2.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-top: 1px solid #e2e8f0;
+}
+
+.process-actions .btn-secondary {
+    padding: 0.875rem 2rem;
+    font-size: 1.0625rem;
+    font-weight: 500;
+    background: white;
+    border: 2px solid #e2e8f0;
+    color: #475569;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.process-actions .btn-secondary:hover {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+/* Mobile Responsive Typography */
+@media (max-width: 768px) {
+    .process-header h2,
+    .category-header h2,
+    .department-header h2 {
+        font-size: 1.75rem;
+    }
+    
+    .process-meta {
+        gap: 1rem;
+    }
+    
+    .process-meta span {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .process-description,
+    .process-legal,
+    .process-outputs,
+    .process-steps,
+    .process-references,
+    .process-tags {
+        padding: 1.5rem;
+    }
+    
+    .step-header {
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+    
+    .step-number {
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.125rem;
+    }
+    
+    .step-title {
+        font-size: 1.25rem;
+    }
+    
+    .step-description {
+        padding: 1.5rem;
+    }
+    
+    .process-actions {
+        padding: 1.5rem;
+        gap: 1rem;
+        flex-direction: column;
+    }
+    
+    .process-actions .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        justify-content: center;
+    }
+    
+    .steps-container::before {
+        left: 1rem;
+    }
 }
