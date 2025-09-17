@@ -2165,6 +2165,24 @@ window.AdminManager = class {
                         </label>
                         <textarea id="proc-step-description" placeholder="이 프로세스에서 수행되는 주요 활동과 목적을 설명하세요..." 
                                   style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            주요 업무 내용
+                        </label>
+                        <textarea id="proc-main-content" placeholder="주요 업무 내용을 한 줄씩 입력하세요&#10;예:&#10;민원인 응대&#10;방문·우편·팩스·국민신문고 등 신청경로 확인·안내&#10;민원 신청서 및 구비서류 안내" 
+                                  style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            산출물
+                        </label>
+                        <textarea id="proc-outputs" placeholder="이 프로세스에서 생성되는 산출물을 한 줄씩 입력하세요&#10;예:&#10;민원신청서(우편, 팩스, 국민신문고 등)&#10;민원처리부&#10;민원 접수증" 
+                                  style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            참고 자료
+                        </label>
+                        <textarea id="proc-references" placeholder="관련 법령, 지침, 매뉴얼 등을 한 줄씩 입력하세요&#10;예:&#10;2022년 공직자 민원응대 매뉴얼 - 민원응대 관련 기본원칙: p.6-7&#10;민원 처리에 관한 법률(시행 2022. 07. 12.) - 민원 처리 담당자의 의무와 보호: 제4조, p.2" 
+                                  style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
                     </div>
                     
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
@@ -2187,13 +2205,26 @@ window.AdminManager = class {
         
         const updateCategoryOptions = () => {
             const selectedDeptId = departmentSelect.value;
-            const currentCategories = this.safeCategories(); // 최신 카테고리 목록 가져오기
-            const filteredCategories = currentCategories.filter(cat => cat.departmentId === selectedDeptId);
+            console.log('선택된 부서 ID:', selectedDeptId);
             
-            categorySelect.innerHTML = '<option value="">카테고리를 선택하세요</option>' + 
-                filteredCategories.map(cat => 
-                    `<option value="${cat.id}">${cat.name}</option>`
-                ).join('');
+            const currentCategories = this.safeCategories(); // 최신 카테고리 목록 가져오기
+            console.log('전체 카테고리 목록:', currentCategories);
+            
+            const filteredCategories = currentCategories.filter(cat => {
+                console.log(`카테고리 "${cat.name}" (부서ID: ${cat.departmentId}) vs 선택된 부서ID: ${selectedDeptId}`);
+                return cat.departmentId === selectedDeptId;
+            });
+            
+            console.log('필터링된 카테고리:', filteredCategories);
+            
+            if (filteredCategories.length === 0) {
+                categorySelect.innerHTML = '<option value="">선택된 부서에 카테고리가 없습니다</option>';
+            } else {
+                categorySelect.innerHTML = '<option value="">카테고리를 선택하세요</option>' + 
+                    filteredCategories.map(cat => 
+                        `<option value="${cat.id}">${cat.name}</option>`
+                    ).join('');
+            }
         };
         
         departmentSelect.addEventListener('change', updateCategoryOptions);
@@ -2226,7 +2257,10 @@ window.AdminManager = class {
             const processData = {
                 title: name,
                 categoryId: categoryId,
-                stepDescription: document.getElementById('proc-step-description').value.trim()
+                stepDescription: document.getElementById('proc-step-description').value.trim(),
+                mainContent: this.parseTextareaLines(document.getElementById('proc-main-content').value),
+                outputs: this.parseTextareaLines(document.getElementById('proc-outputs').value),
+                references: this.parseTextareaLines(document.getElementById('proc-references').value)
             };
             
             console.log('프로세스 추가 데이터:', processData);
