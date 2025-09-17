@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로세스 수정 모달 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #138496;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .process-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        .process-title {
+            font-weight: bold;
+            color: #17a2b8;
+            margin-bottom: 10px;
+        }
+        .process-detail {
+            margin: 5px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛠️ 프로세스 수정 모달 테스트</h1>
+    
+    <div class="test-section">
+        <h2>📋 애플리케이션 상태 확인</h2>
+        <button class="btn" onclick="checkAppStatus()">🔍 상태 확인</button>
+        <button class="btn btn-success" onclick="openMainApp()">🚀 메인 애플리케이션 열기</button>
+        <div id="app-status" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 프로세스 수정 모달 테스트</h2>
+        
+        <h3>1️⃣ 샘플 프로세스 생성</h3>
+        <button class="btn" onclick="createSampleProcess()">📝 샘플 프로세스 생성</button>
+        <div id="sample-process" class="result"></div>
+        
+        <h3>2️⃣ 수정 모달 테스트</h3>
+        <button class="btn" onclick="testEditModal()" id="test-edit-btn" disabled>✏️ 수정 모달 테스트</button>
+        <div id="edit-result" class="result"></div>
+        
+        <h3>3️⃣ 프로세스 목록 확인</h3>
+        <button class="btn" onclick="showProcessList()">📋 프로세스 목록 보기</button>
+        <div id="process-list" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 테스트 진행 순서</h2>
+        <div class="result">
+            <ol>
+                <li><strong>상태 확인</strong>: 애플리케이션이 제대로 로드되었는지 확인</li>
+                <li><strong>샘플 프로세스 생성</strong>: 테스트용 프로세스를 생성</li>
+                <li><strong>수정 모달 테스트</strong>: 생성된 프로세스의 수정 모달 열기</li>
+                <li><strong>새 필드 확인</strong>: 주요 업무 내용, 산출물, 참고 자료 필드가 있는지 확인</li>
+                <li><strong>데이터 입력</strong>: 각 필드에 데이터 입력 후 저장</li>
+                <li><strong>결과 확인</strong>: 저장된 데이터가 제대로 반영되었는지 확인</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let testProcessId = null;
+        
+        function openMainApp() {
+            const currentUrl = window.location.origin;
+            window.open(currentUrl, '_blank');
+        }
+        
+        function checkAppStatus() {
+            const statusDiv = document.getElementById('app-status');
+            
+            try {
+                // 부모 창에서 dataManager와 adminManager 확인
+                if (window.opener && window.opener.dataManager && window.opener.adminManager) {
+                    const dm = window.opener.dataManager;
+                    const am = window.opener.adminManager;
+                    
+                    const departments = dm.getDepartments();
+                    const categories = dm.getCategories();
+                    const processes = dm.data.processes;
+                    
+                    let statusHtml = '<div class="success">✅ 애플리케이션 상태 정상</div>';
+                    statusHtml += `<strong>데이터 상태:</strong><br>`;
+                    statusHtml += `- 부서: ${departments.length}개<br>`;
+                    statusHtml += `- 카테고리: ${categories.length}개<br>`;
+                    statusHtml += `- 프로세스: ${processes.length}개<br>`;
+                    statusHtml += `<strong>AdminManager:</strong> ${am.isLoggedIn ? '로그인됨' : '로그인 필요'}<br>`;
+                    
+                    statusDiv.innerHTML = statusHtml;
+                    
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ 메인 애플리케이션에 접근할 수 없습니다.<br>메인 애플리케이션을 먼저 열어주세요.</div>';
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ 오류: ' + error.message + '</div>';
+            }
+        }
+        
+        function createSampleProcess() {
+            const sampleDiv = document.getElementById('sample-process');
+            
+            try {
+                if (!window.opener || !window.opener.dataManager) {
+                    sampleDiv.innerHTML = '<div class="error">❌ 메인 애플리케이션에 접근할 수 없습니다.</div>';
+                    return;
+                }
+                
+                const dm = window.opener.dataManager;
+                const departments = dm.getDepartments();
+                const categories = dm.getCategories();
+                
+                if (departments.length === 0 || categories.length === 0) {
+                    sampleDiv.innerHTML = '<div class="error">❌ 부서 또는 카테고리 데이터가 없습니다.</div>';
+                    return;
+                }
+                
+                // 첫 번째 카테고리 선택
+                const firstCategory = categories[0];
+                
+                // 샘플 프로세스 생성
+                const sampleProcess = {
+                    id: 'test-proc-' + Date.now(),
+                    title: '테스트 프로세스 (수정 모달 테스트용)',
+                    categoryId: firstCategory.id,
+                    stepDescription: '이것은 수정 모달 테스트를 위한 샘플 프로세스입니다.',
+                    mainContent: ['기존 업무 내용 1', '기존 업무 내용 2', '기존 업무 내용 3'],
+                    outputs: ['기존 산출물 1', '기존 산출물 2'],
+                    references: ['기존 참고 자료 1', '기존 참고 자료 2', '기존 참고 자료 3'],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                // 데이터에 추가
+                dm.data.processes.push(sampleProcess);
+                dm.saveToStorage();
+                
+                testProcessId = sampleProcess.id;
+                
+                let html = '<div class="success">✅ 샘플 프로세스 생성 완료</div>';
+                html += `<strong>프로세스 ID:</strong> ${sampleProcess.id}<br>`;
+                html += `<strong>프로세스명:</strong> ${sampleProcess.title}<br>`;
+                html += `<strong>카테고리:</strong> ${firstCategory.name}<br>`;
+                html += `<strong>주요 업무 내용:</strong> ${sampleProcess.mainContent.length}개 항목<br>`;
+                html += `<strong>산출물:</strong> ${sampleProcess.outputs.length}개 항목<br>`;
+                html += `<strong>참고 자료:</strong> ${sampleProcess.references.length}개 항목<br>`;
+                
+                sampleDiv.innerHTML = html;
+                
+                // 수정 모달 테스트 버튼 활성화
+                document.getElementById('test-edit-btn').disabled = false;
+                
+            } catch (error) {
+                sampleDiv.innerHTML = '<div class="error">❌ 오류: ' + error.message + '</div>';
+            }
+        }
+        
+        function testEditModal() {
+            const resultDiv = document.getElementById('edit-result');
+            
+            try {
+                if (!testProcessId || !window.opener || !window.opener.adminManager) {
+                    resultDiv.innerHTML = '<div class="error">❌ 테스트 프로세스가 없거나 AdminManager에 접근할 수 없습니다.</div>';
+                    return;
+                }
+                
+                const am = window.opener.adminManager;
+                const dm = window.opener.dataManager;
+                
+                // 프로세스 찾기
+                const process = dm.data.processes.find(p => p.id === testProcessId);
+                if (!process) {
+                    resultDiv.innerHTML = '<div class="error">❌ 테스트 프로세스를 찾을 수 없습니다.</div>';
+                    return;
+                }
+                
+                // 수정 모달 열기
+                am.showEditProcessModal(process);
+                
+                let html = '<div class="success">✅ 수정 모달이 열렸습니다!</div>';
+                html += '<strong>확인 사항:</strong><br>';
+                html += '1. 모달에 다음 필드들이 있는지 확인하세요:<br>';
+                html += '&nbsp;&nbsp;- 프로세스명<br>';
+                html += '&nbsp;&nbsp;- 프로세스 설명<br>';
+                html += '&nbsp;&nbsp;- <strong>주요 업무 내용</strong> (새로 추가됨)<br>';
+                html += '&nbsp;&nbsp;- <strong>산출물</strong> (새로 추가됨)<br>';
+                html += '&nbsp;&nbsp;- <strong>참고 자료</strong> (새로 추가됨)<br><br>';
+                html += '2. 각 필드에 기존 데이터가 올바르게 표시되는지 확인<br>';
+                html += '3. 새로운 데이터를 입력하고 저장해보세요<br>';
+                html += '4. 저장 후 다시 수정 모달을 열어서 변경사항이 반영되었는지 확인<br>';
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">❌ 오류: ' + error.message + '</div>';
+            }
+        }
+        
+        function showProcessList() {
+            const listDiv = document.getElementById('process-list');
+            
+            try {
+                if (!window.opener || !window.opener.dataManager) {
+                    listDiv.innerHTML = '<div class="error">❌ 메인 애플리케이션에 접근할 수 없습니다.</div>';
+                    return;
+                }
+                
+                const dm = window.opener.dataManager;
+                const processes = dm.data.processes;
+                const categories = dm.getCategories();
+                
+                let html = `<strong>📋 전체 프로세스 목록 (${processes.length}개)</strong><br><br>`;
+                
+                processes.forEach((proc, idx) => {
+                    const category = categories.find(c => c.id === proc.categoryId);
+                    const isTestProcess = proc.id === testProcessId;
+                    
+                    html += `<div class="process-item${isTestProcess ? ' success' : ''}">`;
+                    html += `<div class="process-title">${idx + 1}. ${proc.title}${isTestProcess ? ' 🧪' : ''}</div>`;
+                    html += `<div class="process-detail">카테고리: ${category ? category.name : '알 수 없음'}</div>`;
+                    html += `<div class="process-detail">설명: ${proc.stepDescription || proc.description || '없음'}</div>`;
+                    if (proc.mainContent && proc.mainContent.length > 0) {
+                        html += `<div class="process-detail">주요 업무 내용: ${proc.mainContent.length}개 항목</div>`;
+                    }
+                    if (proc.outputs && proc.outputs.length > 0) {
+                        html += `<div class="process-detail">산출물: ${proc.outputs.length}개 항목</div>`;
+                    }
+                    if (proc.references && proc.references.length > 0) {
+                        html += `<div class="process-detail">참고 자료: ${proc.references.length}개 항목</div>`;
+                    }
+                    html += `</div>`;
+                });
+                
+                listDiv.innerHTML = html;
+                
+            } catch (error) {
+                listDiv.innerHTML = '<div class="error">❌ 오류: ' + error.message + '</div>';
+            }
+        }
+        
+        // 페이지 로드 시 상태 확인
+        window.addEventListener('load', () => {
+            setTimeout(checkAppStatus, 1000);
+        });
+    </script>
+</body>
+</html>
