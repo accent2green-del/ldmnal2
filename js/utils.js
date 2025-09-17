@@ -229,6 +229,89 @@ class Utils {
     }
 
     /**
+     * 입력창에서 Enter키를 줄바꿈으로 처리하는 이벤트 리스너 추가
+     */
+    static enableEnterNewline(element) {
+        if (!element) return;
+        
+        element.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                // Shift+Enter가 아닌 단순 Enter일 때만 줄바꿈 처리
+                e.preventDefault();
+                
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                const value = this.value;
+                
+                // 커서 위치에 줄바꿈 삽입
+                this.value = value.substring(0, start) + '\n' + value.substring(end);
+                
+                // 커서를 줄바꿈 다음 위치로 이동
+                this.selectionStart = this.selectionEnd = start + 1;
+            }
+        });
+        
+        // 기존 placeholder 개선 (Enter 안내 추가)
+        if (element.tagName.toLowerCase() === 'textarea') {
+            const originalPlaceholder = element.getAttribute('placeholder') || '';
+            if (originalPlaceholder && !originalPlaceholder.includes('Enter')) {
+                element.setAttribute('placeholder', originalPlaceholder + '\n\n💡 Enter: 줄바꿈, Shift+Enter: 기본동작');
+            }
+        }
+    }
+    
+    /**
+     * 모든 textarea 요소에 Enter 줄바꿈 기능 적용
+     */
+    static enableEnterNewlineForAll() {
+        // 기존 textarea들에 적용
+        document.querySelectorAll('textarea').forEach(textarea => {
+            Utils.enableEnterNewline(textarea);
+        });
+        
+        // 새로 추가되는 textarea들을 위한 MutationObserver 설정
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        // 추가된 노드가 textarea인지 확인
+                        if (node.tagName && node.tagName.toLowerCase() === 'textarea') {
+                            Utils.enableEnterNewline(node);
+                        }
+                        
+                        // 자식 노드들 중 textarea 찾기
+                        const textareas = node.querySelectorAll && node.querySelectorAll('textarea');
+                        if (textareas) {
+                            textareas.forEach(textarea => {
+                                Utils.enableEnterNewline(textarea);
+                            });
+                        }
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        return observer;
+    }
+    
+    /**
+     * 특정 컨테이너 내의 모든 textarea에 Enter 줄바꿈 기능 적용
+     */
+    static enableEnterNewlineInContainer(container) {
+        if (!container) return;
+        
+        const textareas = container.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            Utils.enableEnterNewline(textarea);
+        });
+    }
+
+    /**
      * 모바일 디바이스 감지
      */
     static isMobile() {

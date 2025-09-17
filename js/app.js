@@ -271,7 +271,20 @@ class Application {
         // 접근성 개선
         this.initializeAccessibility();
         
+        // Enter키 줄바꿈 기능 활성화
+        this.initializeEnterNewline();
+        
         Logger.info('🎨 UI 초기화 완료');
+    }
+    
+    /**
+     * Enter키 줄바꿈 기능 초기화
+     */
+    initializeEnterNewline() {
+        // 모든 textarea에서 Enter키 줄바꿈 기능 활성화
+        Utils.enableEnterNewlineForAll();
+        
+        Logger.info('⌨️ Enter키 줄바꿈 기능 활성화 완료');
     }
     
     /**

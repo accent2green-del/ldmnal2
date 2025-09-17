@@ -882,8 +882,12 @@ window.AdminManager = class {
             }
         });
         
-        // 부서명 입력란에 포커스
+        // Enter키 줄바꿈 기능 적용 및 포커스
         setTimeout(() => {
+            // 모달 내 모든 textarea에 Enter키 줄바꿈 기능 적용
+            Utils.enableEnterNewlineInContainer(modal);
+            
+            // 부서명 입력란에 포커스
             document.getElementById('edit-dept-name').focus();
             document.getElementById('edit-dept-name').select();
         }, 100);
@@ -1083,8 +1087,12 @@ window.AdminManager = class {
             }
         });
         
-        // 카테고리명 입력란에 포커스
+        // Enter키 줄바꿈 기능 적용 및 포커스
         setTimeout(() => {
+            // 모달 내 모든 textarea에 Enter키 줄바꿈 기능 적용
+            Utils.enableEnterNewlineInContainer(modal);
+            
+            // 카테고리명 입력란에 포커스
             document.getElementById('edit-cat-name').focus();
             document.getElementById('edit-cat-name').select();
         }, 100);
@@ -1396,8 +1404,12 @@ window.AdminManager = class {
             }
         });
         
-        // 프로세스명 입력란에 포커스
+        // Enter키 줄바꿈 기능 적용 및 포커스
         setTimeout(() => {
+            // 모달 내 모든 textarea에 Enter키 줄바꿈 기능 적용
+            Utils.enableEnterNewlineInContainer(modal);
+            
+            // 프로세스명 입력란에 포커스
             document.getElementById('edit-proc-name').focus();
             document.getElementById('edit-proc-name').select();
         }, 100);
@@ -2053,8 +2065,12 @@ window.AdminManager = class {
             }
         });
         
-        // 부서명 입력란에 포커스
+        // Enter키 줄바꿈 기능 적용 및 포커스
         setTimeout(() => {
+            // 모달 내 모든 textarea에 Enter키 줄바꿈 기능 적용
+            Utils.enableEnterNewlineInContainer(modal);
+            
+            // 부서명 입력란에 포커스
             document.getElementById('dept-name').focus();
         }, 100);
     }
@@ -2164,8 +2180,12 @@ window.AdminManager = class {
             }
         });
         
-        // 카테고리명 입력란에 포커스
+        // Enter키 줄바꿈 기능 적용 및 포커스
         setTimeout(() => {
+            // 모달 내 모든 textarea에 Enter키 줄바꿈 기능 적용
+            Utils.enableEnterNewlineInContainer(modal);
+            
+            // 카테고리명 입력란에 포커스
             document.getElementById('cat-name').focus();
         }, 100);
     }
@@ -2386,8 +2406,12 @@ window.AdminManager = class {
             }
         });
         
-        // 프로세스명 입력란에 포커스
+        // Enter키 줄바꿈 기능 적용 및 포커스
         setTimeout(() => {
+            // 모달 내 모든 textarea에 Enter키 줄바꿈 기능 적용
+            Utils.enableEnterNewlineInContainer(modal);
+            
+            // 프로세스명 입력란에 포커스
             document.getElementById('proc-name').focus();
         }, 100);
     }
