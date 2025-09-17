@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>멀티라인 컨텐츠 표시 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .test-title {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .input-section, .output-section {
+            margin-bottom: 20px;
+        }
+        
+        .input-section h4, .output-section h4 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        .output-area {
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            background: #f8f9fa;
+            min-height: 100px;
+        }
+        
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .test-btn:hover {
+            background: #0056b3;
+        }
+        
+        .sample-data {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 멀티라인 컨텐츠 표시 테스트</h1>
+    <p>Enter키로 구분된 데이터가 상세정보창에서 어떻게 표시되는지 테스트합니다.</p>
+    
+    <div class="test-section">
+        <h2 class="test-title">📋 1. 기본 줄바꿈 변환 테스트</h2>
+        <div class="input-section">
+            <h4>입력 데이터:</h4>
+            <textarea id="basic-input" placeholder="Enter키로 구분된 텍스트를 입력하세요...">민원인 응대
+방문·우편·팩스·국민신문고 등 신청경로 확인·안내
+민원 신청서 및 구비서류 안내
+위임민원의 경우 위임장과 신분증 확인</textarea>
+            <div class="sample-data">
+                샘플 데이터: 줄바꿈(\n)으로 구분된 텍스트
+            </div>
+        </div>
+        
+        <div class="test-buttons">
+            <button class="test-btn" onclick="testBasicConversion()">기본 변환 테스트</button>
+            <button class="test-btn" onclick="testListConversion()">리스트 변환 테스트</button>
+            <button class="test-btn" onclick="testCardConversion()">카드 변환 테스트</button>
+        </div>
+        
+        <div class="output-section">
+            <h4>출력 결과:</h4>
+            <div id="basic-output" class="output-area">결과가 여기에 표시됩니다...</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">🎯 2. 주요 업무 내용 스타일 테스트</h2>
+        <div class="input-section">
+            <h4>주요 업무 내용 데이터:</h4>
+            <textarea id="main-content-input">담당자, 민원 내용 검토 및 법령·사례 확인
+필요시 현장조사하여 처리 가능 여부 판단
+보완 필요시, 관계기관과 협의 후 민원인에게 보안사항 안내
+최종 검토결과 기록 후 처리 계획 수립</textarea>
+        </div>
+        
+        <div class="test-buttons">
+            <button class="test-btn" onclick="testMainContentStyle()">주요 업무 내용 스타일 적용</button>
+        </div>
+        
+        <div class="output-section">
+            <h4>출력 결과:</h4>
+            <div id="main-content-output" class="output-area"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">⚖️ 3. 법적 근거 스타일 테스트</h2>
+        <div class="input-section">
+            <h4>법적 근거 데이터:</h4>
+            <textarea id="legal-basis-input">「민원 처리에 관한 법률」
+법 제1조: 목적
+법 제2조 1호: 민원 정의
+법 제4조: 민원처리 담당자 의무와 보호
+법 제6조: 민원처리 원칙</textarea>
+        </div>
+        
+        <div class="test-buttons">
+            <button class="test-btn" onclick="testLegalBasisStyle()">법적 근거 스타일 적용</button>
+        </div>
+        
+        <div class="output-section">
+            <h4>출력 결과:</h4>
+            <div id="legal-basis-output" class="output-area"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">📄 4. 산출물 스타일 테스트</h2>
+        <div class="input-section">
+            <h4>산출물 데이터:</h4>
+            <textarea id="outputs-input">민원신청서(우편, 팩스, 국민신문고 등)
+민원처리부
+민원 접수증
+위임장
+보완요구서 및 반려통보서</textarea>
+        </div>
+        
+        <div class="test-buttons">
+            <button class="test-btn" onclick="testOutputsStyle()">산출물 스타일 적용</button>
+        </div>
+        
+        <div class="output-section">
+            <h4>출력 결과:</h4>
+            <div id="outputs-output" class="output-area"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2 class="test-title">📚 5. 참고자료 스타일 테스트</h2>
+        <div class="input-section">
+            <h4>참고자료 데이터:</h4>
+            <textarea id="references-input">2022년 공직자 민원응대 매뉴얼 - 민원응대 관련 기본원칙: p.6-7
+민원 처리에 관한 법률(시행 2022. 07. 12.) - 민원 처리 담당자의 의무와 보호: 제4조, p.2
+민원 처리에 관한 법률 시행규칙(시행 2024. 09. 06.) - 민원문서의 표시: 제2조, p.1
+2025년 민원편람 - 민원 처리 절차: p.3-5</textarea>
+        </div>
+        
+        <div class="test-buttons">
+            <button class="test-btn" onclick="testReferencesStyle()">참고자료 스타일 적용</button>
+        </div>
+        
+        <div class="output-section">
+            <h4>출력 결과:</h4>
+            <div id="references-output" class="output-area"></div>
+        </div>
+    </div>
+    
+    <!-- Utils 및 Content Renderer 스크립트 로드 -->
+    <script src="js/logger.js"></script>
+    <script src="js/utils.js"></script>
+    
+    <script>
+        // 테스트 함수들
+        function testBasicConversion() {
+            const input = document.getElementById('basic-input').value;
+            const output = Utils.convertNewlinesToBr(input);
+            document.getElementById('basic-output').innerHTML = 
+                `<strong>입력:</strong><br><pre>${input}</pre><br><strong>변환 결과:</strong><br>${output}`;
+        }
+        
+        function testListConversion() {
+            const input = document.getElementById('basic-input').value;
+            const output = Utils.renderMultilineAsList(input, 'ul', '📋');
+            document.getElementById('basic-output').innerHTML = 
+                `<strong>리스트 변환:</strong><br>${output}`;
+        }
+        
+        function testCardConversion() {
+            const input = document.getElementById('basic-input').value;
+            const output = Utils.renderMultilineAsCards(input);
+            document.getElementById('basic-output').innerHTML = 
+                `<strong>카드 변환:</strong><br><div class="main-content-list">${output}</div>`;
+        }
+        
+        function testMainContentStyle() {
+            const input = document.getElementById('main-content-input').value;
+            const output = Utils.renderMultilineAsCards(input);
+            document.getElementById('main-content-output').innerHTML = 
+                `<div class="process-main-content">
+                    <h3>🎯 주요 업무 내용</h3>
+                    <div class="main-content-list">${output}</div>
+                </div>`;
+        }
+        
+        function testLegalBasisStyle() {
+            const input = document.getElementById('legal-basis-input').value;
+            const output = Utils.renderMultilineAsList(input, 'ul', '⚖️');
+            document.getElementById('legal-basis-output').innerHTML = 
+                `<div class="process-legal">
+                    <h3>⚖️ 법적 근거</h3>
+                    <div class="legal-content">${output}</div>
+                </div>`;
+        }
+        
+        function testOutputsStyle() {
+            const input = document.getElementById('outputs-input').value;
+            const output = Utils.renderMultilineAsList(input, 'ul', '📝');
+            document.getElementById('outputs-output').innerHTML = 
+                `<div class="process-outputs">
+                    <h3>📄 산출물 및 결과</h3>
+                    <div class="outputs-content">${output}</div>
+                </div>`;
+        }
+        
+        function testReferencesStyle() {
+            const input = document.getElementById('references-input').value;
+            // 참고자료는 기본 텍스트 스타일 적용
+            const items = Utils.processMultilineData(input);
+            const output = items.map(ref => `
+                <div class="reference-item basic">
+                    <div class="reference-header">
+                        <span class="reference-icon">📄</span>
+                        <span class="reference-type">문서</span>
+                    </div>
+                    <div class="reference-text">
+                        ${Utils.convertNewlinesToBr(ref)}
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('references-output').innerHTML = 
+                `<div class="process-references">
+                    <h3>📚 참고자료 및 관련 문서</h3>
+                    <div class="references-enhanced">${output}</div>
+                </div>`;
+        }
+        
+        // 페이지 로드 시 CSS 추가
+        document.addEventListener('DOMContentLoaded', function() {
+            // Content Renderer의 스타일을 동적으로 추가
+            const style = document.createElement('style');
+            style.textContent = \`
+                /* Content Renderer 스타일 복사 */
+                .process-main-content {
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    padding: 1.5rem;
+                    border-radius: 6px;
+                    border-left: 4px solid #007bff;
+                    margin-bottom: 1.5rem;
+                }
+                
+                .main-content-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+                
+                .multiline-card-item {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 1rem;
+                    padding: 1rem;
+                    background: white;
+                    border: 1px solid #e9ecef;
+                    border-radius: 8px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+                
+                .card-number {
+                    background: linear-gradient(135deg, #007bff, #0056b3);
+                    color: white;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    font-size: 0.9rem;
+                    flex-shrink: 0;
+                }
+                
+                .card-content {
+                    flex: 1;
+                }
+                
+                .card-text {
+                    color: #495057;
+                    line-height: 1.6;
+                }
+                
+                .multiline-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+                
+                .multiline-list li {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 0.75rem;
+                    padding: 0.75rem;
+                    margin-bottom: 0.5rem;
+                    background: white;
+                    border: 1px solid #e9ecef;
+                    border-radius: 6px;
+                }
+                
+                .list-icon {
+                    font-size: 1rem;
+                    flex-shrink: 0;
+                }
+                
+                .process-legal, .process-outputs, .process-references {
+                    background: #f8f9fa;
+                    padding: 1rem;
+                    border-radius: 6px;
+                    border-left: 4px solid #28a745;
+                }
+                
+                .reference-item {
+                    background: white;
+                    border-radius: 8px;
+                    padding: 1rem;
+                    border: 1px solid #e9ecef;
+                    margin-bottom: 1rem;
+                }
+                
+                .reference-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin-bottom: 0.75rem;
+                }
+                
+                .reference-icon {
+                    font-size: 1.2rem;
+                }
+                
+                .reference-type {
+                    font-size: 0.85rem;
+                    color: #6c757d;
+                    background: #f8f9fa;
+                    padding: 0.2rem 0.6rem;
+                    border-radius: 12px;
+                }
+                
+                .reference-text {
+                    color: #495057;
+                    line-height: 1.6;
+                }
+            \`;
+            document.head.appendChild(style);
+            
+            // 초기 테스트 실행
+            testBasicConversion();
+        });
+    </script>
+</body>
+</html>

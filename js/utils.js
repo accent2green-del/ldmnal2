@@ -312,6 +312,81 @@ class Utils {
     }
 
     /**
+     * 텍스트의 줄바꿈(\n)을 HTML <br> 태그로 변환
+     */
+    static convertNewlinesToBr(text) {
+        if (!text || typeof text !== 'string') return '';
+        return Utils.escapeHtml(text).replace(/\n/g, '<br>');
+    }
+
+    /**
+     * 텍스트를 줄바꿈 기준으로 분할하여 배열로 반환
+     */
+    static splitByNewlines(text) {
+        if (!text || typeof text !== 'string') return [];
+        return text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+    }
+
+    /**
+     * 데이터가 배열인지 줄바꿈 구분 문자열인지 자동 감지하여 처리
+     */
+    static processMultilineData(data) {
+        if (!data) return [];
+        
+        if (Array.isArray(data)) {
+            // 이미 배열인 경우 그대로 반환
+            return data.filter(item => item && typeof item === 'string' && item.trim());
+        }
+        
+        if (typeof data === 'string') {
+            // 문자열인 경우 줄바꿈으로 분할
+            return Utils.splitByNewlines(data);
+        }
+        
+        return [];
+    }
+
+    /**
+     * 멀티라인 데이터를 HTML 리스트로 렌더링
+     */
+    static renderMultilineAsList(data, listType = 'ul', itemIcon = null) {
+        const items = Utils.processMultilineData(data);
+        
+        if (items.length === 0) return '<div class="no-data">데이터가 없습니다.</div>';
+        
+        const listItems = items.map(item => {
+            const icon = itemIcon ? `<span class="list-icon">${itemIcon}</span>` : '';
+            return `<li>${icon}${Utils.escapeHtml(item)}</li>`;
+        }).join('');
+        
+        return `<${listType} class="multiline-list">${listItems}</${listType}>`;
+    }
+
+    /**
+     * 멀티라인 데이터를 HTML 카드 형태로 렌더링
+     */
+    static renderMultilineAsCards(data, cardIcon = null) {
+        const items = Utils.processMultilineData(data);
+        
+        if (items.length === 0) return '<div class="no-data">데이터가 없습니다.</div>';
+        
+        return items.map((item, index) => {
+            const icon = cardIcon ? `<span class="card-icon">${cardIcon}</span>` : '';
+            return `
+                <div class="multiline-card-item">
+                    <div class="card-number">${index + 1}</div>
+                    <div class="card-content">
+                        ${icon}
+                        <span class="card-text">${Utils.escapeHtml(item)}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
      * 모바일 디바이스 감지
      */
     static isMobile() {

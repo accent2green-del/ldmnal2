@@ -161,7 +161,17 @@ class ContentRenderer {
                 
                 <div class="department-description">
                     <h3>부서 개요</h3>
-                    <p>${Utils.escapeHtml(department.description || '부서 설명이 없습니다.')}</p>
+                    <div class="description-content">
+                        ${Utils.convertNewlinesToBr(department.description || '부서 설명이 없습니다.')}
+                    </div>
+                    ${department.businessDefinition ? `
+                        <div class="business-definition">
+                            <h4>📋 상세 업무정의</h4>
+                            <div class="definition-content">
+                                ${Utils.convertNewlinesToBr(department.businessDefinition)}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
                 
                 ${allLegalBasis.length > 0 ? `
@@ -252,7 +262,17 @@ class ContentRenderer {
                 
                 <div class="category-description">
                     <h3>카테고리 개요</h3>
-                    <p>${Utils.escapeHtml(category.description || '카테고리 설명이 없습니다.')}</p>
+                    <div class="description-content">
+                        ${Utils.convertNewlinesToBr(category.description || '카테고리 설명이 없습니다.')}
+                    </div>
+                    ${category.businessDefinition ? `
+                        <div class="business-definition">
+                            <h4>📋 상세 업무정의</h4>
+                            <div class="definition-content">
+                                ${Utils.convertNewlinesToBr(category.businessDefinition)}
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
                 
                 ${allLegalBasis.length > 0 ? `
@@ -333,38 +353,33 @@ class ContentRenderer {
                 
                 <div class="process-description mb-3">
                     <h3>📋 업무 개요</h3>
-                    <p>${Utils.escapeHtml(process.description)}</p>
+                    <div class="description-content">${Utils.convertNewlinesToBr(process.description)}</div>
                 </div>
                 
-                ${process.mainContent && process.mainContent.length > 0 ? `
+                ${(process.mainContent && process.mainContent.length > 0) || (typeof process.mainContent === 'string' && process.mainContent.trim()) ? `
                     <div class="process-main-content mb-3">
                         <h3>🎯 주요 업무 내용</h3>
                         <div class="main-content-list">
-                            ${process.mainContent.map((content, index) => `
-                                <div class="main-content-item">
-                                    <div class="content-number">${index + 1}</div>
-                                    <div class="content-text">${Utils.escapeHtml(content)}</div>
-                                </div>
-                            `).join('')}
+                            ${Utils.renderMultilineAsCards(process.mainContent)}
                         </div>
                     </div>
                 ` : ''}
                 
-                ${process.legalBasis && process.legalBasis.length > 0 ? `
+                ${(process.legalBasis && process.legalBasis.length > 0) || (typeof process.legalBasis === 'string' && process.legalBasis.trim()) ? `
                     <div class="process-legal mb-3">
                         <h3>⚖️ 법적 근거</h3>
-                        <ul class="legal-list">
-                            ${process.legalBasis.map(legal => `<li>${Utils.escapeHtml(legal)}</li>`).join('')}
-                        </ul>
+                        <div class="legal-content">
+                            ${Utils.renderMultilineAsList(process.legalBasis, 'ul', '⚖️')}
+                        </div>
                     </div>
                 ` : ''}
                 
-                ${process.outputs && process.outputs.length > 0 ? `
+                ${(process.outputs && process.outputs.length > 0) || (typeof process.outputs === 'string' && process.outputs.trim()) ? `
                     <div class="process-outputs mb-3">
                         <h3>📄 산출물 및 결과</h3>
-                        <ul class="outputs-list">
-                            ${process.outputs.map(output => `<li><span class="output-icon">📝</span>${Utils.escapeHtml(output)}</li>`).join('')}
-                        </ul>
+                        <div class="outputs-content">
+                            ${Utils.renderMultilineAsList(process.outputs, 'ul', '📝')}
+                        </div>
                     </div>
                 ` : ''}
                 
@@ -446,7 +461,7 @@ class ContentRenderer {
                     <h4>${Utils.escapeHtml(process.title)}</h4>
                 </div>
                 <div class="card-body">
-                    <p>${Utils.escapeHtml(process.description)}</p>
+                    <div class="card-description">${Utils.convertNewlinesToBr(process.description)}</div>
                     <div class="card-meta">
                         <span><span class="icon icon-list"></span> ${stepsCount}개 단계</span>
                         <span><span class="icon icon-calendar"></span> ${Utils.formatDate(process.updatedAt)}</span>
@@ -475,8 +490,16 @@ class ContentRenderer {
                     <div class="step-title">${Utils.escapeHtml(step.title)}</div>
                 </div>
                 <div class="step-description">
-                    <p><strong>개요:</strong> ${Utils.escapeHtml(step.description)}</p>
-                    ${step.details ? `<p><strong>세부사항:</strong> ${Utils.escapeHtml(step.details)}</p>` : ''}
+                    <div class="step-overview">
+                        <strong>개요:</strong> 
+                        <div class="step-content">${Utils.convertNewlinesToBr(step.description)}</div>
+                    </div>
+                    ${step.details ? `
+                        <div class="step-details">
+                            <strong>세부사항:</strong> 
+                            <div class="step-content">${Utils.convertNewlinesToBr(step.details)}</div>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -658,8 +681,8 @@ class ContentRenderer {
                     </div>
                     <div class="reference-text">
                         ${reference.isUrl ? 
-                            `<a href="${reference.text}" target="_blank" class="reference-link">${Utils.escapeHtml(reference.text)}</a>` :
-                            Utils.escapeHtml(reference.text)
+                            `<a href="${reference.text}" target="_blank" class="reference-link">${Utils.convertNewlinesToBr(reference.text)}</a>` :
+                            Utils.convertNewlinesToBr(reference.text)
                         }
                     </div>
                     ${reference.sections && reference.sections.length > 0 ? `
@@ -687,8 +710,8 @@ class ContentRenderer {
                     </div>
                     <div class="reference-text">
                         ${isUrl ? 
-                            `<a href="${referenceText}" target="_blank" class="reference-link">${Utils.escapeHtml(referenceText)}</a>` :
-                            Utils.escapeHtml(referenceText)
+                            `<a href="${referenceText}" target="_blank" class="reference-link">${Utils.convertNewlinesToBr(referenceText)}</a>` :
+                            Utils.convertNewlinesToBr(referenceText)
                         }
                     </div>
                 </div>
@@ -752,7 +775,7 @@ class ContentRenderer {
                     <span class="process-count">${processCount}</span>
                 </div>
                 <div class="summary-description">
-                    <p>${Utils.escapeHtml((category.description || '').substring(0, 100))}${(category.description || '').length > 100 ? '...' : ''}</p>
+                    <div class="summary-text">${Utils.convertNewlinesToBr((category.description || '').substring(0, 100))}${(category.description || '').length > 100 ? '...' : ''}</div>
                 </div>
                 <div class="summary-footer">
                     <span class="view-details">자세히 보기 →</span>
@@ -775,7 +798,7 @@ class ContentRenderer {
                     <span class="steps-count">${stepsCount} 단계</span>
                 </div>
                 <div class="summary-description">
-                    <p>${Utils.escapeHtml((process.description || '').substring(0, 120))}${(process.description || '').length > 120 ? '...' : ''}</p>
+                    <div class="summary-text">${Utils.convertNewlinesToBr((process.description || '').substring(0, 120))}${(process.description || '').length > 120 ? '...' : ''}</div>
                 </div>
                 <div class="summary-meta">
                     <span><span class="icon icon-calendar"></span> ${Utils.formatDate(process.updatedAt)}</span>
@@ -907,8 +930,131 @@ class ContentRenderer {
     }
 }
 
-// CSS 추가 스타일 (개선된 UI 스타일)
+// CSS 추가 스타일 (개선된 UI 스타일 + 멀티라인 지원)
 const additionalStyles = `
+    /* 멀티라인 데이터 표시 개선 */
+    .description-content, 
+    .definition-content, 
+    .step-content {
+        line-height: 1.7;
+        color: var(--text-secondary);
+    }
+    
+    .business-definition {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-left: 4px solid #6c757d;
+        border-radius: 4px;
+    }
+    
+    .business-definition h4 {
+        margin: 0 0 0.75rem 0;
+        color: #495057;
+        font-size: 1rem;
+    }
+    
+    /* 멀티라인 리스트 스타일 */
+    .multiline-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .multiline-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    
+    .multiline-list li:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-color: #007bff;
+    }
+    
+    .list-icon {
+        font-size: 1rem;
+        flex-shrink: 0;
+        margin-top: 0.1rem;
+    }
+    
+    /* 멀티라인 카드 스타일 */
+    .multiline-card-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .multiline-card-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: #007bff;
+        transform: translateY(-1px);
+    }
+    
+    .card-number {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+    }
+    
+    .card-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        flex: 1;
+    }
+    
+    .card-icon {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        margin-top: 0.1rem;
+    }
+    
+    .card-text {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        flex: 1;
+    }
+    
+    /* 프로세스 단계 개선 */
+    .step-overview, 
+    .step-details {
+        margin-bottom: 0.75rem;
+    }
+    
+    .step-overview strong, 
+    .step-details strong {
+        color: var(--text-primary);
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .step-content {
+        padding-left: 1rem;
+        border-left: 2px solid #e9ecef;
+    }
     /* 주요 업무 내용 스타일 */
     .process-main-content {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
