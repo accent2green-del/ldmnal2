@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>산출물 첨부파일 표시 테스트</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .test-title {
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 6px 6px 0 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .comparison {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .comparison-column {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        
+        .comparison-column h4 {
+            margin-top: 0;
+            text-align: center;
+        }
+        
+        .before {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        
+        .after {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .sample-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 산출물 첨부파일 표시 테스트</h1>
+        <p>산출물에 첨부된 파일이 상세정보창에서 올바르게 표시되는지 확인합니다.</p>
+        
+        <!-- 테스트 1: 문제 분석 -->
+        <div class="test-section">
+            <div class="test-title">❌ 문제 상황: 산출물 첨부파일이 조회되지 않음</div>
+            
+            <div class="comparison">
+                <div class="comparison-column before">
+                    <h4>🚫 이전 상태 (문제)</h4>
+                    <p><code>renderItemList(process.outputs, '📝')</code></p>
+                    <p>세 번째 매개변수 <code>withAttachment</code>가 <code>false</code> (기본값)</p>
+                    <p>→ 산출물에 첨부파일이 있어도 표시되지 않음</p>
+                </div>
+                <div class="comparison-column after">
+                    <h4>✅ 수정 후 (해결)</h4>
+                    <p><code>renderItemList(process.outputs, '📝', true)</code></p>
+                    <p>세 번째 매개변수 <code>withAttachment</code>를 <code>true</code>로 설정</p>
+                    <p>→ 산출물 첨부파일이 정상 표시됨</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 테스트 2: 실제 렌더링 테스트 -->
+        <div class="test-section">
+            <div class="test-title">🧪 실제 렌더링 테스트</div>
+            
+            <div class="sample-data">
+                <h4>샘플 데이터:</h4>
+                <pre id="sample-data-display">로딩 중...</pre>
+            </div>
+            
+            <h4>📄 산출물 표시 (첨부파일 포함):</h4>
+            <div id="outputs-with-attachments" class="detail-item-list">
+                로딩 중...
+            </div>
+            
+            <h4>📚 참고자료 표시 (비교용):</h4>
+            <div id="references-with-attachments" class="detail-item-list">
+                로딩 중...
+            </div>
+        </div>
+        
+        <!-- 테스트 3: 다운로드 기능 테스트 -->
+        <div class="test-section">
+            <div class="test-title">💾 다운로드 기능 테스트</div>
+            
+            <p>위에 표시된 첨부파일 링크를 클릭하여 다운로드가 정상 작동하는지 확인하세요.</p>
+            
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 6px; margin: 15px 0;">
+                <strong>✅ 테스트 체크리스트:</strong>
+                <ul>
+                    <li>산출물에 첨부파일 링크가 표시되는가?</li>
+                    <li>첨부파일 이름과 크기가 올바르게 표시되는가?</li>
+                    <li>첨부파일 링크 클릭 시 다운로드가 시작되는가?</li>
+                    <li>다운로드된 파일의 내용이 올바른가?</li>
+                    <li>참고자료와 동일한 방식으로 표시되는가?</li>
+                </ul>
+            </div>
+            
+            <div id="test-results" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                <h4>테스트 결과:</h4>
+                <p>콘솔을 확인하여 다운로드 시도 로그를 확인하세요.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/content-renderer.js"></script>
+    <script>
+        // 페이지 로드 시 테스트 데이터 생성
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📎 산출물 첨부파일 표시 테스트 시작');
+            
+            // 샘플 데이터 생성 (첨부파일 포함)
+            const sampleOutputs = [
+                {
+                    text: "민원신청서 양식",
+                    attachment: {
+                        name: "민원신청서.pdf",
+                        type: "application/pdf",
+                        size: 2048,
+                        lastModified: Date.now(),
+                        data: "data:application/pdf;base64," + btoa("샘플 PDF 내용")
+                    }
+                },
+                {
+                    text: "처리 결과 보고서",
+                    attachment: {
+                        name: "처리결과.docx",
+                        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        size: 4096,
+                        lastModified: Date.now(),
+                        data: "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," + btoa("샘플 문서 내용")
+                    }
+                },
+                {
+                    text: "승인 완료 통지서",
+                    attachment: null // 첨부파일 없는 경우
+                }
+            ];
+            
+            const sampleReferences = [
+                {
+                    text: "관련 법령집",
+                    attachment: {
+                        name: "관련법령.pdf",
+                        type: "application/pdf",
+                        size: 1536,
+                        lastModified: Date.now(),
+                        data: "data:application/pdf;base64," + btoa("샘플 법령집 내용")
+                    }
+                },
+                {
+                    text: "업무 처리 가이드",
+                    attachment: null
+                }
+            ];
+            
+            // 샘플 데이터 표시
+            document.getElementById('sample-data-display').textContent = JSON.stringify({
+                outputs: sampleOutputs,
+                references: sampleReferences
+            }, null, 2);
+            
+            // ContentRenderer 인스턴스가 로드된 후 테스트
+            setTimeout(() => {
+                if (window.contentRenderer) {
+                    // 산출물 렌더링 (첨부파일 포함)
+                    const outputsHtml = contentRenderer.renderItemList(sampleOutputs, '📝', true);
+                    document.getElementById('outputs-with-attachments').innerHTML = outputsHtml;
+                    
+                    // 참고자료 렌더링 (비교용)
+                    const referencesHtml = contentRenderer.renderItemList(sampleReferences, '📚', true);
+                    document.getElementById('references-with-attachments').innerHTML = referencesHtml;
+                    
+                    console.log('✅ 렌더링 완료');
+                    console.log('산출물 HTML:', outputsHtml);
+                    console.log('참고자료 HTML:', referencesHtml);
+                } else {
+                    console.error('❌ ContentRenderer를 찾을 수 없습니다.');
+                    document.getElementById('outputs-with-attachments').innerHTML = '<p style="color: red;">ContentRenderer 로드 실패</p>';
+                }
+            }, 500);
+            
+            // 다운로드 테스트 로그
+            let downloadAttempts = 0;
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('attachment-download-link')) {
+                    downloadAttempts++;
+                    const filename = e.target.getAttribute('data-attachment-name');
+                    
+                    const resultsDiv = document.getElementById('test-results');
+                    resultsDiv.innerHTML += `
+                        <div style="margin: 10px 0; padding: 10px; background: #d4edda; border-radius: 4px;">
+                            <strong>[${new Date().toLocaleTimeString()}] 다운로드 시도 #${downloadAttempts}</strong><br>
+                            파일명: ${filename}
+                        </div>
+                    `;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

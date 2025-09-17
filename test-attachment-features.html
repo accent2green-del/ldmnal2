@@ -319,7 +319,7 @@
         function updateAttachmentDisplayDemo() {
             // 산출물 표시 예시 (content-renderer 방식 사용)
             const outputsItems = outputsAttachmentManager ? outputsAttachmentManager.getItems() : [];
-            const outputsHtml = renderItemList(outputsItems, '📝', false);
+            const outputsHtml = renderItemList(outputsItems, '📝', true);
             document.getElementById('outputs-display-attachment-demo').innerHTML = `<div class="detail-item-list">${outputsHtml}</div>`;
             
             // 참고자료 표시 예시 (첨부파일 포함)
@@ -349,7 +349,9 @@
                         </div>
                         ${withAttachment && hasAttachment ? `
                             <div class="item-attachment">
-                                <a href="#" onclick="downloadAttachment('${Utils.escapeHtml(attachment.name)}', '${attachment.data}')" 
+                                <a href="#" data-attachment-name="${Utils.escapeHtml(attachment.name)}" 
+                               data-attachment-data="${attachment.data}" 
+                               class="attachment-download-link" 
                                    title="다운로드: ${Utils.escapeHtml(attachment.name)} (${Utils.formatFileSize(attachment.size)})">
                                     📎 ${Utils.escapeHtml(attachment.name)}
                                 </a>
@@ -365,17 +367,28 @@
             }).join('');
         }
         
-        // 첨부파일 다운로드 (테스트용)
-        function downloadAttachment(filename, base64Data) {
-            console.log(`첨부파일 다운로드 시도: ${filename}`);
-            
-            const success = Utils.downloadBase64File(base64Data, filename);
-            if (success) {
-                alert(`파일 다운로드 완료: ${filename}`);
-            } else {
-                alert(`파일 다운로드 실패: ${filename}`);
+        // 첨부파일 다운로드 (이벤트 델리게이션 사용)
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('attachment-download-link')) {
+                e.preventDefault();
+                
+                const filename = e.target.getAttribute('data-attachment-name');
+                const base64Data = e.target.getAttribute('data-attachment-data');
+                
+                if (filename && base64Data) {
+                    console.log(`첨부파일 다운로드 시도: ${filename}`);
+                    
+                    const success = Utils.downloadBase64File(base64Data, filename);
+                    if (success) {
+                        alert(`파일 다운로드 완료: ${filename}`);
+                    } else {
+                        alert(`파일 다운로드 실패: ${filename}`);
+                    }
+                } else {
+                    alert('첨부파일 정보를 찾을 수 없습니다.');
+                }
             }
-        }
+        });
         
         // 호환성 테스트
         function testAttachmentCompatibility() {
@@ -478,7 +491,9 @@
                     <h5>📎 ${type} 시뮬레이션 완료</h5>
                     <p><strong>파일명:</strong> ${filename}</p>
                     <p><strong>크기:</strong> ${Utils.formatFileSize(size)}</p>
-                    <button class="btn" onclick="downloadAttachment('${filename}', '${data}')">
+                    <button class="btn attachment-download-link" 
+                            data-attachment-name="${filename}" 
+                            data-attachment-data="${data}">
                         📥 다운로드 테스트
                     </button>
                 </div>

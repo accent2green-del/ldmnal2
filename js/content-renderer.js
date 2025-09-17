@@ -378,7 +378,7 @@ class ContentRenderer {
                     <div class="process-outputs mb-3">
                         <h3>📄 산출물 및 결과</h3>
                         <div class="outputs-content detail-item-list">
-                            ${this.renderItemList(process.outputs, '📝')}
+                            ${this.renderItemList(process.outputs, '📝', true)}
                         </div>
                     </div>
                 ` : ''}
@@ -676,7 +676,9 @@ class ContentRenderer {
                     </div>
                     ${withAttachment && hasAttachment ? `
                         <div class="item-attachment">
-                            <a href="#" onclick="contentRenderer.downloadAttachment(${index}, '${Utils.escapeHtml(attachment.name)}', '${attachment.data}')" 
+                            <a href="#" data-attachment-name="${Utils.escapeHtml(attachment.name)}" 
+                               data-attachment-data="${attachment.data}" 
+                               class="attachment-download-link"
                                title="다운로드: ${Utils.escapeHtml(attachment.name)} (${Utils.formatFileSize(attachment.size)})">
                                 📎 ${Utils.escapeHtml(attachment.name)}
                             </a>
@@ -693,7 +695,7 @@ class ContentRenderer {
     }
 
     /**
-     * 첨부파일 다운로드
+     * 첨부파일 다운로드 (이벤트 델리게이션용)
      */
     downloadAttachment(index, filename, base64Data) {
         console.log(`첨부파일 다운로드 시도: ${filename}`);
@@ -706,6 +708,28 @@ class ContentRenderer {
             Utils.showNotification(`파일 다운로드 실패: ${filename}`, 'error');
             Logger.error(`❌ 첨부파일 다운로드 실패: ${filename}`);
         }
+    }
+
+    /**
+     * 첨부파일 다운로드 이벤트 초기화
+     */
+    initializeAttachmentDownloads() {
+        // 이벤트 델리게이션을 사용하여 동적으로 생성된 링크 처리
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('attachment-download-link')) {
+                e.preventDefault();
+                
+                const filename = e.target.getAttribute('data-attachment-name');
+                const base64Data = e.target.getAttribute('data-attachment-data');
+                
+                if (filename && base64Data) {
+                    this.downloadAttachment(0, filename, base64Data);
+                } else {
+                    console.error('첨부파일 정보가 없습니다.');
+                    Utils.showNotification('첨부파일 정보를 찾을 수 없습니다.', 'error');
+                }
+            }
+        });
     }
 
     /**
@@ -1475,6 +1499,10 @@ document.head.appendChild(styleSheet);
 // 전역 인스턴스 생성
 try {
     window.contentRenderer = new ContentRenderer();
+    
+    // 첨부파일 다운로드 이벤트 초기화
+    window.contentRenderer.initializeAttachmentDownloads();
+    
     Logger.info('🎨 ContentRenderer 전역 인스턴스 생성 완료');
 } catch (error) {
     Logger.error('❌ ContentRenderer 전역 인스턴스 생성 실패:', error);

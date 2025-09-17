@@ -262,7 +262,7 @@
         function updateDisplayDemo() {
             // 산출물 표시 예시
             const outputsItems = outputsManager ? outputsManager.getItems() : [];
-            const outputsHtml = outputsItems.length > 0 ? renderItemList(outputsItems, '📝', false) : '<div class="no-data">등록된 산출물이 없습니다.</div>';
+            const outputsHtml = outputsItems.length > 0 ? renderItemList(outputsItems, '📝', true) : '<div class="no-data">등록된 산출물이 없습니다.</div>';
             document.getElementById('outputs-display-demo').innerHTML = `<div class="detail-item-list">${outputsHtml}</div>`;
             
             // 참고자료 표시 예시
@@ -292,7 +292,9 @@
                         </div>
                         ${withAttachment && hasAttachment ? `
                             <div class="item-attachment">
-                                <a href="#" onclick="downloadTestAttachment('${Utils.escapeHtml(attachment.name)}', '${attachment.data}')" 
+                                <a href="#" data-attachment-name="${Utils.escapeHtml(attachment.name)}" 
+                               data-attachment-data="${attachment.data}" 
+                               class="attachment-download-link" 
                                    title="다운로드: ${Utils.escapeHtml(attachment.name)} (${Utils.formatFileSize(attachment.size)})">
                                     📎 ${Utils.escapeHtml(attachment.name)}
                                 </a>
@@ -308,17 +310,28 @@
             }).join('');
         }
         
-        // 테스트용 첨부파일 다운로드
-        function downloadTestAttachment(filename, base64Data) {
-            console.log(`테스트 첨부파일 다운로드: ${filename}`);
-            
-            const success = Utils.downloadBase64File(base64Data, filename);
-            if (success) {
-                alert(`파일 다운로드 완료: ${filename}`);
-            } else {
-                alert(`파일 다운로드 실패: ${filename}`);
+        // 테스트용 첨부파일 다운로드 (이벤트 델리게이션 사용)
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('attachment-download-link')) {
+                e.preventDefault();
+                
+                const filename = e.target.getAttribute('data-attachment-name');
+                const base64Data = e.target.getAttribute('data-attachment-data');
+                
+                if (filename && base64Data) {
+                    console.log(`테스트 첨부파일 다운로드: ${filename}`);
+                    
+                    const success = Utils.downloadBase64File(base64Data, filename);
+                    if (success) {
+                        alert(`파일 다운로드 완료: ${filename}`);
+                    } else {
+                        alert(`파일 다운로드 실패: ${filename}`);
+                    }
+                } else {
+                    alert('첨부파일 정보를 찾을 수 없습니다.');
+                }
             }
-        }
+        });
         
         // 호환성 테스트
         function testCompatibility() {
