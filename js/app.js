@@ -34,6 +34,9 @@ class Application {
             // 로딩 표시
             this.showGlobalLoading('애플리케이션 로딩 중...');
             
+            // 모듈들이 완전히 로드될 때까지 대기
+            await this.waitForModules();
+            
             // 모듈 참조 저장
             this.modules = {
                 dataManager: window.dataManager,
@@ -65,6 +68,19 @@ class Application {
             
             Logger.info('✅ 애플리케이션 초기화 완료');
             
+            // 다중 단계 보장 - 로딩 화면이 여전히 표시되는 경우를 위한 강력한 해결책
+            setTimeout(() => {
+                this.forceHideAllLoading();
+            }, 500);
+            
+            setTimeout(() => {
+                this.forceHideAllLoading();
+            }, 2000);
+            
+            setTimeout(() => {
+                this.forceHideAllLoading();
+            }, 5000);
+            
             // 초기화 완료 이벤트 발생
             EventEmitter.emit('app:initialized');
             
@@ -73,10 +89,123 @@ class Application {
             
         } catch (error) {
             Logger.error('❌ 애플리케이션 초기화 실패:', error);
+            
+            // 모듈 로딩 실패인 경우 재시도
+            if (error.message.includes('필수 모듈이 없습니다')) {
+                Logger.warn('🔄 모듈 로딩 실패로 인한 재시도 시작...');
+                setTimeout(() => {
+                    this.initialize();
+                }, 1000);
+                return;
+            }
+            
             this.handleInitializationError(error);
         }
     }
     
+    /**
+     * 모듈들이 로드될 때까지 대기
+     */
+    async waitForModules(maxAttempts = 100, interval = 100) {
+        Logger.info('🔍 필수 모듈 대기 시작...');
+        
+        const requiredModules = [
+            { name: 'Utils', obj: 'Utils' },
+            { name: 'Logger', obj: 'Logger' },
+            { name: 'EventEmitter', obj: 'EventEmitter' },
+            { name: 'AppConfig', obj: 'AppConfig' },
+            { name: 'dataManager', obj: 'dataManager' },
+            { name: 'navigationManager', obj: 'navigationManager' },
+            { name: 'contentRenderer', obj: 'contentRenderer' },
+            { name: 'adminManager', obj: 'adminManager' },
+            { name: 'searchManager', obj: 'searchManager' }
+        ];
+        
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            const missingModules = requiredModules.filter(module => !window[module.obj]);
+            
+            if (missingModules.length === 0) {
+                Logger.info(`✅ 모든 모듈이 ${attempt}번째 시도에서 로드됨`);
+                
+                // 각 모듈이 제대로 초기화되었는지 확인
+                let allInitialized = true;
+                const initStatus = [];
+                
+                if (window.dataManager) {
+                    const dmInitialized = window.dataManager.initialized !== false;
+                    initStatus.push(`DataManager: ${dmInitialized ? '초기화됨' : '초기화 대기중'}`);
+                    if (!dmInitialized) allInitialized = false;
+                }
+                
+                if (window.adminManager) {
+                    const amReady = typeof window.adminManager.showLoginModal === 'function';
+                    initStatus.push(`AdminManager: ${amReady ? '준비됨' : '준비 중'}`);
+                    if (!amReady) allInitialized = false;
+                }
+                
+                Logger.info('모듈 상태:', initStatus.join(', '));
+                
+                if (!allInitialized && attempt < maxAttempts - 20) {
+                    Logger.warn(`일부 모듈이 아직 초기화되지 않음, 계속 대기... (${attempt}/${maxAttempts})`);
+                    await new Promise(resolve => setTimeout(resolve, interval));
+                    continue;
+                }
+                
+                return;
+            }
+            
+            if (attempt === maxAttempts) {
+                Logger.error(`❌ 필수 모듈 로드 실패: ${missingModules.map(m => m.name).join(', ')} (${maxAttempts}회 시도 후 실패)`);
+                
+                // 부분적 초기화라도 시도
+                Logger.warn('🔄 부분적 초기화 시도...');
+                this.attemptPartialInitialization(missingModules.map(m => m.name));
+                return;
+            }
+            
+            if (attempt % 10 === 0) {
+                Logger.warn(`⏳ 모듈 대기 중... (${attempt}/${maxAttempts}) - 누락: ${missingModules.map(m => m.name).join(', ')}`);
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, interval));
+        }
+    }
+    
+    /**
+     * 부분적 초기화 시도
+     */
+    attemptPartialInitialization(missingModules) {
+        Logger.warn('⚠️ 부분적 초기화 모드로 진행');
+        
+        // 필수 모듈만으로도 기본 동작할 수 있도록 설정
+        if (!window.dataManager) {
+            Logger.error('DataManager가 없어서 기본 데이터 매니저 생성');
+            window.dataManager = {
+                initialized: false,
+                data: { departments: [], categories: [], processes: [] },
+                getDataSummary: () => ({ departments: 0, categories: 0, processes: 0 }),
+                getDepartments: () => [],
+                getCategories: () => [],
+                initialize: async () => {
+                    Logger.warn('기본 DataManager 초기화됨');
+                    this.initialized = true;
+                }
+            };
+        }
+        
+        if (!window.adminManager) {
+            Logger.error('AdminManager가 없어서 기본 관리자 매니저 생성');
+            window.adminManager = {
+                isLoggedIn: false,
+                sessionToken: null,
+                showLoginModal: () => alert('관리자 기능을 사용할 수 없습니다. 페이지를 새로고침해 주세요.'),
+                showAdminPanel: () => alert('관리자 패널을 로드할 수 없습니다. 페이지를 새로고침해 주세요.')
+            };
+        }
+        
+        Logger.info('부분적 초기화 완료');
+    }
+
     /**
      * 모듈 검증
      */
@@ -85,7 +214,21 @@ class Application {
         const missingModules = requiredModules.filter(module => !this.modules[module]);
         
         if (missingModules.length > 0) {
-            throw new Error(`필수 모듈이 없습니다: ${missingModules.join(', ')}`);
+            // 한 번 더 window 객체에서 직접 확인
+            const windowMissing = requiredModules.filter(module => !window[module]);
+            if (windowMissing.length > 0) {
+                throw new Error(`필수 모듈이 없습니다: ${windowMissing.join(', ')}`);
+            }
+            
+            // window 객체에서는 있지만 모듈 참조에서 누락된 경우 재할당
+            Logger.warn('모듈 참조 재할당 중...');
+            this.modules = {
+                dataManager: window.dataManager,
+                navigationManager: window.navigationManager,
+                contentRenderer: window.contentRenderer,
+                adminManager: window.adminManager,
+                searchManager: window.searchManager
+            };
         }
         
         Logger.info('✅ 모든 필수 모듈 확인 완료');
@@ -315,18 +458,24 @@ class Application {
      * 사용자 설정 복원
      */
     restoreUserPreferences() {
-        const preferences = Utils.getFromStorage(AppConfig.STORAGE_KEYS.USER_PREFERENCES, {});
-        
-        // 사이드바 상태 복원
-        if (preferences.sidebarCollapsed) {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar) {
-                sidebar.classList.add('collapsed');
-                this.globalState.sidebarCollapsed = true;
+        try {
+            const preferences = Utils.getFromStorage(AppConfig.STORAGE_KEYS.USER_PREFERENCES, {});
+            
+            // 사이드바 상태 복원
+            if (preferences && preferences.sidebarCollapsed) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.add('collapsed');
+                    this.globalState.sidebarCollapsed = true;
+                }
             }
+            
+            Logger.info('🔄 사용자 설정 복원 완료', preferences || {});
+        } catch (error) {
+            Logger.error('사용자 설정 복원 중 오류:', error);
+            // 기본 설정으로 초기화
+            this.globalState.sidebarCollapsed = false;
         }
-        
-        Logger.info('🔄 사용자 설정 복원 완료', preferences);
     }
     
     /**
@@ -490,6 +639,28 @@ class Application {
     handleGlobalError(event) {
         Logger.error('🚨 전역 오류 발생:', event.error);
         
+        // 네트워크 관련 오류나 리소스 로딩 오류 필터링
+        const error = event.error;
+        const errorMessage = error ? error.message : '';
+        
+        // 404, 파비콘, 기타 무시할 수 있는 오류들 필터링
+        const ignorableErrors = [
+            'Failed to load resource',
+            'favicon.ico',
+            'Script error',
+            'Non-Error promise rejection captured'
+        ];
+        
+        const shouldIgnore = ignorableErrors.some(pattern => 
+            errorMessage.includes(pattern) || 
+            (event.filename && event.filename.includes('favicon'))
+        );
+        
+        if (shouldIgnore) {
+            Logger.warn('🔇 무시된 오류:', errorMessage);
+            return;
+        }
+        
         // 사용자에게 친화적인 오류 메시지
         if (!this.globalState.isLoading) {
             Utils.showNotification('예기치 못한 오류가 발생했습니다.', 'error');
@@ -599,7 +770,99 @@ class Application {
         
         const loadingOverlay = document.getElementById('loading-overlay');
         if (loadingOverlay) {
+            // 클래스 제거
             loadingOverlay.classList.remove('show');
+            
+            // 즉시 강제 숨김
+            loadingOverlay.style.display = 'none !important';
+            loadingOverlay.style.visibility = 'hidden';
+            loadingOverlay.style.opacity = '0';
+            
+            // 추가 보장
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+                loadingOverlay.style.visibility = 'hidden';
+                loadingOverlay.style.opacity = '0';
+                loadingOverlay.style.zIndex = '-9999';
+            }, 100);
+            
+            // 최종 보장 - 1초 후
+            setTimeout(() => {
+                if (loadingOverlay) {
+                    loadingOverlay.remove();
+                }
+            }, 1000);
+        }
+        
+        // body에서 로딩 클래스 제거 (혹시 있다면)
+        document.body.classList.remove('loading', 'app-loading');
+        document.documentElement.classList.remove('loading', 'app-loading');
+        
+        // 로딩 숨김 완료 로그
+        Logger.info('🔄 로딩 오버레이 강제 숨김 완료');
+    }
+    
+    /**
+     * 모든 로딩 관련 요소 강제 숨김 (비상 해결책)
+     */
+    forceHideAllLoading() {
+        try {
+            // 1. 메인 로딩 오버레이
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none !important';
+                loadingOverlay.style.visibility = 'hidden !important';
+                loadingOverlay.style.opacity = '0 !important';
+                loadingOverlay.style.zIndex = '-9999 !important';
+                loadingOverlay.classList.remove('show');
+                
+                if (loadingOverlay.style.display !== 'none') {
+                    loadingOverlay.remove();
+                }
+            }
+            
+            // 2. 모든 .loading 클래스 요소 찾기
+            const allLoadingElements = document.querySelectorAll('.loading, .loading-overlay, .spinner, [class*="loading"]');
+            allLoadingElements.forEach(el => {
+                if (el.textContent && (
+                    el.textContent.includes('로딩') || 
+                    el.textContent.includes('Loading') || 
+                    el.textContent.includes('애플리케이션') ||
+                    el.textContent.includes('처리 중')
+                )) {
+                    el.style.display = 'none !important';
+                    el.style.visibility = 'hidden !important';
+                    el.style.opacity = '0 !important';
+                }
+            });
+            
+            // 3. body와 html 클래스 정리
+            document.body.classList.remove('loading', 'app-loading', 'initializing');
+            document.documentElement.classList.remove('loading', 'app-loading', 'initializing');
+            
+            // 4. CSS 스타일 직접 주입으로 강제 숨김
+            let forceHideStyle = document.getElementById('force-hide-loading');
+            if (!forceHideStyle) {
+                forceHideStyle = document.createElement('style');
+                forceHideStyle.id = 'force-hide-loading';
+                forceHideStyle.textContent = `
+                    .loading-overlay, 
+                    .loading-overlay.show,
+                    #loading-overlay,
+                    #loading-overlay.show {
+                        display: none !important;
+                        visibility: hidden !important;
+                        opacity: 0 !important;
+                        z-index: -9999 !important;
+                    }
+                `;
+                document.head.appendChild(forceHideStyle);
+            }
+            
+            Logger.debug('🔧 강제 로딩 숨김 실행 완료');
+            
+        } catch (error) {
+            Logger.error('❌ 강제 로딩 숨김 중 오류:', error);
         }
     }
     

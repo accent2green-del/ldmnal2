@@ -985,4 +985,10 @@ styleSheet.textContent = additionalStyles;
 document.head.appendChild(styleSheet);
 
 // 전역 인스턴스 생성
-window.contentRenderer = new ContentRenderer();
+try {
+    window.contentRenderer = new ContentRenderer();
+    Logger.info('🎨 ContentRenderer 전역 인스턴스 생성 완료');
+} catch (error) {
+    Logger.error('❌ ContentRenderer 전역 인스턴스 생성 실패:', error);
+    throw error;
+}

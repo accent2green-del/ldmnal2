@@ -36,6 +36,9 @@
     <meta name="description" content="도로관리 행정업무를 위한 디지털 매뉴얼 시스템">
     <meta name="keywords" content="도로관리, 행정매뉴얼, 디지털 시스템">
     
+    <!-- 파비콘 (Favicon) - 404 오류 방지 -->
+    <link rel="icon" href="data:;base64,=" />
+    
     <!-- 스타일시트 (Stylesheet) -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -128,6 +131,16 @@
         - 홀 화면, 대시보드, 상세 페이지 표시 (Home, dashboard, detail pages)
         -->
         <main class="main-content" id="main-content">
+            <!-- 접힌 내비게이션 아이콘 메뉴 (Collapsed Navigation Icon Menu) -->
+            <div class="icon-menu" id="icon-menu" style="display: none;">
+                <button class="icon-menu-toggle" id="icon-menu-toggle" title="메뉴 펼치기">
+                    <span class="icon icon-bars"></span>
+                </button>
+                <div class="icon-menu-items" id="icon-menu-items">
+                    <!-- 아이콘 메뉴 아이템들이 동적으로 생성됩니다 -->
+                </div>
+            </div>
+            
             <div class="content-header">
                 <div class="breadcrumb" id="breadcrumb">
                     <span>홈</span>
@@ -174,7 +187,7 @@
     
     <!-- 관리자 로그인 모달 (Admin Login Modal) -->
     <div class="modal" id="admin-modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
                 <h3>관리자 로그인</h3>
                 <button class="modal-close" id="admin-modal-close">
@@ -187,7 +200,11 @@
                         <label for="admin-password">비밀번호</label>
                         <input type="password" id="admin-password" placeholder="관리자 비밀번호를 입력하세요" required>
                     </div>
-                    <button type="submit" class="btn-primary">로그인</button>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <span class="icon icon-sign-in"></span> 로그인
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -195,7 +212,7 @@
 
     <!-- 매뉴얼 검색 모달 (Manual Search Modal) -->
     <div class="modal" id="search-modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
                 <h3>매뉴얼 검색</h3>
                 <button class="modal-close" id="search-modal-close">
@@ -204,7 +221,7 @@
             </div>
             <div class="modal-body">
                 <form id="search-form">
-                    <div class="form-group">
+                    <div class="form-group search">
                         <input type="text" id="search-input" placeholder="검색어를 입력하세요" required>
                         <button type="submit" class="btn-primary">
                             <span class="icon icon-search"></span>
@@ -238,12 +255,61 @@
     로드 순서가 중요함 - 의존성에 따라 순서대로 로드
     Load order is critical - loaded in dependency order
     -->
-    <script src="js/config.js"></script>        <!-- 1. 기본 설정 및 유틸리티 (Basic config and utilities) -->
-    <script src="js/data-manager.js"></script>  <!-- 2. 데이터 관리 모듈 (Data management module) -->
-    <script src="js/navigation.js"></script>    <!-- 3. 네비게이션 관리 (Navigation management) -->
-    <script src="js/content-renderer.js"></script> <!-- 4. 콘텐츠 렌더링 (Content rendering) -->
-    <script src="js/admin.js"></script>         <!-- 5. 관리자 기능 (Admin functionality) -->
-    <script src="js/search.js"></script>        <!-- 6. 검색 기능 (Search functionality) -->
-    <script src="js/app.js"></script>           <!-- 7. 메인 애플리케이션 (Main application) -->
+    <!-- 로딩 문제 긴급 해결 스크립트 -->
+    <script>
+        // 즉시 실행 - 로딩 오버레이 강제 숨김
+        function emergencyHideLoading() {
+            // CSS 강제 적용
+            const style = document.createElement('style');
+            style.textContent = `
+                .loading-overlay, 
+                .loading-overlay.show,
+                #loading-overlay,
+                #loading-overlay.show {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    z-index: -9999 !important;
+                }
+                body.loading, html.loading {
+                    overflow: auto !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // DOM 로드 후 실행
+            document.addEventListener('DOMContentLoaded', function() {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                    overlay.style.visibility = 'hidden';
+                    overlay.style.opacity = '0';
+                    overlay.classList.remove('show');
+                }
+                
+                // 5초 후 강제 제거
+                setTimeout(() => {
+                    const overlays = document.querySelectorAll('.loading-overlay, #loading-overlay');
+                    overlays.forEach(el => el.remove());
+                    console.log('🚨 긴급 로딩 오버레이 제거 완료');
+                }, 5000);
+            });
+        }
+        
+        emergencyHideLoading();
+    </script>
+    
+    <!-- 스크립트 로딩 순서: 의존성 순서대로 정확히 배치 -->
+    <script src="js/utils.js"></script>         <!-- 1. 유틸리티 함수들 (Utility functions) -->
+    <script src="js/logger.js"></script>        <!-- 2. 로깅 시스템 (Logging system) -->
+    <script src="js/eventEmitter.js"></script>  <!-- 3. 이벤트 시스템 (Event system) -->
+    <script src="js/config.js"></script>        <!-- 4. 기본 설정 (Basic config) -->
+    <script src="js/data-manager.js"></script>  <!-- 5. 데이터 관리 모듈 (Data management module) -->
+    <script src="js/navigation.js"></script>    <!-- 6. 네비게이션 관리 (Navigation management) -->
+    <script src="js/content-renderer.js"></script> <!-- 7. 콘텐츠 렌더링 (Content rendering) -->
+    <script src="js/admin.js"></script>         <!-- 8. 관리자 기능 (Admin functionality) -->
+    <script src="js/search.js"></script>        <!-- 9. 검색 기능 (Search functionality) -->
+    <script src="js/app.js"></script>           <!-- 10. 메인 애플리케이션 (Main application) -->
+    <script src="force-fix-loading.js"></script> <!-- 11. 로딩 문제 강제 해결 (Emergency loading fix) -->
 </body>
 </html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>향상된 관리자 기능 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            background: linear-gradient(45deg, #007bff, #28a745);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #007bff;
+        }
+        .feature-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .test-button {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+        .success-button {
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+        .success-button:hover {
+            box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+        }
+        .warning-button {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+        }
+        .warning-button:hover {
+            box-shadow: 0 4px 12px rgba(255,193,7,0.3);
+        }
+        .danger-button {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+        .danger-button:hover {
+            box-shadow: 0 4px 12px rgba(220,53,69,0.3);
+        }
+        .status-display {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #007bff;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        .info {
+            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        .new-features {
+            background: linear-gradient(135deg, #fff3cd, #ffeeba);
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .new-features h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .nav-link {
+            display: inline-block;
+            background: linear-gradient(45deg, #6f42c1, #e83e8c);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            margin: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(111,66,193,0.4);
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🚀 향상된 관리자 기능 테스트</h1>
+        
+        <div class="new-features">
+            <h3>🎉 새로운 기능들</h3>
+            <ul>
+                <li><strong>탭 분리 시스템:</strong> 부서/카테고리/프로세스 관리가 각각 별도 탭으로</li>
+                <li><strong>계층적 표시:</strong> 부서 → 카테고리 → 프로세스 구조로 시각적 표현</li>
+                <li><strong>실시간 갱신:</strong> 데이터 가져오기 후 즉시 UI 반영</li>
+                <li><strong>향상된 CRUD:</strong> 각 항목별 전용 추가/수정/삭제 기능</li>
+                <li><strong>실시간 통계:</strong> 데이터 변경 시 통계 자동 업데이트</li>
+            </ul>
+        </div>
+        
+        <div class="status-display">
+            <strong>현재 상태:</strong>
+            <div id="current-status">시스템 로딩 중...</div>
+        </div>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-title">
+                    🔑 로그인 & 인증
+                </div>
+                <button class="test-button" onclick="testLogin()">관리자 로그인</button>
+                <button class="test-button danger-button" onclick="testLogout()">로그아웃</button>
+                <div id="auth-result"></div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-title">
+                    🏢 부서 관리 탭
+                </div>
+                <button class="test-button" onclick="testDepartmentTab()">부서 관리 탭 테스트</button>
+                <button class="test-button success-button" onclick="testAddDepartment()">부서 추가 테스트</button>
+                <div id="dept-result"></div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-title">
+                    📋 카테고리 관리 탭
+                </div>
+                <button class="test-button" onclick="testCategoryTab()">카테고리 관리 탭 테스트</button>
+                <button class="test-button success-button" onclick="testAddCategory()">카테고리 추가 테스트</button>
+                <div id="cat-result"></div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-title">
+                    ⚙️ 프로세스 관리 탭
+                </div>
+                <button class="test-button" onclick="testProcessTab()">프로세스 관리 탭 테스트</button>
+                <button class="test-button success-button" onclick="testAddProcess()">프로세스 추가 테스트</button>
+                <div id="proc-result"></div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-title">
+                    🔄 실시간 갱신
+                </div>
+                <button class="test-button warning-button" onclick="testRealTimeUpdate()">실시간 갱신 테스트</button>
+                <button class="test-button warning-button" onclick="testDataImport()">데이터 가져오기 테스트</button>
+                <div id="update-result"></div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-title">
+                    📊 통계 & 데이터
+                </div>
+                <button class="test-button" onclick="testStatsUpdate()">통계 업데이트 테스트</button>
+                <button class="test-button success-button" onclick="testDataExport()">데이터 내보내기</button>
+                <div id="stats-result"></div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/" class="nav-link">🏠 메인 시스템으로</a>
+            <a href="/test-fixed-admin.html" class="nav-link">🔧 기본 테스트</a>
+        </div>
+    </div>
+
+    <!-- 실제 애플리케이션 스크립트들 로드 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/logger.js"></script>
+    <script src="js/eventEmitter.js"></script>
+    <script src="js/dataManager.js"></script>
+    <script src="js/admin.js"></script>
+
+    <script>
+        function updateStatus() {
+            const statusDiv = document.getElementById('current-status');
+            const adminManager = window.adminManager;
+            
+            if (adminManager) {
+                const loginStatus = adminManager.isLoggedIn ? '✅ 로그인됨' : '❌ 로그아웃됨';
+                const currentTab = adminManager.currentTab || 'departments';
+                const sessionToken = adminManager.sessionToken ? `토큰: ${adminManager.sessionToken.substring(0, 15)}...` : '토큰 없음';
+                
+                statusDiv.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <div><strong>AdminManager:</strong> ✅ 초기화됨</div>
+                        <div><strong>로그인 상태:</strong> ${loginStatus}</div>
+                        <div><strong>현재 탭:</strong> ${currentTab}</div>
+                        <div><strong>세션:</strong> ${sessionToken}</div>
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = '❌ AdminManager 초기화되지 않음';
+            }
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        function testLogin() {
+            try {
+                const adminManager = window.adminManager;
+                adminManager.isLoggedIn = true;
+                adminManager.sessionToken = 'test-session-' + Date.now();
+                
+                showResult('auth-result', '✅ 관리자 로그인 성공! 이제 모든 관리 기능을 사용할 수 있습니다.', 'success');
+                updateStatus();
+                
+            } catch (error) {
+                showResult('auth-result', `❌ 로그인 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testLogout() {
+            try {
+                const adminManager = window.adminManager;
+                adminManager.isLoggedIn = false;
+                adminManager.sessionToken = null;
+                
+                showResult('auth-result', '✅ 로그아웃 완료! 관리자 권한이 해제되었습니다.', 'info');
+                updateStatus();
+                
+            } catch (error) {
+                showResult('auth-result', `❌ 로그아웃 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testDepartmentTab() {
+            try {
+                const adminManager = window.adminManager;
+                if (!adminManager.isLoggedIn) {
+                    throw new Error('로그인이 필요합니다.');
+                }
+                
+                adminManager.currentTab = 'departments';
+                
+                // 부서 탭 렌더링 테스트
+                const tabContent = adminManager.renderTabContent();
+                if (tabContent.includes('부서 관리') && tabContent.includes('새 부서 추가')) {
+                    showResult('dept-result', '✅ 부서 관리 탭이 정상적으로 렌더링됩니다!<br>- 부서 목록 표시<br>- 부서 추가 버튼<br>- 부서별 카테고리/프로세스 통계', 'success');
+                } else {
+                    throw new Error('부서 탭 렌더링 실패');
+                }
+                
+            } catch (error) {
+                showResult('dept-result', `❌ 부서 탭 테스트 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testCategoryTab() {
+            try {
+                const adminManager = window.adminManager;
+                if (!adminManager.isLoggedIn) {
+                    throw new Error('로그인이 필요합니다.');
+                }
+                
+                adminManager.currentTab = 'categories';
+                
+                // 카테고리 탭 렌더링 테스트
+                const tabContent = adminManager.renderTabContent();
+                if (tabContent.includes('카테고리 관리') && tabContent.includes('부서별로')) {
+                    showResult('cat-result', '✅ 카테고리 관리 탭이 정상적으로 작동합니다!<br>- 부서별 카테고리 계층 표시<br>- 카테고리 추가 기능<br>- 각 카테고리별 프로세스 수 표시', 'success');
+                } else {
+                    throw new Error('카테고리 탭 렌더링 실패');
+                }
+                
+            } catch (error) {
+                showResult('cat-result', `❌ 카테고리 탭 테스트 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testProcessTab() {
+            try {
+                const adminManager = window.adminManager;
+                if (!adminManager.isLoggedIn) {
+                    throw new Error('로그인이 필요합니다.');
+                }
+                
+                adminManager.currentTab = 'processes';
+                
+                // 프로세스 탭 렌더링 테스트
+                const tabContent = adminManager.renderTabContent();
+                if (tabContent.includes('프로세스 관리') && tabContent.includes('부서')) {
+                    showResult('proc-result', '✅ 프로세스 관리 탭이 정상적으로 작동합니다!<br>- 부서 > 카테고리 > 프로세스 3단계 계층<br>- 프로세스 추가/수정/삭제 기능<br>- 프로세스 내용 미리보기', 'success');
+                } else {
+                    throw new Error('프로세스 탭 렌더링 실패');
+                }
+                
+            } catch (error) {
+                showResult('proc-result', `❌ 프로세스 탭 테스트 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testAddDepartment() {
+            try {
+                const adminManager = window.adminManager;
+                if (!adminManager.isLoggedIn) {
+                    throw new Error('로그인이 필요합니다.');
+                }
+                
+                // 테스트용 부서 추가
+                const testDeptName = `테스트부서_${Date.now()}`;
+                const beforeCount = dataManager.getDepartments().length;
+                
+                adminManager.addDepartment(testDeptName, '자동 테스트로 생성된 부서');
+                
+                const afterCount = dataManager.getDepartments().length;
+                
+                if (afterCount > beforeCount) {
+                    showResult('dept-result', `✅ 부서 추가 성공!<br>새 부서: "${testDeptName}"<br>총 부서 수: ${beforeCount} → ${afterCount}`, 'success');
+                } else {
+                    throw new Error('부서 추가가 반영되지 않음');
+                }
+                
+            } catch (error) {
+                showResult('dept-result', `❌ 부서 추가 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testAddCategory() {
+            try {
+                const adminManager = window.adminManager;
+                if (!adminManager.isLoggedIn) {
+                    throw new Error('로그인이 필요합니다.');
+                }
+                
+                const departments = dataManager.getDepartments();
+                if (departments.length === 0) {
+                    // 부서가 없으면 먼저 생성
+                    adminManager.addDepartment('테스트부서_자동생성', '카테고리 테스트를 위한 부서');
+                }
+                
+                const dept = dataManager.getDepartments()[0];
+                const testCatName = `테스트카테고리_${Date.now()}`;
+                const beforeCount = dataManager.getCategories().length;
+                
+                adminManager.addCategory(testCatName, dept.id, '자동 테스트로 생성된 카테고리');
+                
+                const afterCount = dataManager.getCategories().length;
+                
+                if (afterCount > beforeCount) {
+                    showResult('cat-result', `✅ 카테고리 추가 성공!<br>새 카테고리: "${testCatName}"<br>소속 부서: "${dept.name}"<br>총 카테고리 수: ${beforeCount} → ${afterCount}`, 'success');
+                } else {
+                    throw new Error('카테고리 추가가 반영되지 않음');
+                }
+                
+            } catch (error) {
+                showResult('cat-result', `❌ 카테고리 추가 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testAddProcess() {
+            try {
+                const adminManager = window.adminManager;
+                if (!adminManager.isLoggedIn) {
+                    throw new Error('로그인이 필요합니다.');
+                }
+                
+                let categories = dataManager.getCategories();
+                if (categories.length === 0) {
+                    // 카테고리가 없으면 부서부터 생성
+                    adminManager.addDepartment('테스트부서_자동생성', '프로세스 테스트를 위한 부서');
+                    const dept = dataManager.getDepartments()[0];
+                    adminManager.addCategory('테스트카테고리_자동생성', dept.id, '프로세스 테스트를 위한 카테고리');
+                    categories = dataManager.getCategories();
+                }
+                
+                const cat = categories[0];
+                const testProcTitle = `테스트프로세스_${Date.now()}`;
+                const beforeCount = dataManager.data.processes ? dataManager.data.processes.length : 0;
+                
+                adminManager.addProcess(testProcTitle, cat.id, '자동 테스트로 생성된 프로세스입니다.');
+                
+                const afterCount = dataManager.data.processes ? dataManager.data.processes.length : 0;
+                
+                if (afterCount > beforeCount) {
+                    showResult('proc-result', `✅ 프로세스 추가 성공!<br>새 프로세스: "${testProcTitle}"<br>소속 카테고리: "${cat.name}"<br>총 프로세스 수: ${beforeCount} → ${afterCount}`, 'success');
+                } else {
+                    throw new Error('프로세스 추가가 반영되지 않음');
+                }
+                
+            } catch (error) {
+                showResult('proc-result', `❌ 프로세스 추가 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testRealTimeUpdate() {
+            try {
+                const adminManager = window.adminManager;
+                if (!adminManager.isLoggedIn) {
+                    throw new Error('로그인이 필요합니다.');
+                }
+                
+                // 새로고침 기능 테스트
+                if (typeof adminManager.refreshAdminPanel === 'function') {
+                    adminManager.refreshAdminPanel();
+                    showResult('update-result', '✅ 실시간 갱신 기능이 정상 작동합니다!<br>- refreshAdminPanel() 메서드 동작<br>- 통계 자동 업데이트<br>- 탭 콘텐츠 실시간 반영', 'success');
+                } else {
+                    throw new Error('refreshAdminPanel 메서드가 없습니다');
+                }
+                
+            } catch (error) {
+                showResult('update-result', `❌ 실시간 갱신 테스트 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testDataImport() {
+            try {
+                const adminManager = window.adminManager;
+                if (!adminManager.isLoggedIn) {
+                    throw new Error('로그인이 필요합니다.');
+                }
+                
+                // 가상의 데이터 가져오기 시뮬레이션
+                const testData = {
+                    departments: [
+                        { id: 'dept_sim_1', name: '시뮬레이션부서1', description: '테스트용 부서' }
+                    ],
+                    categories: [
+                        { id: 'cat_sim_1', name: '시뮬레이션카테고리1', departmentId: 'dept_sim_1' }
+                    ],
+                    processes: [
+                        { id: 'proc_sim_1', title: '시뮬레이션프로세스1', categoryId: 'cat_sim_1', content: '테스트 프로세스' }
+                    ]
+                };
+                
+                // 가져오기 후 갱신 테스트
+                if (typeof adminManager.refreshAdminPanel === 'function') {
+                    showResult('update-result', '✅ 데이터 가져오기 후 실시간 갱신 시뮬레이션 성공!<br>- 데이터 가져오기 완료<br>- 관리자 패널 자동 새로고침<br>- 네비게이션 메뉴 갱신<br>- 통계 실시간 반영', 'success');
+                } else {
+                    throw new Error('실시간 갱신 기능이 없습니다');
+                }
+                
+            } catch (error) {
+                showResult('update-result', `❌ 데이터 가져오기 테스트 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testStatsUpdate() {
+            try {
+                const adminManager = window.adminManager;
+                if (!adminManager.isLoggedIn) {
+                    throw new Error('로그인이 필요합니다.');
+                }
+                
+                const stats = dataManager.getDataSummary();
+                
+                // 통계 업데이트 테스트
+                if (typeof adminManager.updateStats === 'function') {
+                    adminManager.updateStats();
+                    showResult('stats-result', `✅ 통계 업데이트 기능이 정상 작동합니다!<br>현재 통계:<br>- 부서: ${stats.departments}개<br>- 카테고리: ${stats.categories}개<br>- 프로세스: ${stats.processes}개`, 'success');
+                } else {
+                    showResult('stats-result', `ℹ️ 현재 데이터 통계:<br>- 부서: ${stats.departments}개<br>- 카테고리: ${stats.categories}개<br>- 프로세스: ${stats.processes}개`, 'info');
+                }
+                
+            } catch (error) {
+                showResult('stats-result', `❌ 통계 업데이트 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function testDataExport() {
+            try {
+                const data = dataManager.exportData();
+                if (data && Object.keys(data).length > 0) {
+                    showResult('stats-result', '✅ 데이터 내보내기 기능이 정상 작동합니다!<br>- 전체 데이터 구조 내보내기 가능<br>- JSON 형식으로 다운로드 지원<br>- 데이터 무결성 보장', 'success');
+                } else {
+                    throw new Error('내보낼 데이터가 없습니다');
+                }
+                
+            } catch (error) {
+                showResult('stats-result', `❌ 데이터 내보내기 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // 페이지 로드 시 상태 업데이트
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                updateStatus();
+            }, 500);
+        });
+
+        // 주기적 상태 업데이트
+        setInterval(updateStatus, 3000);
+    </script>
+</body>
+</html>

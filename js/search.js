@@ -122,7 +122,7 @@ class SearchManager {
         
         try {
             // 데이터 매니저에서 검색 수행
-            const results = dataManager.searchAll(query);
+            const results = dataManager.search(query);
             this.currentResults = results;
             this.selectedIndex = -1;
             
@@ -430,4 +430,10 @@ class SearchManager {
 }
 
 // 전역 인스턴스 생성
-window.searchManager = new SearchManager();
+try {
+    window.searchManager = new SearchManager();
+    Logger.info('🔍 SearchManager 전역 인스턴스 생성 완료');
+} catch (error) {
+    Logger.error('❌ SearchManager 전역 인스턴스 생성 실패:', error);
+    throw error;
+}

@@ -67,7 +67,9 @@ class DataManager {
      */
     async loadFromJSON() {
         try {
+            Logger.info('JSON 파일에서 데이터 로드 시도 중...');
             const response = await fetch(AppConfig.API.ENDPOINTS.MANUAL_DATA);
+            
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -84,6 +86,12 @@ class DataManager {
             
         } catch (error) {
             Logger.warn('JSON 파일 로드 실패, 기본 데이터 생성:', error.message);
+            
+            // 네트워크 오류인지 확인
+            if (error instanceof TypeError && error.message.includes('fetch')) {
+                Logger.info('네트워크 연결 확인 필요 - 오프라인 모드로 전환');
+            }
+            
             this.data = Utils.deepClone(AppConfig.DEFAULT_DATA);
             this.generateSampleData();
             this.saveToStorage();
@@ -820,7 +828,183 @@ class DataManager {
         
         existingProcess.updatedAt = new Date().toISOString();
     }
+    
+    /**
+     * 모든 데이터 초기화
+     */
+    clearAllData() {
+        try {
+            this.data = {
+                departments: [],
+                categories: [],
+                processes: []
+            };
+            
+            this.saveToStorage();
+            EventEmitter.emit('data:updated', this.data);
+            Logger.info('모든 데이터가 초기화되었습니다.');
+            return true;
+        } catch (error) {
+            Logger.error('데이터 초기화 실패:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * 변환된 데이터를 시스템에 로드
+     */
+    importConvertedData(convertedData) {
+        try {
+            if (!convertedData || typeof convertedData !== 'object') {
+                throw new Error('잘못된 데이터 형식입니다.');
+            }
+            
+            const { departments = [], categories = [], processes = [] } = convertedData;
+            
+            // 데이터 유효성 검증
+            if (!Array.isArray(departments) || !Array.isArray(categories) || !Array.isArray(processes)) {
+                throw new Error('데이터는 배열 형식이어야 합니다.');
+            }
+            
+            // 새로운 데이터 설정
+            this.data = {
+                departments: departments.map(dept => ({
+                    ...dept,
+                    createdAt: dept.createdAt || new Date().toISOString(),
+                    updatedAt: dept.updatedAt || new Date().toISOString()
+                })),
+                categories: categories.map(cat => ({
+                    ...cat,
+                    createdAt: cat.createdAt || new Date().toISOString(),
+                    updatedAt: cat.updatedAt || new Date().toISOString()
+                })),
+                processes: processes.map(proc => ({
+                    ...proc,
+                    createdAt: proc.createdAt || new Date().toISOString(),
+                    updatedAt: proc.updatedAt || new Date().toISOString()
+                }))
+            };
+            
+            // 저장 및 이벤트 발생
+            this.saveToStorage();
+            EventEmitter.emit('data:updated', this.data);
+            EventEmitter.emit('data:imported', this.data);
+            
+            Logger.info('변환된 데이터 로드 완료:', {
+                departments: this.data.departments.length,
+                categories: this.data.categories.length,
+                processes: this.data.processes.length
+            });
+            
+            return true;
+        } catch (error) {
+            Logger.error('변환된 데이터 로드 실패:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * 부서 업데이트 (상세 정보 포함)
+     */
+    updateDepartment(id, updateData) {
+        try {
+            const index = this.data.departments.findIndex(dept => dept.id === id);
+            if (index === -1) {
+                throw new Error('부서를 찾을 수 없습니다.');
+            }
+            
+            this.data.departments[index] = {
+                ...this.data.departments[index],
+                ...updateData,
+                updatedAt: new Date().toISOString()
+            };
+            
+            this.saveToStorage();
+            EventEmitter.emit('data:updated', this.data);
+            return true;
+        } catch (error) {
+            Logger.error('부서 업데이트 실패:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * 카테고리 업데이트 (상세 정보 포함)
+     */
+    updateCategory(id, updateData) {
+        try {
+            const index = this.data.categories.findIndex(cat => cat.id === id);
+            if (index === -1) {
+                throw new Error('카테고리를 찾을 수 없습니다.');
+            }
+            
+            this.data.categories[index] = {
+                ...this.data.categories[index],
+                ...updateData,
+                updatedAt: new Date().toISOString()
+            };
+            
+            this.saveToStorage();
+            EventEmitter.emit('data:updated', this.data);
+            return true;
+        } catch (error) {
+            Logger.error('카테고리 업데이트 실패:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * 프로세스 업데이트 (상세 정보 포함)
+     */
+    updateProcess(id, updateData) {
+        try {
+            const index = this.data.processes.findIndex(proc => proc.id === id);
+            if (index === -1) {
+                throw new Error('프로세스를 찾을 수 없습니다.');
+            }
+            
+            this.data.processes[index] = {
+                ...this.data.processes[index],
+                ...updateData,
+                updatedAt: new Date().toISOString()
+            };
+            
+            this.saveToStorage();
+            EventEmitter.emit('data:updated', this.data);
+            return true;
+        } catch (error) {
+            Logger.error('프로세스 업데이트 실패:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * ID로 부서 조회
+     */
+    getDepartmentById(id) {
+        return this.data.departments.find(dept => dept.id === id) || null;
+    }
+    
+    /**
+     * ID로 카테고리 조회
+     */
+    getCategoryById(id) {
+        return this.data.categories.find(cat => cat.id === id) || null;
+    }
+    
+    /**
+     * ID로 프로세스 조회
+     */
+    getProcessById(id) {
+        return this.data.processes.find(proc => proc.id === id) || null;
+    }
 }
 
 // 전역 인스턴스 생성
-window.dataManager = new DataManager();
+try {
+    window.dataManager = new DataManager();
+    Logger.info('📊 DataManager 전역 인스턴스 생성 완료');
+} catch (error) {
+    Logger.error('❌ DataManager 전역 인스턴스 생성 실패:', error);
+    throw error;
+}

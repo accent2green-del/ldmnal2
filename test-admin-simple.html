@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Admin Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        button { padding: 10px 20px; margin: 5px; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        #test-content { min-height: 300px; border: 1px solid #ccc; padding: 15px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Simple Admin Test</h1>
+    
+    <div class="test-section">
+        <h3>Module Status</h3>
+        <div id="module-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Admin Test</h3>
+        <button onclick="testAdminLogin()">Test Admin Login (spt2019!)</button>
+        <button onclick="checkAdminState()">Check Admin State</button>
+        <button onclick="testAdminPanel()">Show Admin Panel</button>
+        <div id="admin-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Content Area (simulates main app content-body)</h3>
+        <div id="content-body" style="min-height: 200px; border: 1px solid #eee; padding: 10px;">
+            <p>This div simulates the main app's content-body where admin panel should render</p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/content-renderer.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/search.js"></script>
+
+    <script>
+        function updateModuleStatus() {
+            const status = document.getElementById('module-status');
+            let html = '';
+            
+            const modules = ['dataManager', 'adminManager', 'navigationManager', 'contentRenderer'];
+            modules.forEach(module => {
+                if (window[module]) {
+                    html += `<span class="success">✅ ${module} loaded</span><br>`;
+                } else {
+                    html += `<span class="error">❌ ${module} not loaded</span><br>`;
+                }
+            });
+            
+            status.innerHTML = html;
+        }
+
+        async function testAdminLogin() {
+            const results = document.getElementById('admin-results');
+            results.innerHTML = '<p class="warning">🔐 Testing admin login...</p>';
+            
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager not available');
+                }
+                
+                console.log('AdminManager available:', typeof adminManager);
+                console.log('AdminManager methods:', Object.getOwnPropertyNames(adminManager.__proto__));
+                
+                // Simulate the login process
+                const password = 'spt2019!';
+                
+                // Check if password matches
+                if (password === AppConfig.ADMIN_PASSWORD) {
+                    console.log('Password matches config');
+                    
+                    // Set login state manually for testing
+                    adminManager.isLoggedIn = true;
+                    adminManager.sessionToken = 'test-token-' + Date.now();
+                    
+                    results.innerHTML = '<p class="success">✅ Admin login successful!</p>' +
+                                       '<p>isLoggedIn: ' + adminManager.isLoggedIn + '</p>' +
+                                       '<p>sessionToken: ' + adminManager.sessionToken + '</p>';
+                } else {
+                    results.innerHTML = '<p class="error">❌ Password mismatch</p>';
+                }
+                
+            } catch (error) {
+                results.innerHTML = '<p class="error">❌ Login test error: ' + error.message + '</p>';
+                console.error('Login test error:', error);
+            }
+        }
+
+        function checkAdminState() {
+            const results = document.getElementById('admin-results');
+            
+            try {
+                if (!window.adminManager) {
+                    results.innerHTML = '<p class="error">❌ AdminManager not available</p>';
+                    return;
+                }
+                
+                const state = {
+                    isLoggedIn: adminManager.isLoggedIn,
+                    sessionToken: adminManager.sessionToken,
+                    methods: Object.getOwnPropertyNames(adminManager.__proto__).filter(name => typeof adminManager[name] === 'function')
+                };
+                
+                results.innerHTML = '<p class="success">✅ Admin state check:</p><pre>' + JSON.stringify(state, null, 2) + '</pre>';
+                
+            } catch (error) {
+                results.innerHTML = '<p class="error">❌ State check error: ' + error.message + '</p>';
+            }
+        }
+
+        async function testAdminPanel() {
+            const results = document.getElementById('admin-results');
+            results.innerHTML = '<p class="warning">🖥️ Testing admin panel rendering...</p>';
+            
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager not available');
+                }
+                
+                if (!adminManager.isLoggedIn) {
+                    results.innerHTML = '<p class="warning">⚠️ Please login first</p>';
+                    return;
+                }
+                
+                console.log('Calling showAdminPanel...');
+                await adminManager.showAdminPanel();
+                
+                // Check if content was rendered
+                const contentBody = document.getElementById('content-body');
+                console.log('Content body innerHTML length:', contentBody.innerHTML.length);
+                console.log('Content includes admin-panel:', contentBody.innerHTML.includes('admin-panel'));
+                
+                if (contentBody.innerHTML.includes('admin-panel')) {
+                    results.innerHTML = '<p class="success">✅ Admin panel rendered successfully!</p>';
+                } else {
+                    results.innerHTML = '<p class="error">❌ Admin panel not rendered. Check content-body div above.</p>';
+                }
+                
+            } catch (error) {
+                results.innerHTML = '<p class="error">❌ Panel test error: ' + error.message + '</p>';
+                console.error('Panel test error:', error);
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                updateModuleStatus();
+                console.log('Page loaded, modules available:', {
+                    dataManager: !!window.dataManager,
+                    adminManager: !!window.adminManager,
+                    AppConfig: !!window.AppConfig
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

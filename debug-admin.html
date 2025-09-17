@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Debug - Korean Road Management</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .debug-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .debug-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #admin-test-area {
+            min-height: 200px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 10px;
+            background-color: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔧 Admin Mode Debug Tool</h1>
+        
+        <div class="debug-section">
+            <h3>🔍 Module Loading Status</h3>
+            <div id="module-status"></div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>📊 Data Manager Status</h3>
+            <div id="data-status"></div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🔐 Admin Manager Status</h3>
+            <div id="admin-status"></div>
+            <button onclick="testAdminLogin()">Test Admin Login (spt2019!)</button>
+            <button onclick="testAdminPanel()">Test Admin Panel Rendering</button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>🧪 Admin Test Area</h3>
+            <div id="admin-test-area"></div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>📝 Console Logs</h3>
+            <div id="console-logs"></div>
+        </div>
+    </div>
+
+    <script>
+        // Console log capture
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const logs = [];
+
+        function captureLog(level, args) {
+            const message = Array.from(args).join(' ');
+            logs.push({ level, message, timestamp: new Date().toISOString() });
+            updateConsoleLogs();
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            captureLog('log', args);
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            captureLog('error', args);
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            captureLog('warn', args);
+        };
+
+        function updateConsoleLogs() {
+            const container = document.getElementById('console-logs');
+            const recent = logs.slice(-10);
+            container.innerHTML = recent.map(log => 
+                `<div class="status ${log.level === 'error' ? 'error' : log.level === 'warn' ? 'warning' : 'success'}">
+                    [${log.timestamp.split('T')[1].split('.')[0]}] ${log.level.toUpperCase()}: ${log.message}
+                </div>`
+            ).join('');
+        }
+
+        function createStatus(text, type = 'success') {
+            return `<div class="status ${type}">${text}</div>`;
+        }
+
+        function checkModuleStatus() {
+            const container = document.getElementById('module-status');
+            let html = '';
+            
+            const modules = [
+                'dataManager',
+                'navigationManager', 
+                'contentRenderer',
+                'adminManager',
+                'searchManager',
+                'Logger',
+                'Utils'
+            ];
+            
+            modules.forEach(module => {
+                if (window[module]) {
+                    html += createStatus(`✅ ${module}: 로드됨`, 'success');
+                } else {
+                    html += createStatus(`❌ ${module}: 로드되지 않음`, 'error');
+                }
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function checkDataStatus() {
+            const container = document.getElementById('data-status');
+            let html = '';
+            
+            try {
+                if (window.dataManager) {
+                    const departments = dataManager.getDepartments();
+                    const categories = dataManager.getCategories();
+                    const processes = dataManager.getProcesses();
+                    
+                    html += createStatus(`📁 부서: ${departments.length}개`, 'success');
+                    html += createStatus(`📋 카테고리: ${categories.length}개`, 'success');
+                    html += createStatus(`📄 프로세스: ${processes.length}개`, 'success');
+                    
+                    // Show sample data
+                    html += `<pre>Sample Department: ${JSON.stringify(departments[0], null, 2)}</pre>`;
+                } else {
+                    html += createStatus('❌ DataManager가 로드되지 않았습니다', 'error');
+                }
+            } catch (error) {
+                html += createStatus(`❌ Data Status 오류: ${error.message}`, 'error');
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function checkAdminStatus() {
+            const container = document.getElementById('admin-status');
+            let html = '';
+            
+            try {
+                if (window.adminManager) {
+                    html += createStatus('✅ AdminManager: 로드됨', 'success');
+                    html += createStatus(`🔐 로그인 상태: ${adminManager.isLoggedIn ? '로그인됨' : '로그아웃됨'}`, 
+                        adminManager.isLoggedIn ? 'success' : 'warning');
+                    
+                    // Check if admin methods exist
+                    const methods = ['handleLogin', 'showAdminPanel', 'renderAdminPanel'];
+                    methods.forEach(method => {
+                        if (typeof adminManager[method] === 'function') {
+                            html += createStatus(`✅ ${method}: 메서드 존재`, 'success');
+                        } else {
+                            html += createStatus(`❌ ${method}: 메서드 없음`, 'error');
+                        }
+                    });
+                } else {
+                    html += createStatus('❌ AdminManager가 로드되지 않았습니다', 'error');
+                }
+            } catch (error) {
+                html += createStatus(`❌ Admin Status 오류: ${error.message}`, 'error');
+            }
+            
+            container.innerHTML = html;
+        }
+
+        async function testAdminLogin() {
+            const testArea = document.getElementById('admin-test-area');
+            testArea.innerHTML = '<div class="status warning">🔐 관리자 로그인 테스트 중...</div>';
+            
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager가 로드되지 않았습니다');
+                }
+                
+                // Simulate login with correct password
+                const password = 'spt2019!';
+                const result = await adminManager.handleLogin(password);
+                
+                if (result) {
+                    testArea.innerHTML = createStatus('✅ 관리자 로그인 성공!', 'success');
+                } else {
+                    testArea.innerHTML = createStatus('❌ 관리자 로그인 실패', 'error');
+                }
+                
+                // Update admin status
+                checkAdminStatus();
+                
+            } catch (error) {
+                testArea.innerHTML = createStatus(`❌ 로그인 테스트 오류: ${error.message}`, 'error');
+                console.error('Login test error:', error);
+            }
+        }
+
+        async function testAdminPanel() {
+            const testArea = document.getElementById('admin-test-area');
+            testArea.innerHTML = '<div class="status warning">🖥️ 관리자 패널 렌더링 테스트 중...</div>';
+            
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager가 로드되지 않았습니다');
+                }
+                
+                if (!adminManager.isLoggedIn) {
+                    testArea.innerHTML = createStatus('⚠️ 먼저 로그인해야 합니다', 'warning');
+                    return;
+                }
+                
+                // Test admin panel rendering
+                await adminManager.showAdminPanel();
+                
+                // Check if content was rendered
+                const contentBody = document.getElementById('content-body');
+                if (contentBody && contentBody.innerHTML.includes('admin-panel')) {
+                    testArea.innerHTML = createStatus('✅ 관리자 패널 렌더링 성공!', 'success');
+                } else {
+                    testArea.innerHTML = createStatus('❌ 관리자 패널 렌더링 실패 - content-body가 없거나 내용이 비어있음', 'error');
+                }
+                
+            } catch (error) {
+                testArea.innerHTML = createStatus(`❌ 패널 렌더링 테스트 오류: ${error.message}`, 'error');
+                console.error('Panel rendering test error:', error);
+            }
+        }
+
+        // Initialize checks when page loads
+        window.addEventListener('load', () => {
+            // Wait a bit for modules to load
+            setTimeout(() => {
+                checkModuleStatus();
+                checkDataStatus();
+                checkAdminStatus();
+            }, 1000);
+        });
+
+        // Auto-refresh status every 5 seconds
+        setInterval(() => {
+            checkModuleStatus();
+            checkDataStatus();
+            checkAdminStatus();
+        }, 5000);
+    </script>
+
+    <!-- Load the actual application modules -->
+    <script src="js/config.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/content-renderer.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/search.js"></script>
+</body>
+</html>

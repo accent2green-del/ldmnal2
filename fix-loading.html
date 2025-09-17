@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Loading Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .test-section h3 { margin-top: 0; }
+        button { padding: 10px 20px; margin: 5px; }
+        .status { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Loading Fix Tool</h1>
+    
+    <div class="test-section">
+        <h3>Current Status</h3>
+        <div id="status">Checking...</div>
+        <button onclick="checkStatus()">Refresh Status</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Manual Fix</h3>
+        <button onclick="hideLoadingManual()">Force Hide Loading</button>
+        <button onclick="showLoadingTest()">Test Show Loading</button>
+        <button onclick="checkMainApp()">Check Main App State</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>JavaScript Fix</h3>
+        <button onclick="injectFix()">Inject Loading Fix</button>
+        <div id="fix-result">Ready to inject fix...</div>
+    </div>
+
+    <script>
+        function checkStatus() {
+            const statusDiv = document.getElementById('status');
+            let html = '';
+            
+            // Check if we can access main app
+            try {
+                const mainWindow = window.parent !== window ? window.parent : window;
+                const loadingOverlay = mainWindow.document.getElementById('loading-overlay');
+                
+                html += '<div class="info">Loading Overlay Found: ' + (loadingOverlay ? 'Yes' : 'No') + '</div>';
+                
+                if (loadingOverlay) {
+                    html += '<div class="info">Classes: "' + loadingOverlay.className + '"</div>';
+                    html += '<div class="info">Display: ' + getComputedStyle(loadingOverlay).display + '</div>';
+                    html += '<div class="info">Visibility: ' + getComputedStyle(loadingOverlay).visibility + '</div>';
+                }
+                
+                // Check if App is available
+                const app = mainWindow.App || mainWindow.app;
+                html += '<div class="info">App Object: ' + (app ? 'Found' : 'Not found') + '</div>';
+                
+                if (app) {
+                    html += '<div class="info">App Initialized: ' + (app.initialized ? 'Yes' : 'No') + '</div>';
+                }
+                
+            } catch (error) {
+                html += '<div class="error">Error accessing main app: ' + error.message + '</div>';
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        function hideLoadingManual() {
+            try {
+                const mainWindow = window.parent !== window ? window.parent : window;
+                const loadingOverlay = mainWindow.document.getElementById('loading-overlay');
+                
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('show');
+                    loadingOverlay.style.display = 'none';
+                    
+                    document.getElementById('fix-result').innerHTML = '<div class="success">Loading overlay hidden successfully!</div>';
+                } else {
+                    document.getElementById('fix-result').innerHTML = '<div class="error">Loading overlay not found</div>';
+                }
+                
+                checkStatus();
+            } catch (error) {
+                document.getElementById('fix-result').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+        
+        function showLoadingTest() {
+            try {
+                const mainWindow = window.parent !== window ? window.parent : window;
+                const loadingOverlay = mainWindow.document.getElementById('loading-overlay');
+                
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('show');
+                    
+                    // Hide after 2 seconds
+                    setTimeout(() => {
+                        loadingOverlay.classList.remove('show');
+                    }, 2000);
+                    
+                    document.getElementById('fix-result').innerHTML = '<div class="info">Loading test completed</div>';
+                } else {
+                    document.getElementById('fix-result').innerHTML = '<div class="error">Loading overlay not found</div>';
+                }
+                
+            } catch (error) {
+                document.getElementById('fix-result').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+        
+        function checkMainApp() {
+            try {
+                // Open main app in new tab to check
+                const newWindow = window.open('/', '_blank');
+                document.getElementById('fix-result').innerHTML = '<div class="info">Main app opened in new tab. Check browser console for errors.</div>';
+            } catch (error) {
+                document.getElementById('fix-result').innerHTML = '<div class="error">Error opening main app: ' + error.message + '</div>';
+            }
+        }
+        
+        function injectFix() {
+            const fixScript = `
+                // Fix loading overlay issue
+                function fixLoadingOverlay() {
+                    const loadingOverlay = document.getElementById('loading-overlay');
+                    if (loadingOverlay) {
+                        // Force hide loading
+                        loadingOverlay.classList.remove('show');
+                        loadingOverlay.style.display = 'none';
+                        
+                        console.log('✅ Loading overlay fixed');
+                        return true;
+                    }
+                    return false;
+                }
+                
+                // Fix App initialization
+                function fixAppInit() {
+                    if (window.App && window.App.initialized === false) {
+                        // Force complete initialization
+                        window.App.hideGlobalLoading();
+                        window.App.initialized = true;
+                        console.log('✅ App initialization fixed');
+                        return true;
+                    }
+                    return false;
+                }
+                
+                // Run fixes
+                const overlay = fixLoadingOverlay();
+                const app = fixAppInit();
+                
+                console.log('Fix results - Overlay:', overlay, 'App:', app);
+                
+                // Return results
+                ({ overlay: overlay, app: app });
+            `;
+            
+            try {
+                const result = eval(fixScript);
+                document.getElementById('fix-result').innerHTML = 
+                    '<div class="success">Fix injected! Results: ' + JSON.stringify(result) + '</div>';
+            } catch (error) {
+                document.getElementById('fix-result').innerHTML = 
+                    '<div class="error">Fix injection failed: ' + error.message + '</div>';
+            }
+        }
+        
+        // Auto-check status on load
+        window.addEventListener('load', () => {
+            setTimeout(checkStatus, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 패널 오류 디버깅</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #dc3545;
+            text-align: center;
+        }
+        .step {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .step h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .debug-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        .debug-button:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .code {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        #console-output {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔍 관리자 패널 오류 디버깅</h1>
+        
+        <div class="info">
+            <strong>목적:</strong> "예기치 못한 오류가 발생했습니다" 오류의 원인을 찾고 해결하기 위한 단계별 진단
+        </div>
+        
+        <div class="step">
+            <h3>1단계: 기본 의존성 확인</h3>
+            <button class="debug-button" onclick="checkDependencies()">의존성 확인</button>
+            <div id="dependencies-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>2단계: DataManager 상태 확인</h3>
+            <button class="debug-button" onclick="checkDataManager()">DataManager 확인</button>
+            <div id="datamanager-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>3단계: AdminManager 상태 확인</h3>
+            <button class="debug-button" onclick="checkAdminManager()">AdminManager 확인</button>
+            <div id="adminmanager-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>4단계: 관리자 로그인 테스트</h3>
+            <button class="debug-button" onclick="testAdminLogin()">로그인 테스트</button>
+            <div id="login-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>5단계: 안전한 관리자 패널 표시</h3>
+            <button class="debug-button" onclick="safeShowAdminPanel()">안전한 패널 표시</button>
+            <div id="panel-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>6단계: 실시간 콘솔 로그</h3>
+            <button class="debug-button" onclick="toggleConsoleCapture()">콘솔 캡처 토글</button>
+            <div id="console-output"></div>
+        </div>
+        
+        <div class="step">
+            <h3>7단계: 메인 사이트 접속</h3>
+            <button class="debug-button" onclick="goToMainSite()">메인 사이트로 이동</button>
+        </div>
+    </div>
+
+    <!-- 실제 애플리케이션 스크립트들 로드 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/logger.js"></script>
+    <script src="js/eventEmitter.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/admin.js"></script>
+
+    <script>
+        let consoleCapture = false;
+        let originalConsole = {};
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        function addToConsole(message, type = 'log') {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = {
+                'log': '#00ff00',
+                'error': '#ff0000',
+                'warn': '#ffff00',
+                'info': '#00ffff'
+            }[type] || '#00ff00';
+            
+            output.innerHTML += `<div style="color: ${color}">[${timestamp}] ${type.toUpperCase()}: ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function toggleConsoleCapture() {
+            if (!consoleCapture) {
+                // 콘솔 캡처 시작
+                originalConsole.log = console.log;
+                originalConsole.error = console.error;
+                originalConsole.warn = console.warn;
+                originalConsole.info = console.info;
+
+                console.log = (...args) => {
+                    originalConsole.log(...args);
+                    addToConsole(args.join(' '), 'log');
+                };
+                console.error = (...args) => {
+                    originalConsole.error(...args);
+                    addToConsole(args.join(' '), 'error');
+                };
+                console.warn = (...args) => {
+                    originalConsole.warn(...args);
+                    addToConsole(args.join(' '), 'warn');
+                };
+                console.info = (...args) => {
+                    originalConsole.info(...args);
+                    addToConsole(args.join(' '), 'info');
+                };
+
+                consoleCapture = true;
+                addToConsole('콘솔 캡처 시작됨', 'info');
+                
+            } else {
+                // 콘솔 캡처 중지
+                console.log = originalConsole.log;
+                console.error = originalConsole.error;
+                console.warn = originalConsole.warn;
+                console.info = originalConsole.info;
+                
+                consoleCapture = false;
+                addToConsole('콘솔 캡처 중지됨', 'info');
+            }
+        }
+
+        function checkDependencies() {
+            let results = [];
+            let allGood = true;
+
+            // 기본 전역 객체들 확인
+            const dependencies = [
+                { name: 'AppConfig', obj: window.AppConfig },
+                { name: 'Utils', obj: window.Utils },
+                { name: 'Logger', obj: window.Logger },
+                { name: 'EventEmitter', obj: window.EventEmitter },
+                { name: 'dataManager', obj: window.dataManager },
+                { name: 'adminManager', obj: window.adminManager }
+            ];
+
+            dependencies.forEach(dep => {
+                if (dep.obj) {
+                    results.push(`✅ ${dep.name}: 로드됨`);
+                } else {
+                    results.push(`❌ ${dep.name}: 로드되지 않음`);
+                    allGood = false;
+                }
+            });
+
+            // DOM 요소들 확인
+            const domElements = [
+                { name: 'content-body', id: 'content-body' },
+                { name: 'admin-modal', id: 'admin-modal' },
+                { name: 'admin-btn', id: 'admin-btn' }
+            ];
+
+            domElements.forEach(elem => {
+                const element = document.getElementById(elem.id);
+                if (element) {
+                    results.push(`✅ DOM ${elem.name}: 존재함`);
+                } else {
+                    results.push(`⚠️ DOM ${elem.name}: 존재하지 않음 (메인 페이지에서만 사용)`);
+                }
+            });
+
+            const resultType = allGood ? 'success' : 'warning';
+            showResult('dependencies-result', results.join('<br>'), resultType);
+        }
+
+        function checkDataManager() {
+            let results = [];
+            let status = 'info';
+
+            if (!window.dataManager) {
+                showResult('datamanager-result', '❌ DataManager가 존재하지 않습니다!', 'error');
+                return;
+            }
+
+            const dm = window.dataManager;
+
+            // DataManager 메서드들 확인
+            const methods = [
+                'initialize', 'getDataSummary', 'getDepartments', 
+                'getCategories', 'getCategoriesByDepartment', 
+                'getProcessesByCategory', 'addDepartment', 'addCategory', 'addProcess'
+            ];
+
+            methods.forEach(method => {
+                if (typeof dm[method] === 'function') {
+                    results.push(`✅ ${method}: 메서드 존재`);
+                } else {
+                    results.push(`❌ ${method}: 메서드 없음`);
+                    status = 'error';
+                }
+            });
+
+            // 데이터 상태 확인
+            try {
+                const summary = dm.getDataSummary();
+                results.push(`📊 데이터 현황: 부서 ${summary.departments}개, 카테고리 ${summary.categories}개, 프로세스 ${summary.processes}개`);
+                
+                if (dm.initialized) {
+                    results.push(`✅ 초기화 상태: 완료`);
+                } else {
+                    results.push(`⚠️ 초기화 상태: 미완료`);
+                    status = 'warning';
+                }
+                
+            } catch (error) {
+                results.push(`❌ 데이터 접근 오류: ${error.message}`);
+                status = 'error';
+            }
+
+            showResult('datamanager-result', results.join('<br>'), status);
+        }
+
+        function checkAdminManager() {
+            let results = [];
+            let status = 'info';
+
+            if (!window.adminManager) {
+                showResult('adminmanager-result', '❌ AdminManager가 존재하지 않습니다!', 'error');
+                return;
+            }
+
+            const am = window.adminManager;
+
+            // AdminManager 메서드들 확인
+            const methods = [
+                'showLoginModal', 'handleLogin', 'showAdminPanel', 
+                'safeDataManager', 'safeDepartments', 'safeDataSummary',
+                'bindAdminPanelEvents', 'renderTabContent'
+            ];
+
+            methods.forEach(method => {
+                if (typeof am[method] === 'function') {
+                    results.push(`✅ ${method}: 메서드 존재`);
+                } else {
+                    results.push(`❌ ${method}: 메서드 없음`);
+                    status = 'warning';
+                }
+            });
+
+            // AdminManager 상태 확인
+            results.push(`🔒 로그인 상태: ${am.isLoggedIn ? '로그인됨' : '로그아웃됨'}`);
+            results.push(`🗂️ 현재 탭: ${am.currentTab || '없음'}`);
+            results.push(`🎫 세션 토큰: ${am.sessionToken ? '있음' : '없음'}`);
+
+            // 안전한 메서드 테스트
+            try {
+                const safeStats = am.safeDataSummary();
+                results.push(`✅ 안전한 통계 조회: 성공 (부서 ${safeStats.departments}개)`);
+            } catch (error) {
+                results.push(`❌ 안전한 통계 조회 실패: ${error.message}`);
+                status = 'error';
+            }
+
+            showResult('adminmanager-result', results.join('<br>'), status);
+        }
+
+        function testAdminLogin() {
+            if (!window.adminManager) {
+                showResult('login-result', '❌ AdminManager가 없습니다!', 'error');
+                return;
+            }
+
+            try {
+                const am = window.adminManager;
+                
+                // 로그인 상태 설정
+                am.isLoggedIn = true;
+                am.sessionToken = 'debug-session-' + Date.now();
+                
+                showResult('login-result', `✅ 로그인 테스트 성공!<br>세션 토큰: ${am.sessionToken}<br>로그인 상태: ${am.isLoggedIn}`, 'success');
+                
+            } catch (error) {
+                showResult('login-result', `❌ 로그인 테스트 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function safeShowAdminPanel() {
+            if (!window.adminManager) {
+                showResult('panel-result', '❌ AdminManager가 없습니다!', 'error');
+                return;
+            }
+
+            try {
+                const am = window.adminManager;
+                
+                // 로그인 확인
+                if (!am.isLoggedIn) {
+                    am.isLoggedIn = true;
+                    am.sessionToken = 'debug-session-' + Date.now();
+                }
+
+                // 가상의 content-body 생성
+                let contentBody = document.getElementById('content-body');
+                if (!contentBody) {
+                    contentBody = document.createElement('div');
+                    contentBody.id = 'content-body';
+                    contentBody.style.cssText = 'margin-top: 20px; padding: 20px; border: 2px dashed #007bff; border-radius: 8px;';
+                    document.body.appendChild(contentBody);
+                }
+
+                // 안전한 관리자 패널 표시
+                console.log('🔧 안전한 관리자 패널 표시 시작');
+                am.showAdminPanel();
+                
+                setTimeout(() => {
+                    const panel = document.querySelector('.admin-panel');
+                    if (panel) {
+                        showResult('panel-result', '✅ 관리자 패널이 성공적으로 표시되었습니다!<br>페이지 아래쪽에서 확인하세요.', 'success');
+                    } else {
+                        showResult('panel-result', '❌ 관리자 패널이 렌더링되지 않았습니다.', 'error');
+                    }
+                }, 500);
+                
+            } catch (error) {
+                console.error('관리자 패널 표시 오류:', error);
+                showResult('panel-result', `❌ 관리자 패널 표시 실패: ${error.message}<br><br>상세 오류:<br><pre>${error.stack}</pre>`, 'error');
+            }
+        }
+
+        function goToMainSite() {
+            if (confirm('메인 사이트로 이동하시겠습니까?')) {
+                window.location.href = '/';
+            }
+        }
+
+        // 페이지 로드 시 자동 진단
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🔍 자동 진단 시작');
+                toggleConsoleCapture(); // 콘솔 캡처 시작
+                checkDependencies();
+            }, 1000);
+        });
+
+        // 오류 캐치
+        window.addEventListener('error', (event) => {
+            addToConsole(`전역 오류: ${event.error.message} (${event.filename}:${event.lineno})`, 'error');
+        });
+    </script>
+</body>
+</html>

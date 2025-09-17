@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actual Admin Test - Korean Road Management</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="data:;base64,=" />
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <h1 class="logo">(PYM)도로관리</h1>
+                    <button class="sidebar-toggle" id="sidebar-toggle">
+                        <span class="icon icon-menu"></span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div id="breadcrumb" class="breadcrumb">
+                        <span>관리자 테스트</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="admin-controls">
+                        <button id="admin-btn" class="admin-btn">
+                            <span class="icon icon-key"></span>
+                            <span class="admin-btn-text">관리자</span>
+                        </button>
+                        <button id="logout-btn" class="logout-btn" style="display: none;">
+                            <span class="icon icon-sign-out"></span>
+                            로그아웃
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <section class="content">
+                <div id="content-body" class="content-body">
+                    <div class="admin-test-container">
+                        <h2>🔧 실제 관리자 시스템 테스트</h2>
+                        
+                        <div class="test-section">
+                            <h3>시스템 상태</h3>
+                            <div id="system-status">로딩 중...</div>
+                        </div>
+                        
+                        <div class="test-section">
+                            <h3>테스트 액션</h3>
+                            <button onclick="testLogin()" class="btn-primary">관리자 로그인 테스트</button>
+                            <button onclick="checkLoginState()" class="btn-secondary">로그인 상태 확인</button>
+                            <button onclick="showAdminPanelTest()" class="btn-primary">관리자 패널 표시</button>
+                            <button onclick="clearSession()" class="btn-warning">세션 초기화</button>
+                        </div>
+                        
+                        <div class="test-section">
+                            <h3>테스트 결과</h3>
+                            <div id="test-results">테스트를 실행해주세요.</div>
+                        </div>
+                        
+                        <div class="test-section">
+                            <h3>콘솔 로그</h3>
+                            <div id="console-output" style="background: #f5f5f5; padding: 10px; min-height: 200px; font-family: monospace; font-size: 12px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Login Modal (correct structure from main app) -->
+    <div class="modal" id="admin-modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>관리자 로그인</h3>
+                <button class="modal-close" id="admin-modal-close">
+                    <span class="icon icon-times"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="admin-login-form">
+                    <div class="form-group">
+                        <label for="admin-password">비밀번호</label>
+                        <input type="password" id="admin-password" placeholder="관리자 비밀번호를 입력하세요" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <span class="icon icon-sign-in"></span> 로그인
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .admin-test-container {
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .btn-primary, .btn-secondary, .btn-warning {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .status-success { color: green; }
+        .status-error { color: red; }
+        .status-warning { color: orange; }
+    </style>
+
+    <!-- Load JavaScript modules -->
+    <script src="js/config.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/content-renderer.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/search.js"></script>
+
+    <script>
+        // Console capture
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+
+        function logToOutput(message, level = 'log') {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = level === 'error' ? 'status-error' : level === 'warn' ? 'status-warning' : '';
+            output.innerHTML += `<div class="${className}">[${timestamp}] ${level.toUpperCase()}: ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            logToOutput(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            logToOutput(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalConsoleWarn.apply(console, args);
+            logToOutput(args.join(' '), 'warn');
+        };
+
+        function updateSystemStatus() {
+            const statusDiv = document.getElementById('system-status');
+            let html = '';
+
+            // Check modules
+            const modules = ['dataManager', 'adminManager', 'AppConfig', 'Utils', 'Logger', 'EventEmitter'];
+            modules.forEach(module => {
+                if (window[module]) {
+                    html += `<span class="status-success">✅ ${module}</span><br>`;
+                } else {
+                    html += `<span class="status-error">❌ ${module}</span><br>`;
+                }
+            });
+
+            // Check admin state if available
+            if (window.adminManager) {
+                html += `<br><strong>Admin State:</strong><br>`;
+                html += `로그인 상태: ${adminManager.isLoggedIn ? '<span class="status-success">✅ 로그인됨</span>' : '<span class="status-warning">❌ 로그아웃</span>'}<br>`;
+                html += `세션 토큰: ${adminManager.sessionToken || 'None'}<br>`;
+            }
+
+            statusDiv.innerHTML = html;
+        }
+
+        function testLogin() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<p class="status-warning">🔐 관리자 로그인 테스트 중...</p>';
+
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager가 로드되지 않음');
+                }
+
+                // Test 1: Show login modal
+                console.log('Step 1: 로그인 모달 표시 테스트');
+                adminManager.showLoginModal();
+
+                // Test 2: Simulate password input and login
+                setTimeout(() => {
+                    console.log('Step 2: 비밀번호 입력 및 로그인 시뮬레이션');
+                    const passwordInput = document.getElementById('admin-password');
+                    if (passwordInput) {
+                        passwordInput.value = 'spt2019!';
+                        console.log('비밀번호 입력 완료');
+                        
+                        // Trigger login
+                        adminManager.handleLogin();
+                        
+                        setTimeout(() => {
+                            updateSystemStatus();
+                            const currentState = adminManager.isLoggedIn;
+                            results.innerHTML = `<p class="${currentState ? 'status-success' : 'status-error'}">
+                                ${currentState ? '✅ 로그인 테스트 성공!' : '❌ 로그인 테스트 실패'}
+                            </p>`;
+                        }, 1000);
+                    } else {
+                        throw new Error('비밀번호 입력 필드를 찾을 수 없음');
+                    }
+                }, 500);
+
+            } catch (error) {
+                results.innerHTML = `<p class="status-error">❌ 로그인 테스트 오류: ${error.message}</p>`;
+                console.error('로그인 테스트 오류:', error);
+            }
+        }
+
+        function checkLoginState() {
+            const results = document.getElementById('test-results');
+            
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager가 로드되지 않음');
+                }
+
+                const state = {
+                    isLoggedIn: adminManager.isLoggedIn,
+                    sessionToken: adminManager.sessionToken,
+                    currentEditItem: adminManager.currentEditItem
+                };
+
+                results.innerHTML = `<p class="status-success">✅ 현재 관리자 상태:</p>
+                    <pre>${JSON.stringify(state, null, 2)}</pre>`;
+                
+                updateSystemStatus();
+
+            } catch (error) {
+                results.innerHTML = `<p class="status-error">❌ 상태 확인 오류: ${error.message}</p>`;
+            }
+        }
+
+        function showAdminPanelTest() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<p class="status-warning">🖥️ 관리자 패널 표시 테스트 중...</p>';
+
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager가 로드되지 않음');
+                }
+
+                if (!adminManager.isLoggedIn) {
+                    results.innerHTML = '<p class="status-warning">⚠️ 먼저 로그인해주세요</p>';
+                    return;
+                }
+
+                console.log('관리자 패널 표시 시도...');
+                adminManager.showAdminPanel();
+
+                setTimeout(() => {
+                    const contentBody = document.getElementById('content-body');
+                    const hasAdminContent = contentBody && contentBody.innerHTML.includes('admin-panel');
+                    
+                    results.innerHTML = `<p class="${hasAdminContent ? 'status-success' : 'status-error'}">
+                        ${hasAdminContent ? '✅ 관리자 패널 표시 성공!' : '❌ 관리자 패널 표시 실패'}
+                    </p>`;
+                    
+                    if (!hasAdminContent) {
+                        console.error('관리자 패널이 content-body에 렌더링되지 않음');
+                    }
+                }, 1000);
+
+            } catch (error) {
+                results.innerHTML = `<p class="status-error">❌ 패널 표시 오류: ${error.message}</p>`;
+                console.error('패널 표시 오류:', error);
+            }
+        }
+
+        function clearSession() {
+            const results = document.getElementById('test-results');
+            
+            try {
+                if (window.adminManager) {
+                    adminManager.isLoggedIn = false;
+                    adminManager.sessionToken = null;
+                    adminManager.currentEditItem = null;
+                    
+                    // Clear localStorage
+                    if (AppConfig && AppConfig.STORAGE_KEYS) {
+                        Utils.removeFromStorage(AppConfig.STORAGE_KEYS.ADMIN_SESSION);
+                    }
+                    
+                    adminManager.updateAdminButtonState();
+                }
+                
+                results.innerHTML = '<p class="status-success">✅ 세션이 초기화되었습니다</p>';
+                updateSystemStatus();
+                
+                // Restore original test content
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+
+            } catch (error) {
+                results.innerHTML = `<p class="status-error">❌ 세션 초기화 오류: ${error.message}</p>`;
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                updateSystemStatus();
+                console.log('관리자 테스트 페이지 로드 완료');
+                
+                // Initialize admin button events
+                if (window.adminManager) {
+                    adminManager.bindLoginModalEvents();
+                    console.log('관리자 이벤트 바인딩 완료');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

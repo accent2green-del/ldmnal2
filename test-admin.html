@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 버튼 테스트</title>
+    <style>
+        body { 
+            font-family: 'Noto Sans KR', Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #2563eb; text-align: center; margin-bottom: 30px; }
+        .test-item {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1d4ed8; }
+        .admin-test-btn {
+            background: #dc2626;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .admin-test-btn:hover { background: #b91c1c; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 관리자 기능 테스트</h1>
+        
+        <div class="test-item">
+            <h3>1. 시스템 로딩 상태 확인</h3>
+            <button onclick="checkSystemStatus()">시스템 상태 확인</button>
+            <div id="systemStatus" class="test-result info">테스트 대기중...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>2. 관리자 버튼 반응 테스트</h3>
+            <button class="admin-test-btn" onclick="testAdminButton()">👑 관리자 패널 열기 (테스트)</button>
+            <div id="adminButtonResult" class="test-result info">테스트 대기중...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>3. 데이터 조회 기능 테스트</h3>
+            <button onclick="testDataRetrieval()">데이터 조회 테스트</button>
+            <div id="dataResult" class="test-result info">테스트 대기중...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>4. 모듈 초기화 상태 확인</h3>
+            <button onclick="checkModuleStatus()">모듈 상태 확인</button>
+            <div id="moduleStatus" class="test-result info">테스트 대기중...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>5. 이벤트 시스템 테스트</h3>
+            <button onclick="testEventSystem()">이벤트 시스템 테스트</button>
+            <div id="eventResult" class="test-result info">테스트 대기중...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>📋 전체 결과 요약</h3>
+            <button onclick="runAllTests()">전체 테스트 실행</button>
+            <div id="overallResult" class="test-result info">전체 테스트 대기중...</div>
+        </div>
+    </div>
+
+    <script>
+        // 메인 시스템 스크립트들 로드
+        const scripts = [
+            './js/utils.js',
+            './js/logger.js',
+            './js/eventEmitter.js',
+            './js/config.js',
+            './js/data-manager.js',
+            './js/admin.js'
+        ];
+
+        let scriptsLoaded = 0;
+        let loadingErrors = [];
+
+        scripts.forEach(src => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => {
+                scriptsLoaded++;
+                console.log(`✅ 로드됨: ${src}`);
+            };
+            script.onerror = () => {
+                loadingErrors.push(src);
+                console.error(`❌ 로드 실패: ${src}`);
+            };
+            document.head.appendChild(script);
+        });
+
+        function checkSystemStatus() {
+            const result = document.getElementById('systemStatus');
+            try {
+                const status = [];
+                
+                if (typeof Utils !== 'undefined') status.push('✅ Utils 모듈');
+                else status.push('❌ Utils 모듈');
+                
+                if (typeof Logger !== 'undefined') status.push('✅ Logger 모듈');
+                else status.push('❌ Logger 모듈');
+                
+                if (typeof EventEmitter !== 'undefined') status.push('✅ EventEmitter 모듈');
+                else status.push('❌ EventEmitter 모듈');
+                
+                if (typeof window.dataManager !== 'undefined') status.push('✅ DataManager');
+                else status.push('❌ DataManager');
+                
+                if (typeof window.adminManager !== 'undefined') status.push('✅ AdminManager');
+                else status.push('❌ AdminManager');
+
+                result.className = 'test-result ' + (status.some(s => s.includes('❌')) ? 'error' : 'success');
+                result.innerHTML = '<strong>시스템 상태:</strong><br>' + status.join('<br>');
+                
+            } catch (error) {
+                result.className = 'test-result error';
+                result.innerHTML = `❌ 시스템 확인 중 오류: ${error.message}`;
+            }
+        }
+
+        function testAdminButton() {
+            const result = document.getElementById('adminButtonResult');
+            try {
+                if (typeof window.adminManager === 'undefined') {
+                    result.className = 'test-result error';
+                    result.innerHTML = '❌ AdminManager가 로드되지 않았습니다.';
+                    return;
+                }
+
+                // 관리자 패널 열기 시도
+                if (typeof window.adminManager.showAdminPanel === 'function') {
+                    window.adminManager.showAdminPanel();
+                    result.className = 'test-result success';
+                    result.innerHTML = '✅ 관리자 버튼이 정상적으로 작동합니다! showAdminPanel() 실행됨';
+                } else {
+                    result.className = 'test-result error';
+                    result.innerHTML = '❌ showAdminPanel 메서드를 찾을 수 없습니다.';
+                }
+                
+            } catch (error) {
+                result.className = 'test-result error';
+                result.innerHTML = `❌ 관리자 버튼 테스트 실패: ${error.message}`;
+            }
+        }
+
+        function testDataRetrieval() {
+            const result = document.getElementById('dataResult');
+            try {
+                if (typeof window.dataManager === 'undefined') {
+                    result.className = 'test-result error';
+                    result.innerHTML = '❌ DataManager가 로드되지 않았습니다.';
+                    return;
+                }
+
+                const departments = window.dataManager.getDepartments();
+                const categories = window.dataManager.getCategories();
+                
+                result.className = 'test-result success';
+                result.innerHTML = `✅ 데이터 조회 성공:<br>` +
+                    `- 부서 수: ${departments ? departments.length : 0}개<br>` +
+                    `- 카테고리 수: ${categories ? categories.length : 0}개`;
+                
+            } catch (error) {
+                result.className = 'test-result error';
+                result.innerHTML = `❌ 데이터 조회 실패: ${error.message}`;
+            }
+        }
+
+        function checkModuleStatus() {
+            const result = document.getElementById('moduleStatus');
+            try {
+                const modules = [
+                    { name: 'Utils', obj: window.Utils, status: typeof Utils !== 'undefined' },
+                    { name: 'Logger', obj: window.Logger, status: typeof Logger !== 'undefined' },
+                    { name: 'EventEmitter', obj: window.EventEmitter, status: typeof EventEmitter !== 'undefined' },
+                    { name: 'DataManager', obj: window.dataManager, status: typeof window.dataManager !== 'undefined' },
+                    { name: 'AdminManager', obj: window.adminManager, status: typeof window.adminManager !== 'undefined' }
+                ];
+
+                const statusText = modules.map(m => 
+                    `${m.status ? '✅' : '❌'} ${m.name}: ${m.status ? '정상' : '로드안됨'}`
+                ).join('<br>');
+
+                const allLoaded = modules.every(m => m.status);
+                result.className = 'test-result ' + (allLoaded ? 'success' : 'error');
+                result.innerHTML = '<strong>모듈 상태:</strong><br>' + statusText;
+                
+            } catch (error) {
+                result.className = 'test-result error';
+                result.innerHTML = `❌ 모듈 상태 확인 실패: ${error.message}`;
+            }
+        }
+
+        function testEventSystem() {
+            const result = document.getElementById('eventResult');
+            try {
+                if (typeof EventEmitter === 'undefined') {
+                    result.className = 'test-result error';
+                    result.innerHTML = '❌ EventEmitter가 로드되지 않았습니다.';
+                    return;
+                }
+
+                // 테스트 이벤트 등록 및 발생
+                let testPassed = false;
+                EventEmitter.on('test:event', () => {
+                    testPassed = true;
+                });
+                
+                EventEmitter.emit('test:event');
+                
+                result.className = 'test-result ' + (testPassed ? 'success' : 'error');
+                result.innerHTML = testPassed ? 
+                    '✅ 이벤트 시스템이 정상적으로 작동합니다.' : 
+                    '❌ 이벤트 시스템이 작동하지 않습니다.';
+                
+            } catch (error) {
+                result.className = 'test-result error';
+                result.innerHTML = `❌ 이벤트 시스템 테스트 실패: ${error.message}`;
+            }
+        }
+
+        function runAllTests() {
+            const result = document.getElementById('overallResult');
+            result.innerHTML = '🔄 전체 테스트 실행 중...';
+            
+            setTimeout(() => {
+                checkSystemStatus();
+                testDataRetrieval();
+                checkModuleStatus();
+                testEventSystem();
+                
+                setTimeout(() => {
+                    const allResults = [
+                        document.getElementById('systemStatus'),
+                        document.getElementById('dataResult'),
+                        document.getElementById('moduleStatus'),
+                        document.getElementById('eventResult')
+                    ];
+                    
+                    const successes = allResults.filter(el => el.className.includes('success')).length;
+                    const total = allResults.length;
+                    
+                    result.className = 'test-result ' + (successes === total ? 'success' : 'error');
+                    result.innerHTML = `📊 전체 테스트 완료: ${successes}/${total} 성공<br>` +
+                        `${successes === total ? '🎉 모든 시스템이 정상 작동 중입니다!' : '⚠️ 일부 시스템에 문제가 있습니다.'}`;
+                }, 500);
+            }, 100);
+        }
+
+        // 페이지 로드 후 자동으로 스크립트 로드 상태 확인
+        setTimeout(() => {
+            console.log(`스크립트 로드 상태: ${scriptsLoaded}/${scripts.length} 완료`);
+            if (loadingErrors.length > 0) {
+                console.error('로드 실패한 스크립트:', loadingErrors);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

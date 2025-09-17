@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="data:;base64,=" />
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .btn-test {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        .btn-test:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        #admin-modal {
+            z-index: 9999 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔐 Admin Login Test Tool</h1>
+        
+        <div class="test-section">
+            <h3>System Status</h3>
+            <div id="system-status">Loading...</div>
+            <button class="btn-test" onclick="checkSystemStatus()">Refresh Status</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Admin Login Tests</h3>
+            <button class="btn-test" onclick="testShowModal()">1. Show Login Modal</button>
+            <button class="btn-test" onclick="testLoginProcess()">2. Test Login Process</button>
+            <button class="btn-test" onclick="testFullLogin()">3. Full Login Test</button>
+            <button class="btn-test" onclick="testLogout()">4. Test Logout</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test Results</h3>
+            <div id="test-results">Ready to run tests...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Console Output</h3>
+            <div id="console-output" style="max-height: 300px; overflow-y: auto; background: #f5f5f5; padding: 10px; font-family: monospace; font-size: 12px;"></div>
+        </div>
+    </div>
+
+    <!-- Login Modal (from main app) -->
+    <div class="modal" id="admin-modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>관리자 로그인</h3>
+                <button class="modal-close" id="admin-modal-close">
+                    <span class="icon icon-times"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="admin-login-form">
+                    <div class="form-group">
+                        <label for="admin-password">비밀번호</label>
+                        <input type="password" id="admin-password" placeholder="관리자 비밀번호를 입력하세요" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <span class="icon icon-sign-in"></span> 로그인
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay for consistency -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner">
+            <span class="icon icon-spinner"></span>
+            <p>처리 중...</p>
+        </div>
+    </div>
+
+    <!-- Load all modules -->
+    <script src="js/config.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/content-renderer.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/search.js"></script>
+
+    <script>
+        // Console capture
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function logToOutput(message, level = 'log') {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = level === 'error' ? 'red' : level === 'warn' ? 'orange' : 'black';
+            output.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logToOutput(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logToOutput(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            logToOutput(args.join(' '), 'warn');
+        };
+        
+        function updateStatus(message, type = 'info') {
+            const results = document.getElementById('test-results');
+            const className = type === 'success' ? 'status success' : type === 'error' ? 'status error' : 'status info';
+            results.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+        
+        function checkSystemStatus() {
+            const statusDiv = document.getElementById('system-status');
+            let html = '';
+            
+            // Check modules
+            const modules = ['AppConfig', 'Utils', 'Logger', 'EventEmitter', 'dataManager', 'adminManager'];
+            modules.forEach(module => {
+                const available = window[module] ? '✅' : '❌';
+                html += `<div>${available} ${module}: ${window[module] ? 'Available' : 'Not found'}</div>`;
+            });
+            
+            // Check admin state
+            if (window.adminManager) {
+                html += `<br><strong>Admin Manager State:</strong><br>`;
+                html += `Login Status: ${adminManager.isLoggedIn ? '✅ Logged In' : '❌ Logged Out'}<br>`;
+                html += `Session Token: ${adminManager.sessionToken || 'None'}<br>`;
+            }
+            
+            // Check admin password config
+            if (window.AppConfig) {
+                html += `<br><strong>Config:</strong><br>`;
+                html += `Admin Password Set: ${AppConfig.ADMIN_PASSWORD ? '✅ Yes' : '❌ No'}<br>`;
+                html += `Password Value: "${AppConfig.ADMIN_PASSWORD}"<br>`;
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        function testShowModal() {
+            updateStatus('Testing modal display...', 'info');
+            
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager not available');
+                }
+                
+                adminManager.showLoginModal();
+                
+                // Check if modal is visible
+                const modal = document.getElementById('admin-modal');
+                if (modal && modal.classList.contains('show')) {
+                    updateStatus('✅ Modal displayed successfully!', 'success');
+                } else {
+                    updateStatus('❌ Modal not displayed properly', 'error');
+                }
+                
+            } catch (error) {
+                updateStatus(`❌ Error showing modal: ${error.message}`, 'error');
+            }
+        }
+        
+        function testLoginProcess() {
+            updateStatus('Testing login process...', 'info');
+            
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager not available');
+                }
+                
+                // Set password and trigger login
+                const passwordInput = document.getElementById('admin-password');
+                if (passwordInput) {
+                    passwordInput.value = 'spt2019!';
+                    console.log('Password set to:', passwordInput.value);
+                    
+                    // Call handleLogin directly
+                    adminManager.handleLogin();
+                    
+                    // Check result after a delay
+                    setTimeout(() => {
+                        if (adminManager.isLoggedIn) {
+                            updateStatus('✅ Login successful!', 'success');
+                            checkSystemStatus();
+                        } else {
+                            updateStatus('❌ Login failed', 'error');
+                        }
+                    }, 1000);
+                } else {
+                    throw new Error('Password input not found');
+                }
+                
+            } catch (error) {
+                updateStatus(`❌ Error in login process: ${error.message}`, 'error');
+            }
+        }
+        
+        function testFullLogin() {
+            updateStatus('Running full login test...', 'info');
+            
+            try {
+                // Step 1: Show modal
+                adminManager.showLoginModal();
+                
+                setTimeout(() => {
+                    // Step 2: Fill password
+                    const passwordInput = document.getElementById('admin-password');
+                    passwordInput.value = 'spt2019!';
+                    
+                    setTimeout(() => {
+                        // Step 3: Submit form
+                        const form = document.getElementById('admin-login-form');
+                        if (form) {
+                            const event = new Event('submit', { bubbles: true, cancelable: true });
+                            form.dispatchEvent(event);
+                        } else {
+                            adminManager.handleLogin();
+                        }
+                        
+                        setTimeout(() => {
+                            // Check result
+                            if (adminManager.isLoggedIn) {
+                                updateStatus('✅ Full login test successful!', 'success');
+                            } else {
+                                updateStatus('❌ Full login test failed', 'error');
+                            }
+                            checkSystemStatus();
+                        }, 1000);
+                    }, 500);
+                }, 500);
+                
+            } catch (error) {
+                updateStatus(`❌ Error in full login test: ${error.message}`, 'error');
+            }
+        }
+        
+        function testLogout() {
+            updateStatus('Testing logout...', 'info');
+            
+            try {
+                if (!window.adminManager) {
+                    throw new Error('AdminManager not available');
+                }
+                
+                if (adminManager.isLoggedIn) {
+                    adminManager.handleLogout();
+                    setTimeout(() => {
+                        updateStatus('✅ Logout test completed', 'success');
+                        checkSystemStatus();
+                    }, 1000);
+                } else {
+                    updateStatus('⚠️ Already logged out', 'info');
+                }
+                
+            } catch (error) {
+                updateStatus(`❌ Error in logout: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkSystemStatus();
+                console.log('Admin login test tool loaded');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

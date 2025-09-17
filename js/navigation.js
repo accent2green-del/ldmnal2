@@ -40,10 +40,23 @@ class NavigationManager {
             }
         });
         
-        // 모바일에서 네비게이션 아이템 클릭 시 사이드바 숨김
-        EventEmitter.on('navigation:itemSelected', () => {
+        // 모바일에서 네비게이션 아이템 클릭 시 사이드바 숨김 (스마트 로직)
+        EventEmitter.on('navigation:itemSelected', (data) => {
             if (window.innerWidth <= 768) {
-                this.hideSidebar();
+                const { type } = data;
+                // 프로세스(leaf node) 선택 시에만 즉시 숨김
+                // 부서나 카테고리 선택 시에는 사용자가 하위 항목을 볼 수 있도록 지연
+                if (type === 'process') {
+                    this.hideSidebar();
+                } else if (type === 'department' || type === 'category') {
+                    // 부서/카테고리 선택 시 2초 후 자동 숨김 (사용자가 하위 항목 확인 가능)
+                    setTimeout(() => {
+                        // 다시 한 번 모바일 체크 (사용자가 화면을 회전했을 수 있음)
+                        if (window.innerWidth <= 768) {
+                            this.hideSidebar();
+                        }
+                    }, 2000);
+                }
             }
         });
         
@@ -51,6 +64,13 @@ class NavigationManager {
         window.addEventListener('resize', Utils.debounce(() => {
             this.handleResize();
         }, 250));
+        
+        // 데이터 로드 후 아이콘 메뉴 초기화
+        EventEmitter.on('data:initialized', () => {
+            setTimeout(() => {
+                this.updateIconMenu();
+            }, 100);
+        });
     }
     
     /**
@@ -237,6 +257,19 @@ class NavigationManager {
         // 선택 상태 저장
         this.currentSelection = { type, id };
         
+        // 부서나 카테고리 클릭 시 자동 확장 (축소는 하지 않음)
+        if (type === 'department') {
+            // 부서 클릭 시 해당 부서만 확장 (다른 부서는 건드리지 않음)
+            if (!this.expandedDepartments.has(id)) {
+                this.expandDepartment(id);
+            }
+        } else if (type === 'category') {
+            // 카테고리 클릭 시 해당 카테고리만 확장
+            if (!this.expandedCategories.has(id)) {
+                this.expandCategory(id);
+            }
+        }
+        
         // 컨텐츠 렌더링 이벤트 발생
         EventEmitter.emit('navigation:itemSelected', { type, id });
         
@@ -244,6 +277,56 @@ class NavigationManager {
         this.updateBreadcrumb(type, id);
         
         // 상태 저장
+        this.saveNavigationState();
+    }
+    
+    /**
+     * 부서 확장만 하기 (축소하지 않음)
+     */
+    expandDepartment(departmentId) {
+        if (this.expandedDepartments.has(departmentId)) return;
+        
+        const expandIcon = document.querySelector(`[data-department-id="${departmentId}"]`);
+        const childrenContainer = document.getElementById(`dept-${departmentId}-children`);
+        
+        if (!expandIcon || !childrenContainer) return;
+        
+        // 확장 애니메이션
+        this.expandedDepartments.add(departmentId);
+        expandIcon.classList.add('expanded');
+        childrenContainer.classList.add('expanding');
+        
+        setTimeout(() => {
+            childrenContainer.classList.add('expanded');
+            childrenContainer.classList.remove('expanding');
+        }, 50);
+        
+        Logger.navigation(`➕ 부서 자동 확장: ${departmentId}`);
+        this.saveNavigationState();
+    }
+    
+    /**
+     * 카테고리 확장만 하기 (축소하지 않음)
+     */
+    expandCategory(categoryId) {
+        if (this.expandedCategories.has(categoryId)) return;
+        
+        const expandIcon = document.querySelector(`[data-category-id="${categoryId}"]`);
+        const childrenContainer = document.getElementById(`cat-${categoryId}-children`);
+        
+        if (!expandIcon || !childrenContainer) return;
+        
+        // 확장 애니메이션
+        this.expandedCategories.add(categoryId);
+        expandIcon.classList.add('expanded');
+        childrenContainer.classList.add('expanding');
+        
+        setTimeout(() => {
+            childrenContainer.classList.add('expanded');
+            childrenContainer.classList.remove('expanding');
+        }, 50);
+        
+        Logger.navigation(`➕ 카테고리 자동 확장: ${categoryId}`);
         this.saveNavigationState();
     }
     
@@ -337,10 +420,12 @@ class NavigationManager {
         if (window.innerWidth <= 768) {
             // 모바일에서는 show/hide 토글
             sidebar.classList.toggle('show');
+            this.updateIconMenu();
         } else {
             // 데스크탑에서는 collapsed 토글
             sidebar.classList.toggle('collapsed');
             this.isCollapsed = sidebar.classList.contains('collapsed');
+            this.updateIconMenu();
         }
         
         Logger.navigation(`📱 사이드바 토글: ${sidebar.classList.contains('show') || sidebar.classList.contains('collapsed') ? '열림' : '닫힌'}`);
@@ -370,6 +455,9 @@ class NavigationManager {
             // 모바일로 변경 시 collapsed 클래스 제거
             sidebar.classList.remove('collapsed');
         }
+        
+        // 아이콘 메뉴 상태 업데이트
+        this.updateIconMenu();
     }
     
     /**
@@ -715,6 +803,93 @@ class NavigationManager {
     }
     
     /**
+     * 아이콘 메뉴 업데이트
+     */
+    updateIconMenu() {
+        const iconMenu = document.getElementById('icon-menu');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (!iconMenu || !sidebar) return;
+        
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        
+        if (isCollapsed && window.innerWidth > 768) {
+            this.showIconMenu();
+            this.createIconMenuItems();
+        } else {
+            this.hideIconMenu();
+        }
+    }
+    
+    /**
+     * 아이콘 메뉴 표시
+     */
+    showIconMenu() {
+        const iconMenu = document.getElementById('icon-menu');
+        if (iconMenu) {
+            iconMenu.classList.add('show');
+            iconMenu.style.display = 'block';
+        }
+    }
+    
+    /**
+     * 아이콘 메뉴 숨김
+     */
+    hideIconMenu() {
+        const iconMenu = document.getElementById('icon-menu');
+        if (iconMenu) {
+            iconMenu.classList.remove('show');
+            iconMenu.style.display = 'none';
+        }
+    }
+    
+    /**
+     * 아이콘 메뉴 아이템 생성
+     */
+    createIconMenuItems() {
+        const iconMenuItems = document.getElementById('icon-menu-items');
+        const iconMenuToggle = document.getElementById('icon-menu-toggle');
+        
+        if (!iconMenuItems) return;
+        
+        // 토글 버튼 이벤트
+        if (iconMenuToggle) {
+            iconMenuToggle.onclick = () => {
+                this.toggleSidebar();
+            };
+        }
+        
+        const departments = dataManager.getDepartments();
+        
+        const menuHTML = departments.map(dept => {
+            const isActive = this.currentSelection?.type === 'department' && this.currentSelection?.id === dept.id;
+            return `
+                <button class="icon-menu-item ${isActive ? 'active' : ''}" 
+                        data-type="department" 
+                        data-id="${dept.id}"
+                        title="${Utils.escapeHtml(dept.name)}">
+                    <span class="icon icon-building"></span>
+                </button>
+            `;
+        }).join('');
+        
+        iconMenuItems.innerHTML = menuHTML;
+        
+        // 아이콘 메뉴 아이템 이벤트 등록
+        iconMenuItems.addEventListener('click', (e) => {
+            const menuItem = e.target.closest('.icon-menu-item');
+            if (menuItem) {
+                const type = menuItem.dataset.type;
+                const id = menuItem.dataset.id;
+                this.navigateToItem(type, id);
+                
+                // 사이드바 펼치기
+                this.toggleSidebar();
+            }
+        });
+    }
+    
+    /**
      * 사이드바 표시
      */
     showSidebar() {
@@ -741,4 +916,10 @@ class NavigationManager {
 }
 
 // 전역 인스턴스 생성
-window.navigationManager = new NavigationManager();
+try {
+    window.navigationManager = new NavigationManager();
+    Logger.info('🧭 NavigationManager 전역 인스턴스 생성 완료');
+} catch (error) {
+    Logger.error('❌ NavigationManager 전역 인스턴스 생성 실패:', error);
+    throw error;
+}
