@@ -1155,14 +1155,9 @@ window.AdminManager = class {
                         <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
                             상위 카테고리 <span style="color: #dc3545;">*</span>
                         </label>
-                        <div style="display: flex; gap: 8px;">
-                            <select id="edit-proc-category" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
-                                ${categories.filter(cat => cat.departmentId === categories.find(c => c.id === process.categoryId)?.departmentId).map(cat => `<option value="${cat.id}" ${cat.id === process.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
-                            </select>
-                            <button type="button" id="edit-add-new-category-btn" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;" title="새 카테고리 추가">
-                                ➕ 새 카테고리
-                            </button>
-                        </div>
+                        <select id="edit-proc-category" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
+                            ${categories.filter(cat => cat.departmentId === categories.find(c => c.id === process.categoryId)?.departmentId).map(cat => `<option value="${cat.id}" ${cat.id === process.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
+                        </select>
                         
                         <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
                             프로세스명 <span style="color: #dc3545;">*</span>
@@ -1175,24 +1170,6 @@ window.AdminManager = class {
                         </label>
                         <textarea id="edit-proc-step-description" placeholder="이 프로세스에서 수행되는 주요 활동과 목적을 설명하세요..." 
                                   style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.escapeHtml(process.stepDescription || process.description || '')}</textarea>
-                        
-                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
-                            주요 업무 내용
-                        </label>
-                        <textarea id="edit-proc-main-content" placeholder="주요 업무 내용을 한 줄씩 입력하세요&#10;예:&#10;민원인 응대&#10;방문·우편·팩스·국민신문고 등 신청경로 확인·안내&#10;민원 신청서 및 구비서류 안내" 
-                                  style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.mainContent)}</textarea>
-                        
-                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
-                            산출물
-                        </label>
-                        <textarea id="edit-proc-outputs" placeholder="이 프로세스에서 생성되는 산출물을 한 줄씩 입력하세요&#10;예:&#10;민원신청서(우편, 팩스, 국민신문고 등)&#10;민원처리부&#10;민원 접수증" 
-                                  style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.outputs)}</textarea>
-                        
-                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
-                            참고 자료
-                        </label>
-                        <textarea id="edit-proc-references" placeholder="관련 법령, 지침, 매뉴얼 등을 한 줄씩 입력하세요&#10;예:&#10;2022년 공직자 민원응대 매뉴얼 - 민원응대 관련 기본원칙: p.6-7&#10;민원 처리에 관한 법률(시행 2022. 07. 12.) - 민원 처리 담당자의 의무와 보호: 제4조, p.2" 
-                                  style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.references)}</textarea>
                     </div>
                     
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
@@ -1215,46 +1192,60 @@ window.AdminManager = class {
         
         const updateEditCategoryOptions = () => {
             const selectedDeptId = departmentSelect.value;
+            console.log('=== 수정 모달 카테고리 필터링 디버깅 ===');
+            console.log('선택된 부서 ID:', selectedDeptId);
+            console.log('현재 프로세스 카테고리 ID:', process.categoryId);
+            
+            const allDepartments = this.safeDepartments();
+            const selectedDept = allDepartments.find(dept => dept.id === selectedDeptId);
+            console.log('선택된 부서 정보:', selectedDept);
+            
             const currentCategories = this.safeCategories();
-            const filteredCategories = currentCategories.filter(cat => cat.departmentId === selectedDeptId);
+            console.log('전체 카테고리 목록 (총 ' + currentCategories.length + '개):');
+            currentCategories.forEach((cat, idx) => {
+                console.log(`  ${idx + 1}. "${cat.name}" (ID: ${cat.id}, 부서ID: ${cat.departmentId})`);
+            });
+            
+            const filteredCategories = currentCategories.filter(cat => {
+                const isMatch = cat.departmentId === selectedDeptId;
+                console.log(`필터링 검사: "${cat.name}" (부서ID: "${cat.departmentId}") === 선택된 ID: "${selectedDeptId}" => ${isMatch}`);
+                return isMatch;
+            });
+            
+            console.log('필터링 결과 (' + filteredCategories.length + '개 카테고리):');
+            filteredCategories.forEach(cat => {
+                console.log(`  - "${cat.name}" (ID: ${cat.id})`);
+            });
             
             const currentCategoryId = categorySelect.value;
-            categorySelect.innerHTML = filteredCategories.map(cat => 
-                `<option value="${cat.id}" ${cat.id === currentCategoryId ? 'selected' : ''}>${cat.name}</option>`
-            ).join('');
             
-            // 현재 프로세스의 카테고리가 새 부서에 속하는지 확인
-            const currentCategory = filteredCategories.find(cat => cat.id === process.categoryId);
-            if (currentCategory && !currentCategoryId) {
-                categorySelect.value = process.categoryId;
+            if (filteredCategories.length === 0) {
+                const message = selectedDept ? 
+                    `"${selectedDept.name}" 부서에 카테고리가 없습니다` : 
+                    '선택된 부서에 카테고리가 없습니다';
+                categorySelect.innerHTML = `<option value="">${message}</option>`;
+                console.log('결과: 카테고리 없음 - ' + message);
+            } else {
+                categorySelect.innerHTML = '<option value="">카테고리를 선택하세요</option>' + 
+                    filteredCategories.map(cat => 
+                        `<option value="${cat.id}" ${cat.id === currentCategoryId || cat.id === process.categoryId ? 'selected' : ''}>${cat.name}</option>`
+                    ).join('');
+                
+                // 현재 프로세스의 카테고리가 새 부서에 속하는지 확인
+                const currentCategory = filteredCategories.find(cat => cat.id === process.categoryId);
+                if (currentCategory) {
+                    categorySelect.value = process.categoryId;
+                    console.log('현재 프로세스의 카테고리를 선택함:', currentCategory.name);
+                }
+                console.log('결과: ' + filteredCategories.length + '개 카테고리 로드 완료');
             }
+            console.log('=== 수정 모달 카테고리 필터링 완료 ===');
         };
         
         departmentSelect.addEventListener('change', updateEditCategoryOptions);
         
-        // 새 카테고리 추가 버튼
-        document.getElementById('edit-add-new-category-btn').onclick = () => {
-            const selectedDeptId = departmentSelect.value;
-            if (!selectedDeptId) {
-                alert('먼저 부서를 선택해주세요.');
-                return;
-            }
-            
-            const categoryName = prompt('새 카테고리명을 입력하세요:');
-            if (categoryName && categoryName.trim()) {
-                const categoryData = {
-                    name: categoryName.trim(),
-                    departmentId: selectedDeptId,
-                    description: ''
-                };
-                
-                if (this.addCategory(categoryData)) {
-                    updateEditCategoryOptions();
-                    categorySelect.value = this.safeCategories().find(cat => cat.name === categoryName.trim())?.id || '';
-                    alert(`"${categoryName.trim()}" 카테고리가 추가되었습니다.`);
-                }
-            }
-        };
+        // 부서 변경 이벤트 리스너 등록
+        departmentSelect.addEventListener('change', updateEditCategoryOptions);
         
         // 취소 버튼
         document.getElementById('edit-proc-cancel-btn').onclick = () => {
@@ -1279,32 +1270,12 @@ window.AdminManager = class {
             }
             
             const stepDescription = document.getElementById('edit-proc-step-description').value.trim();
-            const mainContent = this.parseTextareaLines(document.getElementById('edit-proc-main-content').value);
-            const outputs = this.parseTextareaLines(document.getElementById('edit-proc-outputs').value);
-            const references = this.parseTextareaLines(document.getElementById('edit-proc-references').value);
-            
-            // 콘텐츠 재구성
-            let content = '';
-            if (stepDescription) content += `**단계설명:**\n${stepDescription}\n\n`;
-            if (mainContent.length > 0) {
-                content += `**주요내용:**\n${mainContent.map(item => `• ${item}`).join('\n')}\n\n`;
-            }
-            if (outputs.length > 0) {
-                content += `**산출물:**\n${outputs.map(item => `• ${item}`).join('\n')}\n\n`;
-            }
-            if (references.length > 0) {
-                content += `**참고자료:**\n${references.map(item => `• ${item}`).join('\n')}`;
-            }
             
             const updateData = {
                 title: title,
                 categoryId: categoryId,
                 description: stepDescription,
-                content: content.trim(),
-                stepDescription: stepDescription,
-                mainContent: mainContent,
-                outputs: outputs,
-                references: references
+                stepDescription: stepDescription
             };
             
             try {
@@ -2205,26 +2176,50 @@ window.AdminManager = class {
         
         const updateCategoryOptions = () => {
             const selectedDeptId = departmentSelect.value;
+            console.log('=== 카테고리 필터링 디버깅 ===');
             console.log('선택된 부서 ID:', selectedDeptId);
             
-            const currentCategories = this.safeCategories(); // 최신 카테고리 목록 가져오기
-            console.log('전체 카테고리 목록:', currentCategories);
+            // 1. 전체 부서 목록 확인
+            const allDepartments = this.safeDepartments();
+            console.log('전체 부서 목록:', allDepartments);
             
-            const filteredCategories = currentCategories.filter(cat => {
-                console.log(`카테고리 "${cat.name}" (부서ID: ${cat.departmentId}) vs 선택된 부서ID: ${selectedDeptId}`);
-                return cat.departmentId === selectedDeptId;
+            const selectedDept = allDepartments.find(dept => dept.id === selectedDeptId);
+            console.log('선택된 부서 정보:', selectedDept);
+            
+            // 2. 전체 카테고리 목록 확인
+            const currentCategories = this.safeCategories();
+            console.log('전체 카테고리 목록 (총 ' + currentCategories.length + '개):');
+            currentCategories.forEach((cat, idx) => {
+                console.log(`  ${idx + 1}. "${cat.name}" (ID: ${cat.id}, 부서ID: ${cat.departmentId})`);
             });
             
-            console.log('필터링된 카테고리:', filteredCategories);
+            // 3. 직접 필터링 시도
+            const filteredCategories = currentCategories.filter(cat => {
+                const isMatch = cat.departmentId === selectedDeptId;
+                console.log(`필터링 검사: "${cat.name}" (부서ID: "${cat.departmentId}") === 선택된 ID: "${selectedDeptId}" => ${isMatch}`);
+                return isMatch;
+            });
             
+            console.log('필터링 결과 (' + filteredCategories.length + '개 카테고리):');
+            filteredCategories.forEach(cat => {
+                console.log(`  - "${cat.name}" (ID: ${cat.id})`);
+            });
+            
+            // 4. UI 업데이트
             if (filteredCategories.length === 0) {
-                categorySelect.innerHTML = '<option value="">선택된 부서에 카테고리가 없습니다</option>';
+                const message = selectedDept ? 
+                    `"${selectedDept.name}" 부서에 카테고리가 없습니다` : 
+                    '선택된 부서에 카테고리가 없습니다';
+                categorySelect.innerHTML = `<option value="">${message}</option>`;
+                console.log('결과: 카테고리 없음 - ' + message);
             } else {
                 categorySelect.innerHTML = '<option value="">카테고리를 선택하세요</option>' + 
                     filteredCategories.map(cat => 
                         `<option value="${cat.id}">${cat.name}</option>`
                     ).join('');
+                console.log('결과: ' + filteredCategories.length + '개 카테고리 로드 완료');
             }
+            console.log('=== 카테고리 필터링 완료 ===');
         };
         
         departmentSelect.addEventListener('change', updateCategoryOptions);
