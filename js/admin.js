@@ -654,6 +654,9 @@ window.AdminManager = class {
     refreshAdminPanel() {
         console.log('🔄 관리자 패널 새로고침');
         
+        // 현재 스크롤 위치와 활성 탭 저장
+        const scrollPosition = this.saveCurrentPosition();
+        
         // 통계 업데이트
         this.updateStats();
         
@@ -665,6 +668,9 @@ window.AdminManager = class {
             // 이벤트 재바인딩
             setTimeout(() => {
                 this.bindTabSpecificEvents();
+                
+                // 저장된 위치로 복원
+                this.restorePosition(scrollPosition);
             }, 50);
         }
         
@@ -678,6 +684,39 @@ window.AdminManager = class {
                 </div>
             `;
         }
+    }
+    
+    // 현재 관리자 패널의 위치 정보 저장
+    saveCurrentPosition() {
+        const adminPanel = document.querySelector('.admin-panel');
+        const activeTab = document.querySelector('.tab-button.active');
+        
+        return {
+            scrollTop: adminPanel ? adminPanel.scrollTop : 0,
+            activeTab: activeTab ? activeTab.dataset.tab : this.currentTab,
+            timestamp: Date.now()
+        };
+    }
+    
+    // 저장된 위치로 복원
+    restorePosition(position) {
+        if (!position) return;
+        
+        // 활성 탭 복원
+        if (position.activeTab && position.activeTab !== this.currentTab) {
+            const tabButton = document.querySelector(`[data-tab="${position.activeTab}"]`);
+            if (tabButton) {
+                this.switchTab(position.activeTab);
+            }
+        }
+        
+        // 스크롤 위치 복원
+        setTimeout(() => {
+            const adminPanel = document.querySelector('.admin-panel');
+            if (adminPanel && position.scrollTop > 0) {
+                adminPanel.scrollTop = position.scrollTop;
+            }
+        }, 100);
     }
     
     updateStats() {
@@ -855,11 +894,27 @@ window.AdminManager = class {
     }
     
     deleteDepartment(id, name) {
-        if (confirm(`"${name}" 부서를 정말로 삭제하시겠습니까?\n\n관련된 모든 카테고리와 프로세스도 함께 삭제됩니다.`)) {
+        if (confirm(`"${name}" 부서를 정말로 삭제하시겠습니까?\n\n관련된 모든 카테고리와 프로세스도 함께 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.`)) {
             try {
-                dataManager.deleteDepartment(id);
+                // DataManager 메서드 확인 후 삭제
+                if (typeof window.dataManager.deleteDepartment === 'function') {
+                    window.dataManager.deleteDepartment(id);
+                } else {
+                    throw new Error('DataManager의 deleteDepartment 메서드가 없습니다.');
+                }
+                
+                console.log('✅ 부서 삭제 성공:', name);
                 alert(`"${name}" 부서가 성공적으로 삭제되었습니다!`);
-                this.refreshAdminPanel();
+                
+                // UI 업데이트
+                setTimeout(() => {
+                    this.refreshAdminPanel();
+                    
+                    // 네비게이션 새로고침
+                    if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                        window.navigationManager.renderNavigation();
+                    }
+                }, 100);
                 
             } catch (error) {
                 console.error('부서 삭제 실패:', error);
@@ -895,16 +950,41 @@ window.AdminManager = class {
     
     addCategory(name, departmentId, description = '') {
         try {
+            if (!name || !name.trim()) {
+                throw new Error('카테고리 이름이 필요합니다.');
+            }
+            
+            if (!departmentId) {
+                throw new Error('부서를 선택해야 합니다.');
+            }
+            
             const cat = {
-                id: `cat_${Date.now()}`,
-                name: name,
+                id: Utils.generateId('cat'),
+                name: name.trim(),
                 departmentId: departmentId,
-                description: description
+                description: description || '',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             };
             
-            dataManager.addCategory(cat);
+            // DataManager를 통해 추가
+            if (typeof window.dataManager.addCategory === 'function') {
+                window.dataManager.addCategory(cat);
+            } else {
+                throw new Error('DataManager의 addCategory 메서드가 없습니다.');
+            }
+            
+            console.log('✅ 카테고리 추가 성공:', name);
             alert(`"${name}" 카테고리가 성공적으로 추가되었습니다!`);
-            this.refreshAdminPanel();
+            
+            // UI 업데이트
+            setTimeout(() => {
+                this.refreshAdminPanel();
+                
+                if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                    window.navigationManager.renderNavigation();
+                }
+            }, 100);
             
         } catch (error) {
             console.error('카테고리 추가 실패:', error);
@@ -1037,11 +1117,27 @@ window.AdminManager = class {
     }
     
     deleteCategory(id, name) {
-        if (confirm(`"${name}" 카테고리를 정말로 삭제하시겠습니까?\n\n관련된 모든 프로세스도 함께 삭제됩니다.`)) {
+        if (confirm(`"${name}" 카테고리를 정말로 삭제하시겠습니까?\n\n관련된 모든 프로세스도 함께 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.`)) {
             try {
-                dataManager.deleteCategory(id);
+                // DataManager 메서드 확인 후 삭제
+                if (typeof window.dataManager.deleteCategory === 'function') {
+                    window.dataManager.deleteCategory(id);
+                } else {
+                    throw new Error('DataManager의 deleteCategory 메서드가 없습니다.');
+                }
+                
+                console.log('✅ 카테고리 삭제 성공:', name);
                 alert(`"${name}" 카테고리가 성공적으로 삭제되었습니다!`);
-                this.refreshAdminPanel();
+                
+                // UI 업데이트
+                setTimeout(() => {
+                    this.refreshAdminPanel();
+                    
+                    // 네비게이션 새로고침
+                    if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                        window.navigationManager.renderNavigation();
+                    }
+                }, 100);
                 
             } catch (error) {
                 console.error('카테고리 삭제 실패:', error);
@@ -1274,15 +1370,39 @@ window.AdminManager = class {
             };
             
             try {
-                window.dataManager.updateProcess(process.id, updateData);
+                // 업데이트 데이터에 updatedAt 추가
+                updateData.updatedAt = new Date().toISOString();
+                
+                // DataManager 메서드 확인 후 업데이트
+                if (typeof window.dataManager.updateProcess === 'function') {
+                    window.dataManager.updateProcess(process.id, updateData);
+                } else {
+                    // 직접 업데이트
+                    const processIndex = window.dataManager.data.processes.findIndex(p => p.id === process.id);
+                    if (processIndex !== -1) {
+                        Object.assign(window.dataManager.data.processes[processIndex], updateData);
+                        window.dataManager.saveToStorage();
+                        EventEmitter.emit('data:updated', window.dataManager.data);
+                    } else {
+                        throw new Error('프로세스를 찾을 수 없습니다.');
+                    }
+                }
+                
+                console.log('✅ 프로세스 수정 성공:', title);
                 alert(`"${title}" 프로세스가 성공적으로 수정되었습니다!`);
-                this.refreshAdminPanel();
+                
                 document.body.removeChild(modal);
                 
-                // 네비게이션 새로고침
-                if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
-                    window.navigationManager.renderNavigation();
-                }
+                // UI 업데이트
+                setTimeout(() => {
+                    this.refreshAdminPanel();
+                    
+                    // 네비게이션 새로고침
+                    if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                        window.navigationManager.renderNavigation();
+                    }
+                }, 100);
+                
             } catch (error) {
                 console.error('프로세스 수정 실패:', error);
                 alert(`프로세스 수정 중 오류가 발생했습니다: ${error.message}`);
@@ -1310,11 +1430,35 @@ window.AdminManager = class {
     }
     
     deleteProcess(id, title) {
-        if (confirm(`"${title}" 프로세스를 정말로 삭제하시겠습니까?`)) {
+        if (confirm(`"${title}" 프로세스를 정말로 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
             try {
-                dataManager.deleteProcess(id);
+                // DataManager 메서드 확인 후 삭제
+                if (typeof window.dataManager.deleteProcess === 'function') {
+                    window.dataManager.deleteProcess(id);
+                } else {
+                    // 직접 삭제
+                    const processIndex = window.dataManager.data.processes.findIndex(p => p.id === id);
+                    if (processIndex !== -1) {
+                        window.dataManager.data.processes.splice(processIndex, 1);
+                        window.dataManager.saveToStorage();
+                        EventEmitter.emit('data:updated', window.dataManager.data);
+                    } else {
+                        throw new Error('삭제할 프로세스를 찾을 수 없습니다.');
+                    }
+                }
+                
+                console.log('✅ 프로세스 삭제 성공:', title);
                 alert(`"${title}" 프로세스가 성공적으로 삭제되었습니다!`);
-                this.refreshAdminPanel();
+                
+                // UI 업데이트
+                setTimeout(() => {
+                    this.refreshAdminPanel();
+                    
+                    // 네비게이션 새로고침
+                    if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                        window.navigationManager.renderNavigation();
+                    }
+                }, 100);
                 
             } catch (error) {
                 console.error('프로세스 삭제 실패:', error);
@@ -2115,6 +2259,13 @@ window.AdminManager = class {
             
             if (!name) {
                 alert('프로세스명을 입력해주세요.');
+                document.getElementById('proc-name').focus();
+                return;
+            }
+            
+            if (!categoryId) {
+                alert('카테고리를 선택해주세요.');
+                document.getElementById('proc-category').focus();
                 return;
             }
             
@@ -2127,8 +2278,13 @@ window.AdminManager = class {
                 references: this.parseTextareaLines(document.getElementById('proc-references').value)
             };
             
-            this.addProcess(processData);
-            document.body.removeChild(modal);
+            console.log('프로세스 추가 데이터:', processData);
+            
+            const success = this.addProcess(processData);
+            if (success) {
+                alert(`"${name}" 프로세스가 성공적으로 추가되었습니다!`);
+                document.body.removeChild(modal);
+            }
         };
         
         // 모달 외부 클릭 시 닫기
@@ -2169,8 +2325,16 @@ window.AdminManager = class {
             window.dataManager.saveToStorage();
             EventEmitter.emit('data:updated', window.dataManager.data);
             
-            alert(`"${department.name}" 부서가 성공적으로 추가되었습니다!`);
-            this.refreshAdminPanel();
+            console.log('✅ 부서 추가 성공:', department.name);
+            
+            // UI 업데이트
+            setTimeout(() => {
+                this.refreshAdminPanel();
+                
+                if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                    window.navigationManager.renderNavigation();
+                }
+            }, 100);
             
             if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
                 window.navigationManager.renderNavigation();
@@ -2202,8 +2366,16 @@ window.AdminManager = class {
             window.dataManager.saveToStorage();
             EventEmitter.emit('data:updated', window.dataManager.data);
             
-            alert(`"${category.name}" 카테고리가 성공적으로 추가되었습니다!`);
-            this.refreshAdminPanel();
+            console.log('✅ 카테고리 추가 성공:', category.name);
+            
+            // UI 업데이트
+            setTimeout(() => {
+                this.refreshAdminPanel();
+                
+                if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                    window.navigationManager.renderNavigation();
+                }
+            }, 100);
             
             if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
                 window.navigationManager.renderNavigation();
@@ -2220,6 +2392,25 @@ window.AdminManager = class {
     // 프로세스 추가 메서드 개선
     addProcess(processData) {
         try {
+            // 입력 데이터 검증
+            if (!processData || typeof processData !== 'object') {
+                throw new Error('프로세스 데이터가 유효하지 않습니다.');
+            }
+            
+            if (!processData.title || !processData.title.trim()) {
+                throw new Error('프로세스 제목이 필요합니다.');
+            }
+            
+            if (!processData.categoryId) {
+                throw new Error('카테고리를 선택해야 합니다.');
+            }
+            
+            // 카테고리 존재 확인
+            const category = window.dataManager.getCategoryById(processData.categoryId);
+            if (!category) {
+                throw new Error('선택된 카테고리가 존재하지 않습니다.');
+            }
+            
             let content = '';
             if (processData.stepDescription) content += `**단계설명:**\n${processData.stepDescription}\n\n`;
             if (processData.mainContent && processData.mainContent.length > 0) {
@@ -2234,7 +2425,7 @@ window.AdminManager = class {
             
             const process = {
                 id: Utils.generateId('proc'),
-                title: processData.title || processData.name || processData,
+                title: processData.title.trim(),
                 categoryId: processData.categoryId,
                 description: processData.stepDescription || '',
                 content: content.trim(),
@@ -2246,16 +2437,26 @@ window.AdminManager = class {
                 updatedAt: new Date().toISOString()
             };
             
-            window.dataManager.data.processes.push(process);
-            window.dataManager.saveToStorage();
-            EventEmitter.emit('data:updated', window.dataManager.data);
-            
-            alert(`"${process.title}" 프로세스가 성공적으로 추가되었습니다!`);
-            this.refreshAdminPanel();
-            
-            if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
-                window.navigationManager.renderNavigation();
+            // DataManager를 통해 추가
+            if (typeof window.dataManager.addProcess === 'function') {
+                window.dataManager.addProcess(process);
+            } else {
+                // 직접 추가
+                window.dataManager.data.processes.push(process);
+                window.dataManager.saveToStorage();
+                EventEmitter.emit('data:updated', window.dataManager.data);
             }
+            
+            console.log('✅ 프로세스 추가 성공:', process.title);
+            
+            // UI 업데이트
+            setTimeout(() => {
+                this.refreshAdminPanel();
+                
+                if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                    window.navigationManager.renderNavigation();
+                }
+            }, 100);
             
             return true;
         } catch (error) {
