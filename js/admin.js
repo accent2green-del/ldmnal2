@@ -1202,17 +1202,11 @@ window.AdminManager = class {
                         <textarea id="edit-proc-main-content" placeholder="주요 업무 내용을 한 줄씩 입력하세요&#10;예:&#10;민원인 응대&#10;방문·우편·팩스·국민신문고 등 신청경로 확인·안내&#10;민원 신청서 및 구비서류 안내" 
                                   style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.escapeHtml(this.arrayToText(process.mainContent) || '')}</textarea>
                         
-                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
-                            산출물
-                        </label>
-                        <textarea id="edit-proc-outputs" placeholder="이 프로세스에서 생성되는 산출물을 한 줄씩 입력하세요&#10;예:&#10;민원신청서(우편, 팩스, 국민신문고 등)&#10;민원처리부&#10;민원 접수증" 
-                                  style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.escapeHtml(this.arrayToText(process.outputs) || '')}</textarea>
+                        <!-- 산출물 개별 항목 관리 -->
+                        <div id="edit-proc-outputs-container"></div>
                         
-                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
-                            참고 자료
-                        </label>
-                        <textarea id="edit-proc-references" placeholder="관련 법령, 지침, 매뉴얼 등을 한 줄씩 입력하세요&#10;예:&#10;2022년 공직자 민원응대 매뉴얼 - 민원응대 관련 기본원칙: p.6-7&#10;민원 처리에 관한 법률(시행 2022. 07. 12.) - 민원 처리 담당자의 의무와 보호: 제4조, p.2" 
-                                  style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.escapeHtml(this.arrayToText(process.references) || '')}</textarea>
+                        <!-- 참고자료 개별 항목 관리 -->  
+                        <div id="edit-proc-references-container"></div>
                     </div>
                     
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
@@ -1343,8 +1337,10 @@ window.AdminManager = class {
             
             const stepDescription = document.getElementById('edit-proc-step-description').value.trim();
             const mainContent = document.getElementById('edit-proc-main-content').value.trim();
-            const outputs = document.getElementById('edit-proc-outputs').value.trim();
-            const references = document.getElementById('edit-proc-references').value.trim();
+            
+            // 개별 항목 관리 UI에서 데이터 가져오기
+            const outputs = outputsManager ? outputsManager.getItems() : [];
+            const references = referencesManager ? referencesManager.getItems() : [];
             
             const updateData = {
                 title: title,
@@ -1352,8 +1348,8 @@ window.AdminManager = class {
                 description: stepDescription,
                 stepDescription: stepDescription,
                 mainContent: this.textToArray(mainContent),
-                outputs: this.textToArray(outputs),
-                references: this.textToArray(references)
+                outputs: outputs,
+                references: references
             };
             
             try {
@@ -1404,8 +1400,39 @@ window.AdminManager = class {
             }
         });
         
+        // 개별 항목 관리 UI 초기화
+        let outputsManager, referencesManager;
+        
         // Enter키 줄바꿈 기능 적용 및 포커스
         setTimeout(() => {
+            // 산출물 관리 UI 생성
+            const outputsContainer = document.getElementById('edit-proc-outputs-container');
+            if (outputsContainer) {
+                outputsManager = Utils.createItemListManager(
+                    process.outputs || [],
+                    'outputs-manager',
+                    'outputs',
+                    (items) => {
+                        console.log('산출물 항목 변경:', items);
+                    }
+                );
+                outputsContainer.appendChild(outputsManager.container);
+            }
+            
+            // 참고자료 관리 UI 생성
+            const referencesContainer = document.getElementById('edit-proc-references-container');
+            if (referencesContainer) {
+                referencesManager = Utils.createItemListManager(
+                    process.references || [],
+                    'references-manager',
+                    'references',
+                    (items) => {
+                        console.log('참고자료 항목 변경:', items);
+                    }
+                );
+                referencesContainer.appendChild(referencesManager.container);
+            }
+            
             // 모달 내 모든 textarea에 Enter키 줄바꿈 기능 적용
             Utils.enableEnterNewlineInContainer(modal);
             
@@ -2245,17 +2272,11 @@ window.AdminManager = class {
                         <textarea id="proc-main-content" placeholder="주요 업무 내용을 한 줄씩 입력하세요&#10;예:&#10;민원인 응대&#10;방문·우편·팩스·국민신문고 등 신청경로 확인·안내&#10;민원 신청서 및 구비서류 안내" 
                                   style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
                         
-                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
-                            산출물
-                        </label>
-                        <textarea id="proc-outputs" placeholder="이 프로세스에서 생성되는 산출물을 한 줄씩 입력하세요&#10;예:&#10;민원신청서(우편, 팩스, 국민신문고 등)&#10;민원처리부&#10;민원 접수증" 
-                                  style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                        <!-- 산출물 개별 항목 관리 -->
+                        <div id="proc-outputs-container"></div>
                         
-                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
-                            참고 자료
-                        </label>
-                        <textarea id="proc-references" placeholder="관련 법령, 지침, 매뉴얼 등을 한 줄씩 입력하세요&#10;예:&#10;2022년 공직자 민원응대 매뉴얼 - 민원응대 관련 기본원칙: p.6-7&#10;민원 처리에 관한 법률(시행 2022. 07. 12.) - 민원 처리 담당자의 의무와 보호: 제4조, p.2" 
-                                  style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                        <!-- 참고자료 개별 항목 관리 -->  
+                        <div id="proc-references-container"></div>
                     </div>
                     
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
@@ -2375,13 +2396,17 @@ window.AdminManager = class {
                 return;
             }
             
+            // 개별 항목 관리 UI에서 데이터 가져오기
+            const outputs = outputsManager ? outputsManager.getItems() : [];
+            const references = referencesManager ? referencesManager.getItems() : [];
+            
             const processData = {
                 title: name,
                 categoryId: categoryId,
                 stepDescription: document.getElementById('proc-step-description').value.trim(),
                 mainContent: this.parseTextareaLines(document.getElementById('proc-main-content').value),
-                outputs: this.parseTextareaLines(document.getElementById('proc-outputs').value),
-                references: this.parseTextareaLines(document.getElementById('proc-references').value)
+                outputs: outputs,
+                references: references
             };
             
             console.log('프로세스 추가 데이터:', processData);
@@ -2406,8 +2431,39 @@ window.AdminManager = class {
             }
         });
         
+        // 개별 항목 관리 UI 초기화
+        let outputsManager, referencesManager;
+        
         // Enter키 줄바꿈 기능 적용 및 포커스
         setTimeout(() => {
+            // 산출물 관리 UI 생성
+            const outputsContainer = document.getElementById('proc-outputs-container');
+            if (outputsContainer) {
+                outputsManager = Utils.createItemListManager(
+                    [],
+                    'outputs-manager',
+                    'outputs',
+                    (items) => {
+                        console.log('산출물 항목 변경:', items);
+                    }
+                );
+                outputsContainer.appendChild(outputsManager.container);
+            }
+            
+            // 참고자료 관리 UI 생성
+            const referencesContainer = document.getElementById('proc-references-container');
+            if (referencesContainer) {
+                referencesManager = Utils.createItemListManager(
+                    [],
+                    'references-manager',
+                    'references',
+                    (items) => {
+                        console.log('참고자료 항목 변경:', items);
+                    }
+                );
+                referencesContainer.appendChild(referencesManager.container);
+            }
+            
             // 모달 내 모든 textarea에 Enter키 줄바꿈 기능 적용
             Utils.enableEnterNewlineInContainer(modal);
             

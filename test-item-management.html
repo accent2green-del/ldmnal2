@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>개별 항목 관리 기능 테스트</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .test-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .test-title {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 6px 6px 0 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .test-description {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 6px;
+        }
+        
+        .demo-data {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .demo-column {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .demo-column h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #218838;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 개별 항목 관리 기능 테스트</h1>
+        <p>프로세스 추가/수정 모달과 상세정보창에서 산출물과 참고자료의 개별 항목 관리 기능을 테스트합니다.</p>
+        
+        <!-- 테스트 1: 산출물 개별 항목 관리 UI -->
+        <div class="test-section">
+            <div class="test-title">🔬 테스트 1: 산출물 개별 항목 관리 UI</div>
+            <div class="test-description">
+                산출물을 개별 항목으로 추가, 수정, 삭제, 순서 변경할 수 있는 UI를 테스트합니다.
+            </div>
+            
+            <div id="outputs-test-container"></div>
+            
+            <div class="test-results">
+                <h4>현재 산출물 목록:</h4>
+                <pre id="outputs-result">[]</pre>
+                
+                <button class="btn" onclick="testOutputsOperations()">테스트 데이터 추가</button>
+                <button class="btn btn-secondary" onclick="clearOutputs()">모든 항목 제거</button>
+            </div>
+        </div>
+        
+        <!-- 테스트 2: 참고자료 개별 항목 관리 UI -->
+        <div class="test-section">
+            <div class="test-title">🔬 테스트 2: 참고자료 개별 항목 관리 UI</div>
+            <div class="test-description">
+                참고자료를 개별 항목으로 관리하며, 첨부파일 기능도 포함된 UI를 테스트합니다.
+            </div>
+            
+            <div id="references-test-container"></div>
+            
+            <div class="test-results">
+                <h4>현재 참고자료 목록:</h4>
+                <pre id="references-result">[]</pre>
+                
+                <button class="btn" onclick="testReferencesOperations()">테스트 데이터 추가</button>
+                <button class="btn btn-secondary" onclick="clearReferences()">모든 항목 제거</button>
+            </div>
+        </div>
+        
+        <!-- 테스트 3: 상세정보창 표시 -->
+        <div class="test-section">
+            <div class="test-title">🔬 테스트 3: 상세정보창 개별 항목 표시</div>
+            <div class="test-description">
+                상세정보창에서 개별 항목들이 어떻게 표시되는지 테스트합니다.
+            </div>
+            
+            <div class="demo-data">
+                <div class="demo-column">
+                    <h4>📄 산출물 표시 예시</h4>
+                    <div id="outputs-display-demo"></div>
+                </div>
+                <div class="demo-column">
+                    <h4>📚 참고자료 표시 예시</h4>
+                    <div id="references-display-demo"></div>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="updateDisplayDemo()">표시 예시 업데이트</button>
+        </div>
+        
+        <!-- 테스트 4: 데이터 호환성 -->
+        <div class="test-section">
+            <div class="test-title">🔬 테스트 4: 기존 데이터 호환성</div>
+            <div class="test-description">
+                기존 텍스트 형태의 데이터를 개별 항목으로 변환하고, 다시 텍스트로 변환하는 호환성을 테스트합니다.
+            </div>
+            
+            <div class="test-results">
+                <h4>호환성 테스트 결과:</h4>
+                <div id="compatibility-results"></div>
+                
+                <button class="btn" onclick="testCompatibility()">호환성 테스트 실행</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script>
+        // 전역 변수
+        let outputsManager, referencesManager;
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📝 개별 항목 관리 테스트 페이지 로드');
+            initializeTests();
+        });
+        
+        // 테스트 초기화
+        function initializeTests() {
+            // 산출물 관리 UI 생성
+            const outputsContainer = document.getElementById('outputs-test-container');
+            outputsManager = Utils.createItemListManager(
+                ['민원신청서(우편, 팩스, 국민신문고 등)', '민원처리부', '민원 접수증'],
+                'outputs-manager',
+                'outputs',
+                updateOutputsResult
+            );
+            outputsContainer.appendChild(outputsManager.container);
+            
+            // 참고자료 관리 UI 생성
+            const referencesContainer = document.getElementById('references-test-container');
+            referencesManager = Utils.createItemListManager(
+                ['2022년 공직자 민원응대 매뉴얼 - 민원응대 관련 기본원칙: p.6-7', '민원 처리에 관한 법률(시행 2022. 07. 12.) - 민원 처리 담당자의 의무와 보호: 제4조, p.2'],
+                'references-manager',
+                'references',
+                updateReferencesResult
+            );
+            referencesContainer.appendChild(referencesManager.container);
+            
+            // 초기 결과 업데이트
+            updateOutputsResult(outputsManager.getItems());
+            updateReferencesResult(referencesManager.getItems());
+            updateDisplayDemo();
+        }
+        
+        // 산출물 결과 업데이트
+        function updateOutputsResult(items) {
+            document.getElementById('outputs-result').textContent = JSON.stringify(items, null, 2);
+        }
+        
+        // 참고자료 결과 업데이트
+        function updateReferencesResult(items) {
+            document.getElementById('references-result').textContent = JSON.stringify(items, null, 2);
+        }
+        
+        // 산출물 테스트 데이터 추가
+        function testOutputsOperations() {
+            const testItems = [
+                '신규 산출물 1: 테스트 문서',
+                '신규 산출물 2: 검토 결과서',
+                '신규 산출물 3: 승인 완료 알림'
+            ];
+            
+            testItems.forEach(item => {
+                outputsManager.addItem(item);
+            });
+            
+            alert('테스트 데이터가 추가되었습니다!');
+        }
+        
+        // 참고자료 테스트 데이터 추가
+        function testReferencesOperations() {
+            const testItems = [
+                '신규 참고자료 1: 관련 법령 해석서',
+                '신규 참고자료 2: 업무 처리 가이드라인',
+                '신규 참고자료 3: 사례집 및 FAQ'
+            ];
+            
+            testItems.forEach(item => {
+                referencesManager.addItem(item);
+            });
+            
+            alert('테스트 데이터가 추가되었습니다!');
+        }
+        
+        // 모든 산출물 제거
+        function clearOutputs() {
+            if (confirm('모든 산출물을 제거하시겠습니까?')) {
+                outputsManager.clear();
+            }
+        }
+        
+        // 모든 참고자료 제거
+        function clearReferences() {
+            if (confirm('모든 참고자료를 제거하시겠습니까?')) {
+                referencesManager.clear();
+            }
+        }
+        
+        // 표시 예시 업데이트
+        function updateDisplayDemo() {
+            // 산출물 표시 예시
+            const outputsItems = outputsManager ? outputsManager.getItems() : [];
+            const outputsHtml = outputsItems.length > 0 ? renderItemList(outputsItems, '📝') : '<div class="no-data">등록된 산출물이 없습니다.</div>';
+            document.getElementById('outputs-display-demo').innerHTML = `<div class="detail-item-list">${outputsHtml}</div>`;
+            
+            // 참고자료 표시 예시
+            const referencesItems = referencesManager ? referencesManager.getItems() : [];
+            const referencesHtml = referencesItems.length > 0 ? renderItemList(referencesItems, '📚', true) : '<div class="no-data">등록된 참고자료가 없습니다.</div>';
+            document.getElementById('references-display-demo').innerHTML = `<div class="detail-item-list">${referencesHtml}</div>`;
+        }
+        
+        // 개별 항목 리스트 렌더링 (content-renderer.js와 동일)
+        function renderItemList(items, icon = '•', withAttachment = false) {
+            const processedItems = Utils.processMultilineData(items);
+            
+            if (processedItems.length === 0) {
+                return '<div class="no-data">등록된 항목이 없습니다.</div>';
+            }
+            
+            return processedItems.map((item, index) => `
+                <div class="item-entry">
+                    <div class="item-number">${index + 1}</div>
+                    <div class="item-text">
+                        ${icon} ${Utils.escapeHtml(item)}
+                    </div>
+                    ${withAttachment ? `
+                        <div class="item-attachment">
+                            <a href="#" onclick="event.preventDefault(); alert('첨부파일 기능은 추후 구현예정입니다.');" title="첨부파일">
+                                📎
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+        
+        // 호환성 테스트
+        function testCompatibility() {
+            const testCases = [
+                {
+                    name: '기존 문자열 데이터',
+                    input: '항목1\n항목2\n항목3',
+                    expected: ['항목1', '항목2', '항목3']
+                },
+                {
+                    name: '기존 배열 데이터',
+                    input: ['배열항목1', '배열항목2', '배열항목3'],
+                    expected: ['배열항목1', '배열항목2', '배열항목3']
+                },
+                {
+                    name: '빈 데이터',
+                    input: '',
+                    expected: []
+                },
+                {
+                    name: '공백이 포함된 데이터',
+                    input: '  항목1  \n\n  항목2  \n   \n항목3   ',
+                    expected: ['항목1', '항목2', '항목3']
+                }
+            ];
+            
+            let results = '';
+            let allPassed = true;
+            
+            testCases.forEach(testCase => {
+                const result = Utils.processMultilineData(testCase.input);
+                const passed = JSON.stringify(result) === JSON.stringify(testCase.expected);
+                
+                if (!passed) allPassed = false;
+                
+                results += `
+                    <div style="margin: 10px 0; padding: 10px; background: ${passed ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+                        <strong>${testCase.name}:</strong> ${passed ? '✅ 통과' : '❌ 실패'}<br>
+                        입력: ${JSON.stringify(testCase.input)}<br>
+                        예상: ${JSON.stringify(testCase.expected)}<br>
+                        실제: ${JSON.stringify(result)}
+                    </div>
+                `;
+            });
+            
+            // 양방향 변환 테스트
+            const items = ['테스트1', '테스트2', '테스트3'];
+            const toText = Utils.itemsToText(items);
+            const backToItems = Utils.textToItems(toText);
+            const roundTripPassed = JSON.stringify(items) === JSON.stringify(backToItems);
+            
+            if (!roundTripPassed) allPassed = false;
+            
+            results += `
+                <div style="margin: 10px 0; padding: 10px; background: ${roundTripPassed ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+                    <strong>양방향 변환 테스트:</strong> ${roundTripPassed ? '✅ 통과' : '❌ 실패'}<br>
+                    원본: ${JSON.stringify(items)}<br>
+                    텍스트 변환: "${toText}"<br>
+                    다시 배열로: ${JSON.stringify(backToItems)}
+                </div>
+            `;
+            
+            results = `<h4 style="color: ${allPassed ? 'green' : 'red'};">전체 테스트 결과: ${allPassed ? '✅ 모든 테스트 통과' : '❌ 일부 테스트 실패'}</h4>` + results;
+            
+            document.getElementById('compatibility-results').innerHTML = results;
+        }
+    </script>
+</body>
+</html>

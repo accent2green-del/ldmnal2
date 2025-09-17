@@ -411,6 +411,199 @@ class Utils {
             isMobile: Utils.isMobile()
         };
     }
+
+    /**
+     * 개별 항목 리스트 관리 UI 생성
+     * @param {Array} items - 기존 항목들
+     * @param {string} containerClass - 컨테이너 CSS 클래스
+     * @param {string} itemType - 항목 타입 (outputs, references 등)
+     * @param {Function} onItemsChange - 항목 변경시 호출될 콜백
+     */
+    static createItemListManager(items = [], containerClass = '', itemType = 'item', onItemsChange = null) {
+        const containerId = `${itemType}-list-container-${Date.now()}`;
+        
+        const container = document.createElement('div');
+        container.className = `item-list-manager ${containerClass}`;
+        container.id = containerId;
+        
+        // 현재 항목들을 관리할 배열
+        let currentItems = [...Utils.processMultilineData(items)];
+        
+        // 항목 변경 알림 함수
+        const notifyChange = () => {
+            if (onItemsChange && typeof onItemsChange === 'function') {
+                onItemsChange(currentItems);
+            }
+        };
+        
+        // UI 렌더링 함수
+        const renderItems = () => {
+            const itemsHtml = currentItems.map((item, index) => `
+                <div class="item-row" data-index="${index}">
+                    <div class="item-content">
+                        <textarea class="item-text" placeholder="항목을 입력하세요...">${Utils.escapeHtml(item)}</textarea>
+                        ${itemType === 'references' ? `
+                            <input type="file" class="item-attachment" accept="*/*" style="display: none;" data-index="${index}">
+                            <button type="button" class="attachment-btn" data-index="${index}">📎 첨부</button>
+                        ` : ''}
+                    </div>
+                    <div class="item-actions">
+                        <button type="button" class="move-up-btn" data-index="${index}" ${index === 0 ? 'disabled' : ''}>▲</button>
+                        <button type="button" class="move-down-btn" data-index="${index}" ${index === currentItems.length - 1 ? 'disabled' : ''}>▼</button>
+                        <button type="button" class="remove-item-btn" data-index="${index}">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = `
+                <div class="item-list-header">
+                    <h4>${itemType === 'outputs' ? '산출물' : '참고자료'} 관리</h4>
+                    <button type="button" class="add-item-btn">+ 항목 추가</button>
+                </div>
+                <div class="item-list-body">
+                    ${itemsHtml}
+                    ${currentItems.length === 0 ? '<div class="no-items">아직 등록된 항목이 없습니다.</div>' : ''}
+                </div>
+            `;
+            
+            // 이벤트 리스너 등록
+            bindEvents();
+        };
+        
+        // 이벤트 바인딩 함수
+        const bindEvents = () => {
+            // 항목 추가
+            const addBtn = container.querySelector('.add-item-btn');
+            if (addBtn) {
+                addBtn.addEventListener('click', () => {
+                    currentItems.push('');
+                    renderItems();
+                    
+                    // 새로 추가된 textarea에 포커스
+                    const newTextarea = container.querySelector(`.item-row[data-index="${currentItems.length - 1}"] .item-text`);
+                    if (newTextarea) {
+                        newTextarea.focus();
+                    }
+                    
+                    notifyChange();
+                });
+            }
+            
+            // 항목 제거
+            container.querySelectorAll('.remove-item-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.getAttribute('data-index'));
+                    if (confirm('이 항목을 삭제하시겠습니까?')) {
+                        currentItems.splice(index, 1);
+                        renderItems();
+                        notifyChange();
+                    }
+                });
+            });
+            
+            // 항목 위로 이동
+            container.querySelectorAll('.move-up-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.getAttribute('data-index'));
+                    if (index > 0) {
+                        [currentItems[index], currentItems[index - 1]] = [currentItems[index - 1], currentItems[index]];
+                        renderItems();
+                        notifyChange();
+                    }
+                });
+            });
+            
+            // 항목 아래로 이동
+            container.querySelectorAll('.move-down-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.getAttribute('data-index'));
+                    if (index < currentItems.length - 1) {
+                        [currentItems[index], currentItems[index + 1]] = [currentItems[index + 1], currentItems[index]];
+                        renderItems();
+                        notifyChange();
+                    }
+                });
+            });
+            
+            // 텍스트 변경
+            container.querySelectorAll('.item-text').forEach(textarea => {
+                Utils.enableEnterNewline(textarea);
+                
+                textarea.addEventListener('input', (e) => {
+                    const index = parseInt(e.target.closest('.item-row').getAttribute('data-index'));
+                    currentItems[index] = e.target.value;
+                    notifyChange();
+                });
+            });
+            
+            // 첨부파일 버튼 (참고자료만)
+            if (itemType === 'references') {
+                container.querySelectorAll('.attachment-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(e.target.getAttribute('data-index'));
+                        const fileInput = container.querySelector(`.item-attachment[data-index="${index}"]`);
+                        if (fileInput) {
+                            fileInput.click();
+                        }
+                    });
+                });
+                
+                container.querySelectorAll('.item-attachment').forEach(input => {
+                    input.addEventListener('change', (e) => {
+                        const index = parseInt(e.target.getAttribute('data-index'));
+                        const file = e.target.files[0];
+                        if (file) {
+                            // 파일 처리 로직 (현재는 파일명만 표시)
+                            const attachmentInfo = `📎 ${file.name}`;
+                            const btn = container.querySelector(`.attachment-btn[data-index="${index}"]`);
+                            if (btn) {
+                                btn.textContent = attachmentInfo;
+                                btn.title = `첨부된 파일: ${file.name}`;
+                            }
+                        }
+                    });
+                });
+            }
+        };
+        
+        // 초기 렌더링
+        renderItems();
+        
+        // 공개 메서드들
+        return {
+            container,
+            getItems: () => [...currentItems],
+            setItems: (items) => {
+                currentItems = [...Utils.processMultilineData(items)];
+                renderItems();
+            },
+            addItem: (item = '') => {
+                currentItems.push(item);
+                renderItems();
+                notifyChange();
+            },
+            clear: () => {
+                currentItems = [];
+                renderItems();
+                notifyChange();
+            }
+        };
+    }
+
+    /**
+     * 개별 항목들을 단일 텍스트로 변환 (호환성을 위해)
+     */
+    static itemsToText(items) {
+        if (!items) return '';
+        return Utils.processMultilineData(items).join('\n');
+    }
+
+    /**
+     * 단일 텍스트를 개별 항목들로 변환
+     */
+    static textToItems(text) {
+        return Utils.processMultilineData(text);
+    }
 }
 
 // 전역 객체로 등록

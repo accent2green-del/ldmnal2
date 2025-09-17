@@ -377,8 +377,8 @@ class ContentRenderer {
                 ${(process.outputs && process.outputs.length > 0) || (typeof process.outputs === 'string' && process.outputs.trim()) ? `
                     <div class="process-outputs mb-3">
                         <h3>📄 산출물 및 결과</h3>
-                        <div class="outputs-content">
-                            ${Utils.renderMultilineAsList(process.outputs, 'ul', '📝')}
+                        <div class="outputs-content detail-item-list">
+                            ${this.renderItemList(process.outputs, '📝')}
                         </div>
                     </div>
                 ` : ''}
@@ -405,8 +405,8 @@ class ContentRenderer {
                 ${process.references && process.references.length > 0 ? `
                     <div class="process-references mt-3">
                         <h3>📚 참고자료 및 관련 문서</h3>
-                        <div class="references-enhanced">
-                            ${process.references.map(ref => this.renderReferenceItem(ref)).join('')}
+                        <div class="references-enhanced detail-item-list">
+                            ${this.renderItemList(process.references, '📚', true)}
                         </div>
                     </div>
                 ` : ''}
@@ -663,6 +663,33 @@ class ContentRenderer {
         }
     }
     
+    /**
+     * 개별 항목 리스트 렌더링 (새로운 방식)
+     */
+    renderItemList(items, icon = '•', withAttachment = false) {
+        const processedItems = Utils.processMultilineData(items);
+        
+        if (processedItems.length === 0) {
+            return '<div class="no-data">등록된 항목이 없습니다.</div>';
+        }
+        
+        return processedItems.map((item, index) => `
+            <div class="item-entry">
+                <div class="item-number">${index + 1}</div>
+                <div class="item-text">
+                    ${icon} ${Utils.escapeHtml(item)}
+                </div>
+                ${withAttachment ? `
+                    <div class="item-attachment">
+                        <a href="#" onclick="event.preventDefault(); alert('첨부파일 기능은 추후 구현예정입니다.');" title="첨부파일">
+                            📎
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
     /**
      * 개선된 참고자료 아이템 렌더링
      */
