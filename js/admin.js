@@ -632,6 +632,9 @@ window.AdminManager = class {
     refreshAdminPanel() {
         console.log('🔄 관리자 패널 새로고침');
         
+        // 리다이렉션 방지
+        this.preventRedirection();
+        
         // 현재 스크롤 위치와 활성 탭 저장
         const scrollPosition = this.saveCurrentPosition();
         
@@ -662,6 +665,31 @@ window.AdminManager = class {
                 </div>
             `;
         }
+    }
+    
+    // 리다이렉션 방지 및 관리자 패널 유지
+    preventRedirection() {
+        // 현재 관리자 패널이 표시되어 있는지 확인
+        if (this.isAdminPanelVisible()) {
+            // 페이지 리로드나 네비게이션 이벤트를 캐치하여 방지
+            const currentUrl = window.location.href;
+            
+            // 관리자 패널 상태 유지를 위한 URL 해시 업데이트
+            if (!currentUrl.includes('#admin')) {
+                history.replaceState(null, '', window.location.pathname + '#admin');
+            }
+            
+            console.log('🛡️ 리다이렉션 방지 활성화 - 관리자 패널 유지');
+            return true;
+        }
+        return false;
+    }
+    
+    // 관리자 패널이 현재 표시되어 있는지 확인
+    isAdminPanelVisible() {
+        const adminPanel = document.querySelector('.admin-panel');
+        return adminPanel && adminPanel.style.display !== 'none' && 
+               getComputedStyle(adminPanel).display !== 'none';
     }
     
     // 현재 관리자 패널의 위치 정보 저장
@@ -1081,7 +1109,7 @@ window.AdminManager = class {
     // 참고: 이 메서드는 삭제됨 - 상세한 addProcess 메서드로 대체됨
     
     editProcess(id) {
-        const proc = window.dataManager.getProcessById(id);
+        const proc = this.safeProcessById(id);
         if (!proc) {
             alert('프로세스를 찾을 수 없습니다.');
             return;
@@ -1092,8 +1120,8 @@ window.AdminManager = class {
     
     // 프로세스 수정 모달
     showEditProcessModal(process) {
-        const categories = window.dataManager.getCategories();
-        const departments = window.dataManager.getDepartments();
+        const categories = this.safeCategories();
+        const departments = this.safeDepartments();
         
         if (categories.length === 0) {
             alert('카테고리 정보가 없습니다.');
@@ -1819,6 +1847,17 @@ window.AdminManager = class {
         }
     }
     
+    safeProcessById(id) {
+        try {
+            if (!id) return null;
+            const processes = this.safeDataManager().data?.processes || [];
+            return processes.find(p => p.id === id) || null;
+        } catch (error) {
+            console.error('프로세스 조회 실패:', error);
+            return null;
+        }
+    }
+    
     // 기존 AdminManager와 호환성을 위한 메서드들
     isAdminLoggedIn() {
         return this.isLoggedIn;
@@ -2043,8 +2082,8 @@ window.AdminManager = class {
     
     // 상세 프로세스 추가 모달
     showAddProcessModal() {
-        const categories = window.dataManager.getCategories();
-        const departments = window.dataManager.getDepartments();
+        const categories = this.safeCategories();
+        const departments = this.safeDepartments();
         
         if (categories.length === 0) {
             alert('먼저 카테고리를 추가해주세요.');

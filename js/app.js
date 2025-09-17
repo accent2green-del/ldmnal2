@@ -132,9 +132,10 @@ class Application {
                 const initStatus = [];
                 
                 if (window.dataManager) {
-                    const dmInitialized = window.dataManager.initialized !== false;
-                    initStatus.push(`DataManager: ${dmInitialized ? '초기화됨' : '초기화 대기중'}`);
-                    if (!dmInitialized) allInitialized = false;
+                    // DataManager 객체가 존재하면 준비된 것으로 간주 (initialize는 이후에 호출됨)
+                    const dmReady = typeof window.dataManager.initialize === 'function';
+                    initStatus.push(`DataManager: ${dmReady ? '준비됨' : '준비 중'}`);
+                    if (!dmReady) allInitialized = false;
                 }
                 
                 if (window.adminManager) {
