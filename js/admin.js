@@ -1132,140 +1132,74 @@ window.AdminManager = class {
         modal.id = 'edit-process-modal';
         modal.innerHTML = `
             <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 9999;">
-                <div style="background: white; padding: 30px; border-radius: 12px; max-width: 700px; width: 95%; max-height: 90vh; overflow-y: auto;">
-                    <div style="border-bottom: 2px solid #ffc107; padding-bottom: 15px; margin-bottom: 20px;">
-                        <h3 style="margin: 0; color: #ffc107; font-size: 20px;">✏️ 프로세스 수정</h3>
+                <div style="background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                    <div style="border-bottom: 2px solid #17a2b8; padding-bottom: 15px; margin-bottom: 20px;">
+                        <h3 style="margin: 0; color: #17a2b8; font-size: 20px;">✏️ 프로세스 수정</h3>
                         <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">
-                            "${this.escapeHtml(process.title)}" 프로세스의 상세 정보를 수정하세요.
+                            "${this.escapeHtml(process.title)}" 프로세스의 정보를 수정하세요.
                         </p>
                     </div>
                     
                     <div style="margin: 20px 0;">
-                        <!-- 기본 정보 섹션 -->
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin: 0 0 15px 0; color: #495057; font-size: 16px;">📋 기본 정보</h4>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                        상위 부서 <span style="color: #dc3545;">*</span>
-                                    </label>
-                                    <select id="edit-proc-department" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
-                                        ${departments.map(dept => {
-                                            const category = categories.find(c => c.id === process.categoryId);
-                                            const isSelected = category && category.departmentId === dept.id;
-                                            return `<option value="${dept.id}" ${isSelected ? 'selected' : ''}>${dept.name}</option>`;
-                                        }).join('')}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                        상위 카테고리 <span style="color: #dc3545;">*</span>
-                                    </label>
-                                    <div style="display: flex; gap: 8px;">
-                                        <select id="edit-proc-category" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
-                                            ${categories.map(cat => `<option value="${cat.id}" ${cat.id === process.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
-                                        </select>
-                                        <button type="button" id="edit-add-new-category-btn" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;" title="새 카테고리 추가">
-                                            ➕ 새 카테고리
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    프로세스명 <span style="color: #dc3545;">*</span>
-                                </label>
-                                <input type="text" id="edit-proc-name" value="${this.escapeHtml(process.title)}" 
-                                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                        우선순위
-                                    </label>
-                                    <select id="edit-proc-priority" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
-                                        <option value="보통" ${(process.priority || '보통') === '보통' ? 'selected' : ''}>보통</option>
-                                        <option value="높음" ${process.priority === '높음' ? 'selected' : ''}>높음</option>
-                                        <option value="낮음" ${process.priority === '낮음' ? 'selected' : ''}>낮음</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                        예상 소요시간
-                                    </label>
-                                    <input type="text" id="edit-proc-duration" value="${this.escapeHtml(process.duration || '')}" placeholder="예: 30분, 1-2시간, 1일" 
-                                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
-                                </div>
-                            </div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            상위 부서 <span style="color: #dc3545;">*</span>
+                        </label>
+                        <select id="edit-proc-department" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
+                            ${departments.map(dept => {
+                                const category = categories.find(c => c.id === process.categoryId);
+                                const isSelected = category && category.departmentId === dept.id;
+                                return `<option value="${dept.id}" ${isSelected ? 'selected' : ''}>${dept.name}</option>`;
+                            }).join('')}
+                        </select>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            상위 카테고리 <span style="color: #dc3545;">*</span>
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="edit-proc-category" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
+                                ${categories.filter(cat => cat.departmentId === categories.find(c => c.id === process.categoryId)?.departmentId).map(cat => `<option value="${cat.id}" ${cat.id === process.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
+                            </select>
+                            <button type="button" id="edit-add-new-category-btn" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;" title="새 카테고리 추가">
+                                ➕ 새 카테고리
+                            </button>
                         </div>
                         
-                        <!-- 상세 정보 섹션 -->
-                        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">📝 상세 정보</h4>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    프로세스 개요 및 목적
-                                </label>
-                                <textarea id="edit-proc-step-description" placeholder="이 프로세스에서 수행되는 주요 활동과 목적을 상세히 설명하세요..." 
-                                          style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.escapeHtml(process.stepDescription || process.description || '')}</textarea>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    주요 업무 내용 및 단계
-                                </label>
-                                <textarea id="edit-proc-main-content" placeholder="주요 업무 내용을 단계별로 한 줄씩 입력하세요&#10;예:&#10;1. 민원인 응대 및 접수&#10;2. 방문·우편·팩스·국민신문고 등 신청경로 확인·안내&#10;3. 민원 신청서 및 구비서류 검토&#10;4. 처리 담당자 배정 및 전달" 
-                                          style="width: 100%; height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.mainContent)}</textarea>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    필요 서류 및 자료
-                                </label>
-                                <textarea id="edit-proc-required-docs" placeholder="프로세스 수행에 필요한 서류나 자료를 입력하세요&#10;예:&#10;• 민원신청서&#10;• 신분증 사본&#10;• 관련 증빙서류&#10;• 위임장(대리신청시)" 
-                                          style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.requiredDocs)}</textarea>
-                            </div>
-                        </div>
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            프로세스명 <span style="color: #dc3545;">*</span>
+                        </label>
+                        <input type="text" id="edit-proc-name" value="${this.escapeHtml(process.title)}" 
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
                         
-                        <!-- 산출물 및 참고자료 섹션 -->
-                        <div style="background: #d1ecf1; padding: 20px; border-radius: 8px;">
-                            <h4 style="margin: 0 0 15px 0; color: #0c5460; font-size: 16px;">📤 산출물 및 참고자료</h4>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    산출물 및 결과물
-                                </label>
-                                <textarea id="edit-proc-outputs" placeholder="이 프로세스에서 생성되는 산출물을 한 줄씩 입력하세요&#10;예:&#10;• 민원신청서(우편, 팩스, 국민신문고 등)&#10;• 민원처리부&#10;• 민원 접수증&#10;• 처리 결과 통보서" 
-                                          style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.outputs)}</textarea>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    관련 법령 및 참고 자료
-                                </label>
-                                <textarea id="edit-proc-references" placeholder="관련 법령, 지침, 매뉴얼 등을 한 줄씩 입력하세요&#10;예:&#10;• 2022년 공직자 민원응대 매뉴얼 - 민원응대 관련 기본원칙: p.6-7&#10;• 민원 처리에 관한 법률(시행 2022. 07. 12.) - 민원 처리 담당자의 의무와 보호: 제4조, p.2&#10;• 행정절차법 제2조(정의)" 
-                                          style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.references)}</textarea>
-                            </div>
-                            
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    주의사항 및 특이사항
-                                </label>
-                                <textarea id="edit-proc-notes" placeholder="프로세스 수행 시 주의해야 할 사항이나 특이사항을 입력하세요&#10;예:&#10;• 개인정보 보호 주의&#10;• 처리기한 엄수&#10;• 관련 부서 협조 필요시 사전 연락" 
-                                          style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.notes)}</textarea>
-                            </div>
-                        </div>
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            프로세스 설명
+                        </label>
+                        <textarea id="edit-proc-step-description" placeholder="이 프로세스에서 수행되는 주요 활동과 목적을 설명하세요..." 
+                                  style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.escapeHtml(process.stepDescription || process.description || '')}</textarea>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            주요 업무 내용
+                        </label>
+                        <textarea id="edit-proc-main-content" placeholder="주요 업무 내용을 한 줄씩 입력하세요&#10;예:&#10;민원인 응대&#10;방문·우편·팩스·국민신문고 등 신청경로 확인·안내&#10;민원 신청서 및 구비서류 안내" 
+                                  style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.mainContent)}</textarea>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            산출물
+                        </label>
+                        <textarea id="edit-proc-outputs" placeholder="이 프로세스에서 생성되는 산출물을 한 줄씩 입력하세요&#10;예:&#10;민원신청서(우편, 팩스, 국민신문고 등)&#10;민원처리부&#10;민원 접수증" 
+                                  style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.outputs)}</textarea>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            참고 자료
+                        </label>
+                        <textarea id="edit-proc-references" placeholder="관련 법령, 지침, 매뉴얼 등을 한 줄씩 입력하세요&#10;예:&#10;2022년 공직자 민원응대 매뉴얼 - 민원응대 관련 기본원칙: p.6-7&#10;민원 처리에 관한 법률(시행 2022. 07. 12.) - 민원 처리 담당자의 의무와 보호: 제4조, p.2" 
+                                  style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;">${this.arrayToTextarea(process.references)}</textarea>
                     </div>
                     
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
                         <button id="edit-proc-cancel-btn" style="background: #6c757d; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
                             ❌ 취소
                         </button>
-                        <button id="edit-proc-save-btn" style="background: #ffc107; color: black; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                        <button id="edit-proc-save-btn" style="background: #17a2b8; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
                             💾 저장
                         </button>
                     </div>
@@ -1281,7 +1215,7 @@ window.AdminManager = class {
         
         const updateEditCategoryOptions = () => {
             const selectedDeptId = departmentSelect.value;
-            const currentCategories = this.safeCategories(); // 최신 카테고리 목록 가져오기
+            const currentCategories = this.safeCategories();
             const filteredCategories = currentCategories.filter(cat => cat.departmentId === selectedDeptId);
             
             const currentCategoryId = categorySelect.value;
@@ -1315,7 +1249,7 @@ window.AdminManager = class {
                 };
                 
                 if (this.addCategory(categoryData)) {
-                    updateEditCategoryOptions(); // 카테고리 목록 새로고침
+                    updateEditCategoryOptions();
                     categorySelect.value = this.safeCategories().find(cat => cat.name === categoryName.trim())?.id || '';
                     alert(`"${categoryName.trim()}" 카테고리가 추가되었습니다.`);
                 }
@@ -1346,28 +1280,20 @@ window.AdminManager = class {
             
             const stepDescription = document.getElementById('edit-proc-step-description').value.trim();
             const mainContent = this.parseTextareaLines(document.getElementById('edit-proc-main-content').value);
-            const requiredDocs = this.parseTextareaLines(document.getElementById('edit-proc-required-docs').value);
             const outputs = this.parseTextareaLines(document.getElementById('edit-proc-outputs').value);
             const references = this.parseTextareaLines(document.getElementById('edit-proc-references').value);
-            const notes = this.parseTextareaLines(document.getElementById('edit-proc-notes').value);
             
-            // 상세 정보를 포함한 콘텐츠 재구성
+            // 콘텐츠 재구성
             let content = '';
-            if (stepDescription) content += `**프로세스 개요 및 목적:**\n${stepDescription}\n\n`;
+            if (stepDescription) content += `**단계설명:**\n${stepDescription}\n\n`;
             if (mainContent.length > 0) {
-                content += `**주요 업무 내용 및 단계:**\n${mainContent.map(item => `${item}`).join('\n')}\n\n`;
-            }
-            if (requiredDocs.length > 0) {
-                content += `**필요 서류 및 자료:**\n${requiredDocs.map(item => `${item}`).join('\n')}\n\n`;
+                content += `**주요내용:**\n${mainContent.map(item => `• ${item}`).join('\n')}\n\n`;
             }
             if (outputs.length > 0) {
-                content += `**산출물 및 결과물:**\n${outputs.map(item => `${item}`).join('\n')}\n\n`;
+                content += `**산출물:**\n${outputs.map(item => `• ${item}`).join('\n')}\n\n`;
             }
             if (references.length > 0) {
-                content += `**관련 법령 및 참고자료:**\n${references.map(item => `${item}`).join('\n')}\n\n`;
-            }
-            if (notes.length > 0) {
-                content += `**주의사항 및 특이사항:**\n${notes.map(item => `${item}`).join('\n')}`;
+                content += `**참고자료:**\n${references.map(item => `• ${item}`).join('\n')}`;
             }
             
             const updateData = {
@@ -1375,14 +1301,10 @@ window.AdminManager = class {
                 categoryId: categoryId,
                 description: stepDescription,
                 content: content.trim(),
-                priority: document.getElementById('edit-proc-priority').value || '보통',
-                duration: document.getElementById('edit-proc-duration').value.trim(),
                 stepDescription: stepDescription,
                 mainContent: mainContent,
-                requiredDocs: requiredDocs,
                 outputs: outputs,
-                references: references,
-                notes: notes
+                references: references
             };
             
             try {
@@ -2195,7 +2117,7 @@ window.AdminManager = class {
         }, 100);
     }
     
-    // 상세 프로세스 추가 모달
+    // 상세 프로세스 추가 모달 - 카테고리 추가 스타일과 동일하게 단순화
     showAddProcessModal() {
         const categories = this.safeCategories();
         const departments = this.safeDepartments();
@@ -2209,130 +2131,40 @@ window.AdminManager = class {
         modal.id = 'add-process-modal';
         modal.innerHTML = `
             <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 9999;">
-                <div style="background: white; padding: 30px; border-radius: 12px; max-width: 700px; width: 95%; max-height: 90vh; overflow-y: auto;">
+                <div style="background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
                     <div style="border-bottom: 2px solid #17a2b8; padding-bottom: 15px; margin-bottom: 20px;">
                         <h3 style="margin: 0; color: #17a2b8; font-size: 20px;">⚙️ 새 프로세스 추가</h3>
                         <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">
-                            새로운 업무 프로세스의 상세 정보를 입력하세요.
+                            새로운 업무 프로세스의 정보를 입력하세요.
                         </p>
                     </div>
                     
                     <div style="margin: 20px 0;">
-                        <!-- 기본 정보 섹션 -->
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin: 0 0 15px 0; color: #495057; font-size: 16px;">📋 기본 정보</h4>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                        상위 부서 <span style="color: #dc3545;">*</span>
-                                    </label>
-                                    <select id="proc-department" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
-                                        ${departments.map(dept => `<option value="${dept.id}">${dept.name}</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                        상위 카테고리 <span style="color: #dc3545;">*</span>
-                                    </label>
-                                    <div style="display: flex; gap: 8px;">
-                                        <select id="proc-category" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
-                                            <option value="">카테고리를 선택하세요</option>
-                                            ${categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('')}
-                                        </select>
-                                        <button type="button" id="add-new-category-btn" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; white-space: nowrap;" title="새 카테고리 추가">
-                                            ➕ 새 카테고리
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    프로세스명 <span style="color: #dc3545;">*</span>
-                                </label>
-                                <input type="text" id="proc-name" placeholder="예: 민원신청, 검토/현장방문, 민원회신" 
-                                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                        우선순위
-                                    </label>
-                                    <select id="proc-priority" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
-                                        <option value="보통">보통</option>
-                                        <option value="높음">높음</option>
-                                        <option value="낮음">낮음</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                        예상 소요시간
-                                    </label>
-                                    <input type="text" id="proc-duration" placeholder="예: 30분, 1-2시간, 1일" 
-                                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
-                                </div>
-                            </div>
-                        </div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            상위 부서 <span style="color: #dc3545;">*</span>
+                        </label>
+                        <select id="proc-department" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
+                            ${departments.map(dept => `<option value="${dept.id}">${dept.name}</option>`).join('')}
+                        </select>
                         
-                        <!-- 상세 정보 섹션 -->
-                        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                            <h4 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">📝 상세 정보</h4>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    프로세스 개요 및 목적
-                                </label>
-                                <textarea id="proc-step-description" placeholder="이 프로세스에서 수행되는 주요 활동과 목적을 상세히 설명하세요..." 
-                                          style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    주요 업무 내용 및 단계
-                                </label>
-                                <textarea id="proc-main-content" placeholder="주요 업무 내용을 단계별로 한 줄씩 입력하세요&#10;예:&#10;1. 민원인 응대 및 접수&#10;2. 방문·우편·팩스·국민신문고 등 신청경로 확인·안내&#10;3. 민원 신청서 및 구비서류 검토&#10;4. 처리 담당자 배정 및 전달" 
-                                          style="width: 100%; height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    필요 서류 및 자료
-                                </label>
-                                <textarea id="proc-required-docs" placeholder="프로세스 수행에 필요한 서류나 자료를 입력하세요&#10;예:&#10;• 민원신청서&#10;• 신분증 사본&#10;• 관련 증빙서류&#10;• 위임장(대리신청시)" 
-                                          style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
-                            </div>
-                        </div>
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            상위 카테고리 <span style="color: #dc3545;">*</span>
+                        </label>
+                        <select id="proc-category" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
+                            <option value="">카테고리를 선택하세요</option>
+                        </select>
                         
-                        <!-- 산출물 및 참고자료 섹션 -->
-                        <div style="background: #d1ecf1; padding: 20px; border-radius: 8px;">
-                            <h4 style="margin: 0 0 15px 0; color: #0c5460; font-size: 16px;">📤 산출물 및 참고자료</h4>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    산출물 및 결과물
-                                </label>
-                                <textarea id="proc-outputs" placeholder="이 프로세스에서 생성되는 산출물을 한 줄씩 입력하세요&#10;예:&#10;• 민원신청서(우편, 팩스, 국민신문고 등)&#10;• 민원처리부&#10;• 민원 접수증&#10;• 처리 결과 통보서" 
-                                          style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    관련 법령 및 참고 자료
-                                </label>
-                                <textarea id="proc-references" placeholder="관련 법령, 지침, 매뉴얼 등을 한 줄씩 입력하세요&#10;예:&#10;• 2022년 공직자 민원응대 매뉴얼 - 민원응대 관련 기본원칙: p.6-7&#10;• 민원 처리에 관한 법률(시행 2022. 07. 12.) - 민원 처리 담당자의 의무와 보호: 제4조, p.2&#10;• 행정절차법 제2조(정의)" 
-                                          style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
-                            </div>
-                            
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
-                                    주의사항 및 특이사항
-                                </label>
-                                <textarea id="proc-notes" placeholder="프로세스 수행 시 주의해야 할 사항이나 특이사항을 입력하세요&#10;예:&#10;• 개인정보 보호 주의&#10;• 처리기한 엄수&#10;• 관련 부서 협조 필요시 사전 연락" 
-                                          style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
-                            </div>
-                        </div>
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            프로세스명 <span style="color: #dc3545;">*</span>
+                        </label>
+                        <input type="text" id="proc-name" placeholder="예: 민원신청, 검토/현장방문, 민원회신" 
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            프로세스 설명
+                        </label>
+                        <textarea id="proc-step-description" placeholder="이 프로세스에서 수행되는 주요 활동과 목적을 설명하세요..." 
+                                  style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
                     </div>
                     
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
@@ -2366,31 +2198,7 @@ window.AdminManager = class {
         
         departmentSelect.addEventListener('change', updateCategoryOptions);
         
-        // 새 카테고리 추가 버튼
-        document.getElementById('add-new-category-btn').onclick = () => {
-            const selectedDeptId = departmentSelect.value;
-            if (!selectedDeptId) {
-                alert('먼저 부서를 선택해주세요.');
-                return;
-            }
-            
-            const categoryName = prompt('새 카테고리명을 입력하세요:');
-            if (categoryName && categoryName.trim()) {
-                const categoryData = {
-                    name: categoryName.trim(),
-                    departmentId: selectedDeptId,
-                    description: ''
-                };
-                
-                if (this.addCategory(categoryData)) {
-                    updateCategoryOptions(); // 카테고리 목록 새로고침
-                    categorySelect.value = this.safeCategories().find(cat => cat.name === categoryName.trim())?.id || '';
-                    alert(`"${categoryName.trim()}" 카테고리가 추가되었습니다.`);
-                }
-            }
-        };
-        
-        // 초기 카테고리 필터링
+        // 초기 카테고리 필터링 - 첫 번째 부서의 카테고리를 로드
         updateCategoryOptions();
         
         // 취소 버튼
@@ -2418,14 +2226,7 @@ window.AdminManager = class {
             const processData = {
                 title: name,
                 categoryId: categoryId,
-                priority: document.getElementById('proc-priority').value || '보통',
-                duration: document.getElementById('proc-duration').value.trim(),
-                stepDescription: document.getElementById('proc-step-description').value.trim(),
-                mainContent: this.parseTextareaLines(document.getElementById('proc-main-content').value),
-                requiredDocs: this.parseTextareaLines(document.getElementById('proc-required-docs').value),
-                outputs: this.parseTextareaLines(document.getElementById('proc-outputs').value),
-                references: this.parseTextareaLines(document.getElementById('proc-references').value),
-                notes: this.parseTextareaLines(document.getElementById('proc-notes').value)
+                stepDescription: document.getElementById('proc-step-description').value.trim()
             };
             
             console.log('프로세스 추가 데이터:', processData);
