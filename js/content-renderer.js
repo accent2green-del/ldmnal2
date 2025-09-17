@@ -667,27 +667,55 @@ class ContentRenderer {
      * 개별 항목 리스트 렌더링 (새로운 방식)
      */
     renderItemList(items, icon = '•', withAttachment = false) {
-        const processedItems = Utils.processMultilineData(items);
+        const processedItems = Utils.processItemsWithAttachments(items);
         
         if (processedItems.length === 0) {
             return '<div class="no-data">등록된 항목이 없습니다.</div>';
         }
         
-        return processedItems.map((item, index) => `
-            <div class="item-entry">
-                <div class="item-number">${index + 1}</div>
-                <div class="item-text">
-                    ${icon} ${Utils.escapeHtml(item)}
-                </div>
-                ${withAttachment ? `
-                    <div class="item-attachment">
-                        <a href="#" onclick="event.preventDefault(); alert('첨부파일 기능은 추후 구현예정입니다.');" title="첨부파일">
-                            📎
-                        </a>
+        return processedItems.map((item, index) => {
+            const itemText = typeof item === 'string' ? item : (item.text || '');
+            const hasAttachment = typeof item === 'object' && item.attachment;
+            const attachment = hasAttachment ? item.attachment : null;
+            
+            return `
+                <div class="item-entry">
+                    <div class="item-number">${index + 1}</div>
+                    <div class="item-text">
+                        ${icon} ${Utils.escapeHtml(itemText)}
                     </div>
-                ` : ''}
-            </div>
-        `).join('');
+                    ${withAttachment && hasAttachment ? `
+                        <div class="item-attachment">
+                            <a href="#" onclick="contentRenderer.downloadAttachment(${index}, '${Utils.escapeHtml(attachment.name)}', '${attachment.data}')" 
+                               title="다운로드: ${Utils.escapeHtml(attachment.name)} (${Utils.formatFileSize(attachment.size)})">
+                                📎 ${Utils.escapeHtml(attachment.name)}
+                            </a>
+                            <span class="file-size">(${Utils.formatFileSize(attachment.size)})</span>
+                        </div>
+                    ` : (withAttachment ? `
+                        <div class="item-attachment-placeholder">
+                            <span class="no-attachment">첨부파일 없음</span>
+                        </div>
+                    ` : '')}
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * 첨부파일 다운로드
+     */
+    downloadAttachment(index, filename, base64Data) {
+        console.log(`첨부파일 다운로드 시도: ${filename}`);
+        
+        const success = Utils.downloadBase64File(base64Data, filename);
+        if (success) {
+            Utils.showNotification(`파일 다운로드 완료: ${filename}`, 'success');
+            Logger.info(`📎 첨부파일 다운로드 완료: ${filename}`);
+        } else {
+            Utils.showNotification(`파일 다운로드 실패: ${filename}`, 'error');
+            Logger.error(`❌ 첨부파일 다운로드 실패: ${filename}`);
+        }
     }
 
     /**

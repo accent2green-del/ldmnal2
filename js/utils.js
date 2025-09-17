@@ -426,8 +426,8 @@ class Utils {
         container.className = `item-list-manager ${containerClass}`;
         container.id = containerId;
         
-        // 현재 항목들을 관리할 배열
-        let currentItems = [...Utils.processMultilineData(items)];
+        // 현재 항목들을 관리할 배열 (각 항목은 {text, attachment} 형태)
+        let currentItems = Utils.processItemsWithAttachments(items);
         
         // 항목 변경 알림 함수
         const notifyChange = () => {
@@ -436,24 +436,47 @@ class Utils {
             }
         };
         
+        // 파일을 Base64로 변환하는 함수
+        const fileToBase64 = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        };
+        
         // UI 렌더링 함수
         const renderItems = () => {
-            const itemsHtml = currentItems.map((item, index) => `
-                <div class="item-row" data-index="${index}">
-                    <div class="item-content">
-                        <textarea class="item-text" placeholder="항목을 입력하세요...">${Utils.escapeHtml(item)}</textarea>
-                        ${itemType === 'references' ? `
-                            <input type="file" class="item-attachment" accept="*/*" style="display: none;" data-index="${index}">
-                            <button type="button" class="attachment-btn" data-index="${index}">📎 첨부</button>
-                        ` : ''}
+            const itemsHtml = currentItems.map((item, index) => {
+                const itemText = typeof item === 'string' ? item : (item.text || '');
+                const hasAttachment = typeof item === 'object' && item.attachment;
+                const attachmentName = hasAttachment ? item.attachment.name : '';
+                
+                return `
+                    <div class="item-row" data-index="${index}">
+                        <div class="item-content">
+                            <textarea class="item-text" placeholder="항목을 입력하세요...">${Utils.escapeHtml(itemText)}</textarea>
+                            ${(itemType === 'outputs' || itemType === 'references') ? `
+                                <div class="attachment-section">
+                                    <input type="file" class="item-attachment" accept="*/*" style="display: none;" data-index="${index}">
+                                    <button type="button" class="attachment-btn" data-index="${index}">
+                                        ${hasAttachment ? `📎 ${attachmentName}` : '📎 파일 첨부'}
+                                    </button>
+                                    ${hasAttachment ? `
+                                        <button type="button" class="remove-attachment-btn" data-index="${index}" title="첨부파일 제거">✖</button>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="item-actions">
+                            <button type="button" class="move-up-btn" data-index="${index}" ${index === 0 ? 'disabled' : ''}>▲</button>
+                            <button type="button" class="move-down-btn" data-index="${index}" ${index === currentItems.length - 1 ? 'disabled' : ''}>▼</button>
+                            <button type="button" class="remove-item-btn" data-index="${index}">🗑️</button>
+                        </div>
                     </div>
-                    <div class="item-actions">
-                        <button type="button" class="move-up-btn" data-index="${index}" ${index === 0 ? 'disabled' : ''}>▲</button>
-                        <button type="button" class="move-down-btn" data-index="${index}" ${index === currentItems.length - 1 ? 'disabled' : ''}>▼</button>
-                        <button type="button" class="remove-item-btn" data-index="${index}">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             
             container.innerHTML = `
                 <div class="item-list-header">
@@ -476,7 +499,7 @@ class Utils {
             const addBtn = container.querySelector('.add-item-btn');
             if (addBtn) {
                 addBtn.addEventListener('click', () => {
-                    currentItems.push('');
+                    currentItems.push({ text: '', attachment: null });
                     renderItems();
                     
                     // 새로 추가된 textarea에 포커스
@@ -531,13 +554,17 @@ class Utils {
                 
                 textarea.addEventListener('input', (e) => {
                     const index = parseInt(e.target.closest('.item-row').getAttribute('data-index'));
-                    currentItems[index] = e.target.value;
+                    if (typeof currentItems[index] === 'string') {
+                        currentItems[index] = { text: e.target.value, attachment: null };
+                    } else {
+                        currentItems[index].text = e.target.value;
+                    }
                     notifyChange();
                 });
             });
             
-            // 첨부파일 버튼 (참고자료만)
-            if (itemType === 'references') {
+            // 첨부파일 버튼 (산출물과 참고자료 모두)
+            if (itemType === 'outputs' || itemType === 'references') {
                 container.querySelectorAll('.attachment-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const index = parseInt(e.target.getAttribute('data-index'));
@@ -549,17 +576,50 @@ class Utils {
                 });
                 
                 container.querySelectorAll('.item-attachment').forEach(input => {
-                    input.addEventListener('change', (e) => {
+                    input.addEventListener('change', async (e) => {
                         const index = parseInt(e.target.getAttribute('data-index'));
                         const file = e.target.files[0];
                         if (file) {
-                            // 파일 처리 로직 (현재는 파일명만 표시)
-                            const attachmentInfo = `📎 ${file.name}`;
-                            const btn = container.querySelector(`.attachment-btn[data-index="${index}"]`);
-                            if (btn) {
-                                btn.textContent = attachmentInfo;
-                                btn.title = `첨부된 파일: ${file.name}`;
+                            try {
+                                // 파일을 Base64로 변환
+                                const base64Data = await fileToBase64(file);
+                                
+                                // 현재 항목 데이터 구조 확인 및 업데이트
+                                if (typeof currentItems[index] === 'string') {
+                                    currentItems[index] = { text: currentItems[index], attachment: null };
+                                }
+                                
+                                // 첨부파일 정보 저장
+                                currentItems[index].attachment = {
+                                    name: file.name,
+                                    type: file.type,
+                                    size: file.size,
+                                    lastModified: file.lastModified,
+                                    data: base64Data
+                                };
+                                
+                                renderItems();
+                                notifyChange();
+                                
+                                console.log(`파일 첨부 완료: ${file.name} (${Math.round(file.size / 1024)}KB)`);
+                            } catch (error) {
+                                console.error('파일 처리 중 오류:', error);
+                                alert('파일 처리 중 오류가 발생했습니다.');
                             }
+                        }
+                    });
+                });
+                
+                // 첨부파일 제거 버튼
+                container.querySelectorAll('.remove-attachment-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(e.target.getAttribute('data-index'));
+                        if (confirm('첨부파일을 제거하시겠습니까?')) {
+                            if (typeof currentItems[index] === 'object') {
+                                currentItems[index].attachment = null;
+                            }
+                            renderItems();
+                            notifyChange();
                         }
                     });
                 });
@@ -573,12 +633,14 @@ class Utils {
         return {
             container,
             getItems: () => [...currentItems],
+            getItemsAsText: () => currentItems.map(item => typeof item === 'string' ? item : item.text),
             setItems: (items) => {
-                currentItems = [...Utils.processMultilineData(items)];
+                currentItems = Utils.processItemsWithAttachments(items);
                 renderItems();
             },
             addItem: (item = '') => {
-                currentItems.push(item);
+                const newItem = typeof item === 'string' ? { text: item, attachment: null } : item;
+                currentItems.push(newItem);
                 renderItems();
                 notifyChange();
             },
@@ -603,6 +665,97 @@ class Utils {
      */
     static textToItems(text) {
         return Utils.processMultilineData(text);
+    }
+
+    /**
+     * 첨부파일이 포함된 항목들 처리
+     */
+    static processItemsWithAttachments(items) {
+        if (!items) return [];
+        
+        if (Array.isArray(items)) {
+            return items.map(item => {
+                if (typeof item === 'string') {
+                    return { text: item, attachment: null };
+                } else if (typeof item === 'object' && item !== null) {
+                    return {
+                        text: item.text || '',
+                        attachment: item.attachment || null
+                    };
+                }
+                return { text: '', attachment: null };
+            }).filter(item => item.text.trim() || item.attachment);
+        }
+        
+        if (typeof items === 'string') {
+            return Utils.splitByNewlines(items).map(text => ({ text, attachment: null }));
+        }
+        
+        return [];
+    }
+
+    /**
+     * 첨부파일이 포함된 항목들을 텍스트로 변환 (호환성용)
+     */
+    static itemsWithAttachmentsToText(items) {
+        if (!items || !Array.isArray(items)) return '';
+        return items.map(item => typeof item === 'string' ? item : (item.text || '')).join('\n');
+    }
+
+    /**
+     * Base64 데이터를 파일로 다운로드
+     */
+    static downloadBase64File(base64Data, filename) {
+        try {
+            // Base64 데이터에서 MIME 타입 추출
+            const mimeMatch = base64Data.match(/^data:([^;]+);base64,(.+)$/);
+            if (!mimeMatch) {
+                throw new Error('잘못된 Base64 데이터 형식입니다.');
+            }
+            
+            const mimeType = mimeMatch[1];
+            const base64String = mimeMatch[2];
+            
+            // Base64를 Blob으로 변환
+            const byteCharacters = atob(base64String);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: mimeType });
+            
+            // 다운로드 링크 생성 및 클릭
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            
+            // 정리
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            return true;
+        } catch (error) {
+            console.error('파일 다운로드 실패:', error);
+            Utils.showNotification(`파일 다운로드 중 오류가 발생했습니다: ${error.message}`, 'error');
+            return false;
+        }
+    }
+
+    /**
+     * 파일 크기를 읽기 쉬운 형태로 변환
+     */
+    static formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 }
 

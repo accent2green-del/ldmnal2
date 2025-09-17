@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>첨부파일 기능 테스트</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .test-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .test-title {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 6px 6px 0 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .test-description {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 6px;
+        }
+        
+        .demo-data {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .demo-column {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .demo-column h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #218838;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .file-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .file-info h5 {
+            margin: 0 0 10px 0;
+            color: #856404;
+        }
+        
+        .attachment-demo {
+            border: 2px dashed #28a745;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>📎 첨부파일 기능 테스트</h1>
+        <p>산출물과 참고자료의 첨부파일 관리 및 다운로드 기능을 종합적으로 테스트합니다.</p>
+        
+        <!-- 테스트 1: 산출물 첨부파일 관리 -->
+        <div class="test-section">
+            <div class="test-title">📎 테스트 1: 산출물 첨부파일 관리</div>
+            <div class="test-description">
+                산출물 항목에 파일을 첨부하고, 첨부파일 정보를 확인하며, 제거 기능을 테스트합니다.
+            </div>
+            
+            <div id="outputs-attachment-container"></div>
+            
+            <div class="test-results">
+                <h4>산출물 데이터 (첨부파일 포함):</h4>
+                <pre id="outputs-attachment-result">[]</pre>
+                
+                <button class="btn" onclick="addSampleOutputsWithAttachments()">샘플 데이터 추가</button>
+                <button class="btn btn-secondary" onclick="clearOutputsAttachments()">모든 항목 제거</button>
+            </div>
+        </div>
+        
+        <!-- 테스트 2: 참고자료 첨부파일 관리 -->
+        <div class="test-section">
+            <div class="test-title">📚 테스트 2: 참고자료 첨부파일 관리</div>
+            <div class="test-description">
+                참고자료 항목에 파일을 첨부하고, 첨부파일 정보를 확인하며, 제거 기능을 테스트합니다.
+            </div>
+            
+            <div id="references-attachment-container"></div>
+            
+            <div class="test-results">
+                <h4>참고자료 데이터 (첨부파일 포함):</h4>
+                <pre id="references-attachment-result">[]</pre>
+                
+                <button class="btn" onclick="addSampleReferencesWithAttachments()">샘플 데이터 추가</button>
+                <button class="btn btn-secondary" onclick="clearReferencesAttachments()">모든 항목 제거</button>
+            </div>
+        </div>
+        
+        <!-- 테스트 3: 상세정보창 표시 및 다운로드 -->
+        <div class="test-section">
+            <div class="test-title">💾 테스트 3: 상세정보창 표시 및 다운로드</div>
+            <div class="test-description">
+                상세정보창에서 첨부파일이 어떻게 표시되는지 확인하고, 다운로드 기능을 테스트합니다.
+            </div>
+            
+            <div class="demo-data">
+                <div class="demo-column">
+                    <h4>📄 산출물 표시 (첨부파일 포함)</h4>
+                    <div id="outputs-display-attachment-demo"></div>
+                </div>
+                <div class="demo-column">
+                    <h4>📚 참고자료 표시 (첨부파일 포함)</h4>
+                    <div id="references-display-attachment-demo"></div>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="updateAttachmentDisplayDemo()">표시 예시 업데이트</button>
+            <button class="btn btn-secondary" onclick="createTestFiles()">테스트 파일 생성</button>
+        </div>
+        
+        <!-- 테스트 4: 데이터 호환성 및 변환 -->
+        <div class="test-section">
+            <div class="test-title">🔄 테스트 4: 데이터 호환성 및 변환</div>
+            <div class="test-description">
+                기존 텍스트 형태의 데이터와 새로운 첨부파일 데이터 구조 간의 호환성을 테스트합니다.
+            </div>
+            
+            <div class="test-results">
+                <h4>호환성 테스트 결과:</h4>
+                <div id="attachment-compatibility-results"></div>
+                
+                <button class="btn" onclick="testAttachmentCompatibility()">호환성 테스트 실행</button>
+            </div>
+        </div>
+        
+        <!-- 테스트 5: 파일 업로드/다운로드 시뮬레이션 -->
+        <div class="test-section">
+            <div class="test-title">📂 테스트 5: 파일 업로드/다운로드 시뮬레이션</div>
+            <div class="test-description">
+                다양한 파일 형식의 업로드와 다운로드 기능을 시뮬레이션합니다.
+            </div>
+            
+            <div class="attachment-demo">
+                <h4>📎 파일 시뮬레이션 영역</h4>
+                <p>아래 버튼들로 다양한 파일 형식을 시뮬레이션할 수 있습니다.</p>
+                
+                <button class="btn" onclick="simulateTextFile()">📄 텍스트 파일</button>
+                <button class="btn" onclick="simulateImageFile()">🖼️ 이미지 파일</button>
+                <button class="btn" onclick="simulatePdfFile()">📋 PDF 파일</button>
+                <button class="btn" onclick="simulateExcelFile()">📊 엑셀 파일</button>
+            </div>
+            
+            <div id="simulation-results"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/content-renderer.js"></script>
+    <script>
+        // 전역 변수
+        let outputsAttachmentManager, referencesAttachmentManager;
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📎 첨부파일 기능 테스트 페이지 로드');
+            initializeAttachmentTests();
+        });
+        
+        // 테스트 초기화
+        function initializeAttachmentTests() {
+            // 산출물 첨부파일 관리 UI 생성
+            const outputsContainer = document.getElementById('outputs-attachment-container');
+            outputsAttachmentManager = Utils.createItemListManager(
+                [
+                    { text: '민원신청서 양식', attachment: null },
+                    { text: '처리 결과 보고서', attachment: null }
+                ],
+                'outputs-attachment-manager',
+                'outputs',
+                updateOutputsAttachmentResult
+            );
+            outputsContainer.appendChild(outputsAttachmentManager.container);
+            
+            // 참고자료 첨부파일 관리 UI 생성
+            const referencesContainer = document.getElementById('references-attachment-container');
+            referencesAttachmentManager = Utils.createItemListManager(
+                [
+                    { text: '민원처리 관련 법령집', attachment: null },
+                    { text: '업무 처리 매뉴얼', attachment: null }
+                ],
+                'references-attachment-manager',
+                'references',
+                updateReferencesAttachmentResult
+            );
+            referencesContainer.appendChild(referencesAttachmentManager.container);
+            
+            // 초기 결과 업데이트
+            updateOutputsAttachmentResult(outputsAttachmentManager.getItems());
+            updateReferencesAttachmentResult(referencesAttachmentManager.getItems());
+            updateAttachmentDisplayDemo();
+        }
+        
+        // 산출물 첨부파일 결과 업데이트
+        function updateOutputsAttachmentResult(items) {
+            document.getElementById('outputs-attachment-result').textContent = JSON.stringify(items, null, 2);
+        }
+        
+        // 참고자료 첨부파일 결과 업데이트
+        function updateReferencesAttachmentResult(items) {
+            document.getElementById('references-attachment-result').textContent = JSON.stringify(items, null, 2);
+        }
+        
+        // 샘플 산출물 데이터 추가
+        function addSampleOutputsWithAttachments() {
+            const sampleItems = [
+                { text: '민원 접수증 (첨부파일 포함)', attachment: null },
+                { text: '처리 완료 통지서', attachment: null },
+                { text: '관련 서류 모음집', attachment: null }
+            ];
+            
+            sampleItems.forEach(item => {
+                outputsAttachmentManager.addItem(item);
+            });
+            
+            alert('샘플 산출물이 추가되었습니다!');
+        }
+        
+        // 샘플 참고자료 데이터 추가
+        function addSampleReferencesWithAttachments() {
+            const sampleItems = [
+                { text: '관련 법령 해석 지침서', attachment: null },
+                { text: '사례별 처리 가이드', attachment: null },
+                { text: 'FAQ 및 문의응답집', attachment: null }
+            ];
+            
+            sampleItems.forEach(item => {
+                referencesAttachmentManager.addItem(item);
+            });
+            
+            alert('샘플 참고자료가 추가되었습니다!');
+        }
+        
+        // 산출물 첨부파일 모두 제거
+        function clearOutputsAttachments() {
+            if (confirm('모든 산출물 항목을 제거하시겠습니까?')) {
+                outputsAttachmentManager.clear();
+            }
+        }
+        
+        // 참고자료 첨부파일 모두 제거
+        function clearReferencesAttachments() {
+            if (confirm('모든 참고자료 항목을 제거하시겠습니까?')) {
+                referencesAttachmentManager.clear();
+            }
+        }
+        
+        // 첨부파일 표시 예시 업데이트
+        function updateAttachmentDisplayDemo() {
+            // 산출물 표시 예시 (content-renderer 방식 사용)
+            const outputsItems = outputsAttachmentManager ? outputsAttachmentManager.getItems() : [];
+            const outputsHtml = renderItemList(outputsItems, '📝', false);
+            document.getElementById('outputs-display-attachment-demo').innerHTML = `<div class="detail-item-list">${outputsHtml}</div>`;
+            
+            // 참고자료 표시 예시 (첨부파일 포함)
+            const referencesItems = referencesAttachmentManager ? referencesAttachmentManager.getItems() : [];
+            const referencesHtml = renderItemList(referencesItems, '📚', true);
+            document.getElementById('references-display-attachment-demo').innerHTML = `<div class="detail-item-list">${referencesHtml}</div>`;
+        }
+        
+        // 항목 리스트 렌더링 (content-renderer와 동일)
+        function renderItemList(items, icon = '•', withAttachment = false) {
+            const processedItems = Utils.processItemsWithAttachments(items);
+            
+            if (processedItems.length === 0) {
+                return '<div class="no-data">등록된 항목이 없습니다.</div>';
+            }
+            
+            return processedItems.map((item, index) => {
+                const itemText = typeof item === 'string' ? item : (item.text || '');
+                const hasAttachment = typeof item === 'object' && item.attachment;
+                const attachment = hasAttachment ? item.attachment : null;
+                
+                return `
+                    <div class="item-entry">
+                        <div class="item-number">${index + 1}</div>
+                        <div class="item-text">
+                            ${icon} ${Utils.escapeHtml(itemText)}
+                        </div>
+                        ${withAttachment && hasAttachment ? `
+                            <div class="item-attachment">
+                                <a href="#" onclick="downloadAttachment('${Utils.escapeHtml(attachment.name)}', '${attachment.data}')" 
+                                   title="다운로드: ${Utils.escapeHtml(attachment.name)} (${Utils.formatFileSize(attachment.size)})">
+                                    📎 ${Utils.escapeHtml(attachment.name)}
+                                </a>
+                                <span class="file-size">(${Utils.formatFileSize(attachment.size)})</span>
+                            </div>
+                        ` : (withAttachment ? `
+                            <div class="item-attachment-placeholder">
+                                <span class="no-attachment">첨부파일 없음</span>
+                            </div>
+                        ` : '')}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 첨부파일 다운로드 (테스트용)
+        function downloadAttachment(filename, base64Data) {
+            console.log(`첨부파일 다운로드 시도: ${filename}`);
+            
+            const success = Utils.downloadBase64File(base64Data, filename);
+            if (success) {
+                alert(`파일 다운로드 완료: ${filename}`);
+            } else {
+                alert(`파일 다운로드 실패: ${filename}`);
+            }
+        }
+        
+        // 호환성 테스트
+        function testAttachmentCompatibility() {
+            const testCases = [
+                {
+                    name: '기존 문자열 배열 데이터',
+                    input: ['항목1', '항목2', '항목3'],
+                    expected: [{text: '항목1', attachment: null}, {text: '항목2', attachment: null}, {text: '항목3', attachment: null}]
+                },
+                {
+                    name: '새로운 첨부파일 구조',
+                    input: [{text: '항목1', attachment: {name: 'test.pdf'}}, {text: '항목2', attachment: null}],
+                    expected: [{text: '항목1', attachment: {name: 'test.pdf'}}, {text: '항목2', attachment: null}]
+                },
+                {
+                    name: '혼합 데이터 구조',
+                    input: ['문자열항목', {text: '객체항목', attachment: null}],
+                    expected: [{text: '문자열항목', attachment: null}, {text: '객체항목', attachment: null}]
+                }
+            ];
+            
+            let results = '';
+            let allPassed = true;
+            
+            testCases.forEach(testCase => {
+                const result = Utils.processItemsWithAttachments(testCase.input);
+                const passed = JSON.stringify(result) === JSON.stringify(testCase.expected);
+                
+                if (!passed) allPassed = false;
+                
+                results += `
+                    <div style="margin: 10px 0; padding: 10px; background: ${passed ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+                        <strong>${testCase.name}:</strong> ${passed ? '✅ 통과' : '❌ 실패'}<br>
+                        입력: ${JSON.stringify(testCase.input)}<br>
+                        예상: ${JSON.stringify(testCase.expected)}<br>
+                        실제: ${JSON.stringify(result)}
+                    </div>
+                `;
+            });
+            
+            results = `<h4 style="color: ${allPassed ? 'green' : 'red'};">첨부파일 호환성 테스트: ${allPassed ? '✅ 모든 테스트 통과' : '❌ 일부 테스트 실패'}</h4>` + results;
+            
+            document.getElementById('attachment-compatibility-results').innerHTML = results;
+        }
+        
+        // 테스트 파일 생성
+        function createTestFiles() {
+            // 테스트용 Base64 데이터를 가진 첨부파일을 시뮬레이션
+            const testFile = {
+                name: 'test-document.txt',
+                type: 'text/plain',
+                size: 1024,
+                lastModified: Date.now(),
+                data: 'data:text/plain;base64,' + btoa('이것은 테스트 문서입니다.\n\n첨부파일 다운로드 기능을 테스트하기 위한 샘플 파일입니다.')
+            };
+            
+            // 산출물에 테스트 파일 첨부
+            const outputsItems = outputsAttachmentManager.getItems();
+            if (outputsItems.length > 0) {
+                outputsItems[0].attachment = testFile;
+                outputsAttachmentManager.setItems(outputsItems);
+            }
+            
+            // 참고자료에 테스트 파일 첨부
+            const referencesItems = referencesAttachmentManager.getItems();
+            if (referencesItems.length > 0) {
+                referencesItems[0].attachment = testFile;
+                referencesAttachmentManager.setItems(referencesItems);
+            }
+            
+            updateAttachmentDisplayDemo();
+            alert('테스트 파일이 첫 번째 항목들에 첨부되었습니다!');
+        }
+        
+        // 파일 시뮬레이션 함수들
+        function simulateTextFile() {
+            showSimulationResult('텍스트 파일', 'data:text/plain;base64,' + btoa('샘플 텍스트 파일 내용입니다.'), 'sample.txt', 1024);
+        }
+        
+        function simulateImageFile() {
+            // 1x1 픽셀 투명 PNG
+            const pngData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAHN6M8mJgAAAABJRU5ErkJggg==';
+            showSimulationResult('이미지 파일', pngData, 'sample.png', 150);
+        }
+        
+        function simulatePdfFile() {
+            const pdfData = 'data:application/pdf;base64,JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKFNhbXBsZSBQREYpCi9Qcm9kdWNlciAoVGVzdCkKL1R5cGUgL0NhdGFsb2cKPj4KZW5kb2JqCnhyZWYKMCAxCjAwMDAwMDAwMDAgNjU1MzUgZiAKdHJhaWxlcgo8PAovU2l6ZSAxCi9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgoxNDUKJSVFT0YK';
+            showSimulationResult('PDF 파일', pdfData, 'sample.pdf', 2048);
+        }
+        
+        function simulateExcelFile() {
+            const excelData = 'data:application/vnd.ms-excel;base64,0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPgADAP7/CQAGAAAAAAAAAAAAAAABAAAALgAAAAAAAAAAEAAAAgAAAAEAAAD+////AAAAAAAA';
+            showSimulationResult('엑셀 파일', excelData, 'sample.xlsx', 4096);
+        }
+        
+        function showSimulationResult(type, data, filename, size) {
+            const resultDiv = document.getElementById('simulation-results');
+            resultDiv.innerHTML = `
+                <div class="file-info">
+                    <h5>📎 ${type} 시뮬레이션 완료</h5>
+                    <p><strong>파일명:</strong> ${filename}</p>
+                    <p><strong>크기:</strong> ${Utils.formatFileSize(size)}</p>
+                    <button class="btn" onclick="downloadAttachment('${filename}', '${data}')">
+                        📥 다운로드 테스트
+                    </button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
