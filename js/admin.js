@@ -572,29 +572,7 @@ window.AdminManager = class {
         });
         
         // 추가 버튼들
-        const addDeptBtn = document.getElementById('btn-add-dept');
-        if (addDeptBtn) {
-            addDeptBtn.onclick = () => {
-                console.log('부서 추가 클릭');
-                this.showAddDepartmentModal();
-            };
-        }
-        
-        const addCatBtn = document.getElementById('btn-add-cat');
-        if (addCatBtn) {
-            addCatBtn.onclick = () => {
-                console.log('카테고리 추가 클릭');
-                this.showAddCategoryModal();
-            };
-        }
-        
-        const addProcBtn = document.getElementById('btn-add-proc');
-        if (addProcBtn) {
-            addProcBtn.onclick = () => {
-                console.log('프로세스 추가 클릭');
-                this.showAddProcessModal();
-            };
-        }
+        // 참고: 중복된 이벤트 바인딩 제거 - bindTabSpecificEvents에서 처리
         
         console.log('✅ 모든 이벤트 바인딩 완료');
     }
@@ -739,36 +717,9 @@ window.AdminManager = class {
     }
     
     // 부서 관련 메서드들
-    showAddDepartmentModal() {
-        const name = prompt('새 부서 이름을 입력하세요:');
-        if (name && name.trim()) {
-            const description = prompt('부서 설명을 입력하세요 (선택사항):', '');
-            this.addDepartment(name.trim(), description);
-        }
-    }
+    // 참고: 이 메서드는 삭제됨 - 상세한 모달 방식으로 대체됨
     
-    addDepartment(name, description = '') {
-        try {
-            if (!window.dataManager) {
-                throw new Error('DataManager가 초기화되지 않았습니다.');
-            }
-            
-            const dept = {
-                id: `dept_${Date.now()}`,
-                name: name,
-                description: description,
-                order: window.dataManager.getDepartments().length + 1
-            };
-            
-            window.dataManager.addDepartment(dept);
-            alert(`"${name}" 부서가 성공적으로 추가되었습니다!`);
-            this.refreshAdminPanel();
-            
-        } catch (error) {
-            console.error('부서 추가 실패:', error);
-            alert(`부서 추가 중 오류가 발생했습니다: ${error.message}`);
-        }
-    }
+    // 참고: 이 메서드는 삭제됨 - 상세한 addDepartment 메서드로 대체됨
     
     editDepartment(id) {
         try {
@@ -924,29 +875,7 @@ window.AdminManager = class {
     }
     
     // 카테고리 관련 메서드들
-    showAddCategoryModal() {
-        const departments = dataManager.getDepartments();
-        if (departments.length === 0) {
-            alert('먼저 부서를 추가해주세요.');
-            return;
-        }
-        
-        // 부서 선택
-        const deptOptions = departments.map(d => `${d.name} (${d.id})`).join('\n');
-        const selectedDept = prompt(`카테고리를 추가할 부서를 선택하세요:\n\n${deptOptions}\n\n부서 ID를 입력하세요:`);
-        
-        const dept = departments.find(d => d.id === selectedDept || d.name === selectedDept);
-        if (!dept) {
-            alert('유효한 부서를 선택해주세요.');
-            return;
-        }
-        
-        const name = prompt(`"${dept.name}" 부서에 추가할 카테고리 이름을 입력하세요:`);
-        if (name && name.trim()) {
-            const description = prompt('카테고리 설명을 입력하세요 (선택사항):', '');
-            this.addCategory(name.trim(), dept.id, description);
-        }
-    }
+    // 참고: 이 메서드는 삭제됨 - 상세한 모달 방식으로 대체됨
     
     addCategory(name, departmentId, description = '') {
         try {
@@ -1147,63 +1076,9 @@ window.AdminManager = class {
     }
     
     // 프로세스 관련 메서드들
-    showAddProcessModal() {
-        const categories = dataManager.getCategories();
-        if (categories.length === 0) {
-            alert('먼저 부서와 카테고리를 추가해주세요.');
-            return;
-        }
-        
-        // 카테고리 선택 (부서 포함)
-        let catOptions = '';
-        const departments = dataManager.getDepartments();
-        departments.forEach(dept => {
-            const deptCategories = dataManager.getCategoriesByDepartment(dept.id);
-            if (deptCategories.length > 0) {
-                catOptions += `\n[${dept.name}]\n`;
-                deptCategories.forEach(cat => {
-                    catOptions += `  - ${cat.name} (${cat.id})\n`;
-                });
-            }
-        });
-        
-        const selectedCat = prompt(`프로세스를 추가할 카테고리를 선택하세요:${catOptions}\n카테고리 ID를 입력하세요:`);
-        
-        const cat = categories.find(c => c.id === selectedCat || c.name === selectedCat);
-        if (!cat) {
-            alert('유효한 카테고리를 선택해주세요.');
-            return;
-        }
-        
-        const title = prompt(`"${cat.name}" 카테고리에 추가할 프로세스 제목을 입력하세요:`);
-        if (title && title.trim()) {
-            const content = prompt('프로세스 내용을 입력하세요:', '');
-            this.addProcess(title.trim(), cat.id, content);
-        }
-    }
+    // 참고: 이 메서드는 삭제됨 - 상세한 모달 방식으로 대체됨
     
-    addProcess(title, categoryId, content = '') {
-        try {
-            const proc = {
-                id: `proc_${Date.now()}`,
-                title: title,
-                categoryId: categoryId,
-                content: content,
-                steps: [],
-                legalBasis: '',
-                outputs: '',
-                references: ''
-            };
-            
-            dataManager.addProcess(proc);
-            alert(`"${title}" 프로세스가 성공적으로 추가되었습니다!`);
-            this.refreshAdminPanel();
-            
-        } catch (error) {
-            console.error('프로세스 추가 실패:', error);
-            alert(`프로세스 추가 중 오류가 발생했습니다: ${error.message}`);
-        }
-    }
+    // 참고: 이 메서드는 삭제됨 - 상세한 addProcess 메서드로 대체됨
     
     editProcess(id) {
         const proc = window.dataManager.getProcessById(id);
@@ -2027,8 +1902,19 @@ window.AdminManager = class {
                 contact: document.getElementById('dept-contact').value.trim()
             };
             
-            this.addDepartment(departmentData);
-            document.body.removeChild(modal);
+            try {
+                const success = this.addDepartment(departmentData);
+                if (success) {
+                    alert(`"${name}" 부서가 성공적으로 추가되었습니다!`);
+                    document.body.removeChild(modal);
+                    
+                    // 관리자 패널로 돌아가지 않고 위치 유지
+                    // refreshAdminPanel에서 위치 유지 기능이 처리됨
+                }
+            } catch (error) {
+                console.error('부서 추가 오류:', error);
+                alert(`부서 추가 중 오류가 발생했습니다: ${error.message}`);
+            }
         };
         
         // 모달 외부 클릭 시 닫기
@@ -2127,8 +2013,19 @@ window.AdminManager = class {
                 legalBasis: document.getElementById('cat-legal-basis').value.trim()
             };
             
-            this.addCategory(categoryData);
-            document.body.removeChild(modal);
+            try {
+                const success = this.addCategory(categoryData);
+                if (success) {
+                    alert(`"${name}" 카테고리가 성공적으로 추가되었습니다!`);
+                    document.body.removeChild(modal);
+                    
+                    // 관리자 패널로 돌아가지 않고 위치 유지
+                    // refreshAdminPanel에서 위치 유지 기능이 처리뜨
+                }
+            } catch (error) {
+                console.error('카테고리 추가 오류:', error);
+                alert(`카테고리 추가 중 오류가 발생했습니다: ${error.message}`);
+            }
         };
         
         // 모달 외부 클릭 시 닫기
@@ -2284,6 +2181,9 @@ window.AdminManager = class {
             if (success) {
                 alert(`"${name}" 프로세스가 성공적으로 추가되었습니다!`);
                 document.body.removeChild(modal);
+                
+                // 관리자 패널로 돌아가지 않고 위치 유지
+                // refreshAdminPanel에서 위치 유지 기능이 처리됨
             }
         };
         
@@ -2343,8 +2243,8 @@ window.AdminManager = class {
             return true;
         } catch (error) {
             console.error('부서 추가 실패:', error);
-            alert(`부서 추가 중 오류가 발생했습니다: ${error.message}`);
-            return false;
+            // alert는 모달에서 처리
+            throw error;
         }
     }
     
@@ -2384,8 +2284,8 @@ window.AdminManager = class {
             return true;
         } catch (error) {
             console.error('카테고리 추가 실패:', error);
-            alert(`카테고리 추가 중 오류가 발생했습니다: ${error.message}`);
-            return false;
+            // alert는 모달에서 처리
+            throw error;
         }
     }
     
