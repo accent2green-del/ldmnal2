@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 패널 지속성 테스트</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .test-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .test-title {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 6px 6px 0 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .test-description {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .checklist {
+            background: #e7f3ff;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .checklist h4 {
+            margin: 0 0 15px 0;
+            color: #0056b3;
+        }
+        
+        .checklist ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .checklist li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .admin-link {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        
+        .admin-link:hover {
+            background: #0056b3;
+            color: white;
+        }
+        
+        .demo-frame {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            min-height: 400px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 관리자 패널 지속성 테스트</h1>
+        <p>관리자 패널에서 CRUD 작업 시 패널이 유지되는지, 상세조회에서 처리단계 영역이 제거되었는지 테스트합니다.</p>
+        
+        <!-- 테스트 1: 처리단계 영역 제거 확인 -->
+        <div class="test-section">
+            <div class="test-title">🔍 테스트 1: 상세조회 화면 처리단계 영역 제거</div>
+            <div class="test-description">
+                프로세스 상세조회 화면에서 "처리 단계" 영역이 완전히 제거되었는지 확인합니다.
+            </div>
+            
+            <div class="checklist">
+                <h4>✅ 검증 체크리스트:</h4>
+                <ul>
+                    <li>프로세스 상세조회 화면에 "처리 단계" 제목이 없어야 함</li>
+                    <li>"등록된 처리 단계가 없습니다" 메시지가 없어야 함</li>
+                    <li>처리단계 관련 HTML 구조가 완전히 제거되어야 함</li>
+                    <li>다른 섹션들(산출물, 참고자료)은 정상 표시되어야 함</li>
+                </ul>
+            </div>
+            
+            <a href="index.html" class="admin-link" target="_blank">
+                📄 메인 페이지에서 프로세스 상세조회 테스트
+            </a>
+        </div>
+        
+        <!-- 테스트 2: 관리자 패널 지속성 -->
+        <div class="test-section">
+            <div class="test-title">⚙️ 테스트 2: 관리자 패널 CRUD 작업 시 패널 유지</div>
+            <div class="test-description">
+                관리자 패널에서 부서, 카테고리, 프로세스의 추가/수정/삭제 작업 후에도 관리자 패널이 닫히지 않고 유지되는지 확인합니다.
+            </div>
+            
+            <div class="checklist">
+                <h4>🔧 부서 관리 테스트:</h4>
+                <ul>
+                    <li>부서 추가 → 성공 메시지 후 관리자 패널 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                    <li>부서 수정 → 수정 완료 후 관리자 패널 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                    <li>부서 삭제 → 삭제 완료 후 관리자 패널 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                    <li>활성 탭 및 스크롤 위치 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                </ul>
+            </div>
+            
+            <div class="checklist">
+                <h4>📂 카테고리 관리 테스트:</h4>
+                <ul>
+                    <li>카테고리 추가 → 성공 메시지 후 관리자 패널 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                    <li>카테고리 수정 → 수정 완료 후 관리자 패널 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                    <li>카테고리 삭제 → 삭제 완료 후 관리자 패널 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                    <li>부서 변경 시 실시간 필터링 동작<span class="status-indicator status-pending">테스트 필요</span></li>
+                </ul>
+            </div>
+            
+            <div class="checklist">
+                <h4>⚙️ 프로세스 관리 테스트:</h4>
+                <ul>
+                    <li>프로세스 추가 → 성공 메시지 후 관리자 패널 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                    <li>프로세스 수정 → 수정 완료 후 관리자 패널 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                    <li>프로세스 삭제 → 삭제 완료 후 관리자 패널 유지<span class="status-indicator status-pending">테스트 필요</span></li>
+                    <li>첨부파일 기능 정상 동작<span class="status-indicator status-pending">테스트 필요</span></li>
+                </ul>
+            </div>
+            
+            <a href="index.html" class="admin-link" target="_blank">
+                🔧 메인 페이지에서 관리자 로그인 후 테스트
+            </a>
+            
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin: 15px 0;">
+                <strong>🔑 관리자 로그인 정보:</strong><br>
+                비밀번호: <code>admin123</code>
+            </div>
+        </div>
+        
+        <!-- 테스트 3: 기술적 구현 검증 -->
+        <div class="test-section">
+            <div class="test-title">🔬 테스트 3: 기술적 구현 검증</div>
+            <div class="test-description">
+                코드 레벨에서 구현된 기능들이 올바르게 작동하는지 확인합니다.
+            </div>
+            
+            <div class="checklist">
+                <h4>🛠️ 코드 구현 확인사항:</h4>
+                <ul>
+                    <li><code>preventRedirection()</code> 메서드 호출 확인</li>
+                    <li><code>refreshAdminPanel()</code> 후 위치 복원 확인</li>
+                    <li>모달 제거 후 적절한 타이밍으로 패널 새로고침</li>
+                    <li>네비게이션 매니저 연동 새로고침</li>
+                    <li>콘솔 로그에서 오류 메시지 없음 확인</li>
+                </ul>
+            </div>
+            
+            <div style="background: #e7f3ff; border: 1px solid #bee5eb; padding: 15px; border-radius: 6px; margin: 15px 0;">
+                <strong>💡 개발자 도구 확인사항:</strong><br>
+                F12를 눌러 개발자 도구를 열고 Console 탭에서 다음 로그들을 확인하세요:<br>
+                <code>✅ 부서 추가 성공</code>, <code>🔄 관리자 패널 새로고침</code>, <code>🛡️ 리다이렉션 방지 활성화</code>
+            </div>
+        </div>
+        
+        <!-- 테스트 4: 사용자 경험 검증 -->
+        <div class="test-section">
+            <div class="test-title">👤 테스트 4: 사용자 경험 검증</div>
+            <div class="test-description">
+                실제 사용자 관점에서 개선된 관리자 패널의 사용성을 확인합니다.
+            </div>
+            
+            <div class="checklist">
+                <h4>🎯 사용자 경험 체크포인트:</h4>
+                <ul>
+                    <li>CRUD 작업 후 관리자 패널에 그대로 남아있음</li>
+                    <li>작업 전의 탭 위치와 스크롤 위치가 유지됨</li>
+                    <li>불필요한 페이지 새로고침이나 이동이 없음</li>
+                    <li>작업 완료 후 즉시 결과를 확인할 수 있음</li>
+                    <li>연속적인 관리 작업이 편리함</li>
+                </ul>
+            </div>
+            
+            <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 6px; margin: 15px 0;">
+                <strong>🎉 기대되는 개선효과:</strong><br>
+                • 관리 작업 효율성 대폭 향상<br>
+                • 불필요한 네비게이션 감소<br>
+                • 직관적인 관리자 경험 제공<br>
+                • 실수 방지 및 작업 연속성 보장
+            </div>
+        </div>
+        
+        <!-- 실제 테스트 결과 기록 -->
+        <div class="test-section">
+            <div class="test-title">📊 실제 테스트 결과</div>
+            <div class="test-description">
+                실제 테스트를 진행하며 결과를 기록하는 공간입니다.
+            </div>
+            
+            <div id="test-results" class="demo-frame">
+                여기에 테스트 결과를 기록해 주세요.<br>
+                브라우저 콘솔에서 다음 함수를 실행하여 테스트할 수 있습니다:<br><br>
+                <code>// 테스트 로그 확인</code><br>
+                <code>console.log('관리자 패널 테스트 시작');</code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 테스트 헬퍼 함수들
+        function logTestResult(testName, result) {
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[${timestamp}] ${testName}: ${result ? '✅ 성공' : '❌ 실패'}`);
+            
+            // 결과를 페이지에도 표시
+            const resultsDiv = document.getElementById('test-results');
+            const resultHtml = `
+                <div style="margin: 10px 0; padding: 10px; background: ${result ? '#d4edda' : '#f8d7da'}; border-radius: 4px; text-align: left;">
+                    <strong>[${timestamp}] ${testName}</strong><br>
+                    결과: ${result ? '✅ 성공' : '❌ 실패'}
+                </div>
+            `;
+            
+            if (resultsDiv.innerHTML.includes('여기에 테스트')) {
+                resultsDiv.innerHTML = resultHtml;
+            } else {
+                resultsDiv.innerHTML += resultHtml;
+            }
+        }
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 관리자 패널 지속성 테스트 페이지 로드 완료');
+            console.log('💡 메인 페이지에서 관리자 로그인 후 CRUD 작업을 테스트하세요.');
+            console.log('🔑 관리자 비밀번호: admin123');
+        });
+        
+        // 전역 테스트 함수들
+        window.testAdminPersistence = {
+            logTestResult,
+            
+            // 프로세스 상세조회 처리단계 제거 테스트
+            checkProcessDetailSteps: function() {
+                // 이 함수는 메인 페이지에서 실행해야 함
+                console.log('⚠️ 이 테스트는 메인 페이지에서 프로세스 상세조회 시 실행하세요.');
+                return false;
+            },
+            
+            // 관리자 패널 지속성 테스트
+            checkAdminPanelPersistence: function() {
+                console.log('⚠️ 이 테스트는 메인 페이지에서 관리자 로그인 후 실행하세요.');
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

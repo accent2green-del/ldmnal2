@@ -862,13 +862,18 @@ window.AdminManager = class {
             try {
                 window.dataManager.updateDepartment(dept.id, updateData);
                 alert(`"${name}" 부서가 성공적으로 수정되었습니다!`);
-                this.refreshAdminPanel();
                 document.body.removeChild(modal);
                 
-                // 네비게이션 새로고침
-                if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
-                    window.navigationManager.renderNavigation();
-                }
+                // 관리자 패널 상태 유지하며 새로고침
+                this.preventRedirection();
+                setTimeout(() => {
+                    this.refreshAdminPanel();
+                    
+                    // 네비게이션 새로고침
+                    if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                        window.navigationManager.renderNavigation();
+                    }
+                }, 100);
             } catch (error) {
                 console.error('부서 수정 실패:', error);
                 alert(`부서 수정 중 오류가 발생했습니다: ${error.message}`);
@@ -1067,13 +1072,18 @@ window.AdminManager = class {
             try {
                 window.dataManager.updateCategory(category.id, updateData);
                 alert(`"${name}" 카테고리가 성공적으로 수정되었습니다!`);
-                this.refreshAdminPanel();
                 document.body.removeChild(modal);
                 
-                // 네비게이션 새로고침
-                if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
-                    window.navigationManager.renderNavigation();
-                }
+                // 관리자 패널 상태 유지하며 새로고침
+                this.preventRedirection();
+                setTimeout(() => {
+                    this.refreshAdminPanel();
+                    
+                    // 네비게이션 새로고침
+                    if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                        window.navigationManager.renderNavigation();
+                    }
+                }, 100);
             } catch (error) {
                 console.error('카테고리 수정 실패:', error);
                 alert(`카테고리 수정 중 오류가 발생했습니다: ${error.message}`);
@@ -2076,8 +2086,16 @@ window.AdminManager = class {
                     alert(`"${name}" 부서가 성공적으로 추가되었습니다!`);
                     document.body.removeChild(modal);
                     
-                    // 관리자 패널로 돌아가지 않고 위치 유지
-                    // refreshAdminPanel에서 위치 유지 기능이 처리됨
+                    // 관리자 패널 상태 유지하며 새로고침
+                    this.preventRedirection();
+                    setTimeout(() => {
+                        this.refreshAdminPanel();
+                        
+                        // 네비게이션 새로고침
+                        if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                            window.navigationManager.renderNavigation();
+                        }
+                    }, 100);
                 }
             } catch (error) {
                 console.error('부서 추가 오류:', error);
@@ -2191,8 +2209,16 @@ window.AdminManager = class {
                     alert(`"${name}" 카테고리가 성공적으로 추가되었습니다!`);
                     document.body.removeChild(modal);
                     
-                    // 관리자 패널로 돌아가지 않고 위치 유지
-                    // refreshAdminPanel에서 위치 유지 기능이 처리뜨
+                    // 관리자 패널 상태 유지하며 새로고침
+                    this.preventRedirection();
+                    setTimeout(() => {
+                        this.refreshAdminPanel();
+                        
+                        // 네비게이션 새로고침
+                        if (window.navigationManager && typeof window.navigationManager.renderNavigation === 'function') {
+                            window.navigationManager.renderNavigation();
+                        }
+                    }, 100);
                 }
             } catch (error) {
                 console.error('카테고리 추가 오류:', error);

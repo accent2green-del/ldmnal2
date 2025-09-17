@@ -392,16 +392,6 @@ class ContentRenderer {
                     </div>
                 ` : ''}
                 
-                <div class="process-steps">
-                    <h3>처리 단계</h3>
-                    <div class="steps-container">
-                        ${process.steps && process.steps.length > 0 ? 
-                            process.steps.map(step => this.renderProcessStep(step)).join('') :
-                            '<div class="no-data">등록된 처리 단계가 없습니다.</div>'
-                        }
-                    </div>
-                </div>
-                
                 ${process.references && process.references.length > 0 ? `
                     <div class="process-references mt-3">
                         <h3>📚 참고자료 및 관련 문서</h3>
