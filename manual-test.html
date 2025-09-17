@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Fix Testing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #138496;
+        }
+        .instruction {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .result {
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #c3e6cb;
+        }
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Manual Fix Testing - Korean Road Management System</h1>
+    
+    <div class="test-section">
+        <h2>📋 Test Results Summary</h2>
+        <div id="test-results">
+            <p>Complete the tests below to verify both fixes are working correctly.</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Test 1: Admin Login Modal X Button Fix</h2>
+        <div class="instruction">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>Click "Open Main Application" button below</li>
+                <li>Navigate to "관리자 패널" tab</li>
+                <li>Click the admin login button</li>
+                <li>Test the X (close) button in the modal</li>
+                <li>Test clicking outside the modal</li>
+                <li>Report results below</li>
+            </ol>
+        </div>
+        
+        <button class="btn" onclick="openMainApp()">🚀 Open Main Application</button>
+        
+        <h3>Expected Behavior:</h3>
+        <ul>
+            <li>X button should close the modal immediately</li>
+            <li>Clicking outside modal should also close it</li>
+            <li>Console should show "로그인 모달 X 버튼 클릭" message</li>
+        </ul>
+        
+        <h3>Test Result:</h3>
+        <button class="btn" onclick="markTest1Pass()" style="background: #28a745;">✅ Test 1 PASSED</button>
+        <button class="btn" onclick="markTest1Fail()" style="background: #dc3545;">❌ Test 1 FAILED</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Test 2: Enhanced Category Filtering Debug</h2>
+        <div class="instruction">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>In the main application, login as admin</li>
+                <li>Navigate to "프로세스 관리" section</li>
+                <li>Click "새 프로세스 추가" button</li>
+                <li>Open browser Developer Tools (F12) and go to Console tab</li>
+                <li>Select different departments in the dropdown</li>
+                <li>Observe detailed debug output in console</li>
+                <li>Also test by editing an existing process</li>
+            </ol>
+        </div>
+        
+        <button class="btn" onclick="showDebugExample()">📖 Show Debug Example</button>
+        
+        <h3>Expected Debug Output:</h3>
+        <div id="debug-example" style="display: none;">
+            <code>
+=== 새 프로세스 카테고리 필터링 디버깅 ===<br>
+1. 선택된 부서 ID: "dept-001" (관리자 패널 > 프로세스 관리 > 새 프로세스 추가)<br>
+2. 선택된 부서 정보:<br>
+&nbsp;&nbsp;&nbsp;- 부서명: "공통(운영지원과)"<br>
+&nbsp;&nbsp;&nbsp;- 부서 ID: "dept-001"<br>
+...<br>
+5. 필터링 과정:<br>
+&nbsp;&nbsp;&nbsp;✓ "정보공개 업무" - 부서ID "dept-001" == 선택 "dept-001" => true<br>
+&nbsp;&nbsp;&nbsp;✓ "보안관리 업무" - 부서ID "dept-001" == 선택 "dept-001" => true<br>
+=== 새 프로세스 카테고리 필터링 완료 ===
+            </code>
+        </div>
+        
+        <h3>Test Result:</h3>
+        <button class="btn" onclick="markTest2Pass()" style="background: #28a745;">✅ Test 2 PASSED</button>
+        <button class="btn" onclick="markTest2Fail()" style="background: #dc3545;">❌ Test 2 FAILED</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Final Verification</h2>
+        <div id="final-status">
+            <p>Complete both tests above to see final verification status.</p>
+        </div>
+    </div>
+
+    <script>
+        let test1Status = null;
+        let test2Status = null;
+
+        function openMainApp() {
+            const currentUrl = window.location.origin;
+            window.open(currentUrl, '_blank');
+        }
+
+        function showDebugExample() {
+            const example = document.getElementById('debug-example');
+            example.style.display = example.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function markTest1Pass() {
+            test1Status = true;
+            updateResults();
+        }
+
+        function markTest1Fail() {
+            test1Status = false;
+            updateResults();
+        }
+
+        function markTest2Pass() {
+            test2Status = true;
+            updateResults();
+        }
+
+        function markTest2Fail() {
+            test2Status = false;
+            updateResults();
+        }
+
+        function updateResults() {
+            const resultsDiv = document.getElementById('test-results');
+            const finalDiv = document.getElementById('final-status');
+            
+            let html = '<h3>Test Status:</h3><ul>';
+            
+            if (test1Status === true) {
+                html += '<li style="color: #28a745;">✅ Admin Login Modal X Button: PASSED</li>';
+            } else if (test1Status === false) {
+                html += '<li style="color: #dc3545;">❌ Admin Login Modal X Button: FAILED</li>';
+            } else {
+                html += '<li style="color: #6c757d;">⏳ Admin Login Modal X Button: Pending</li>';
+            }
+            
+            if (test2Status === true) {
+                html += '<li style="color: #28a745;">✅ Enhanced Category Filtering Debug: PASSED</li>';
+            } else if (test2Status === false) {
+                html += '<li style="color: #dc3545;">❌ Enhanced Category Filtering Debug: FAILED</li>';
+            } else {
+                html += '<li style="color: #6c757d;">⏳ Enhanced Category Filtering Debug: Pending</li>';
+            }
+            
+            html += '</ul>';
+            resultsDiv.innerHTML = html;
+            
+            // Final status
+            if (test1Status !== null && test2Status !== null) {
+                if (test1Status && test2Status) {
+                    finalDiv.innerHTML = `
+                        <div class="result">
+                            <h3 style="color: #28a745;">🎉 All Tests PASSED!</h3>
+                            <p>Both fixes have been successfully implemented and verified:</p>
+                            <ul>
+                                <li>Admin login modal X button is working correctly</li>
+                                <li>Enhanced category filtering debugging is active and providing detailed output</li>
+                            </ul>
+                            <p><strong>✅ Ready for production deployment!</strong></p>
+                        </div>
+                    `;
+                } else {
+                    finalDiv.innerHTML = `
+                        <div style="background: #f8d7da; padding: 15px; border-radius: 6px; border: 1px solid #f5c6cb;">
+                            <h3 style="color: #721c24;">⚠️ Some Tests Failed</h3>
+                            <p>Please review the failed tests and check the implementation:</p>
+                            <ul>
+                                ${!test1Status ? '<li>Admin login modal X button needs attention</li>' : ''}
+                                ${!test2Status ? '<li>Enhanced category filtering debug needs attention</li>' : ''}
+                            </ul>
+                            <p><strong>❌ Further debugging required.</strong></p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Initialize
+        updateResults();
+    </script>
+</body>
+</html>

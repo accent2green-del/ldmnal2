@@ -76,12 +76,29 @@ class DataManager {
             
             const data = await response.json();
             
+            // 표준 형식인지 확인
             if (this.validateData(data)) {
                 this.data = data;
                 this.saveToStorage();
-                Logger.info('JSON 파일에서 데이터 로드 완료');
+                Logger.info('JSON 파일에서 데이터 로드 완료 (표준 형식)');
+            } else if (Array.isArray(data) && data.length > 0 && data[0]['1단계']) {
+                // 새 형식 (1단계/2단계) 데이터인 경우 변환
+                Logger.info('새 형식 JSON 데이터 감지됨, 변환 중...', { itemCount: data.length });
+                const convertedData = this.convertNewFormatToStandard(data);
+                
+                if (this.validateData(convertedData)) {
+                    this.data = convertedData;
+                    this.saveToStorage();
+                    Logger.info('JSON 파일에서 데이터 로드 완료 (새 형식 변환됨)', {
+                        departments: convertedData.departments.length,
+                        categories: convertedData.categories.length,
+                        processes: convertedData.processes.length
+                    });
+                } else {
+                    throw new Error('변환된 데이터 구조가 유효하지 않음');
+                }
             } else {
-                throw new Error('Invalid data structure');
+                throw new Error('알 수 없는 데이터 구조');
             }
             
         } catch (error) {
@@ -218,6 +235,13 @@ class DataManager {
      */
     getDepartments() {
         return [...this.data.departments].sort((a, b) => a.order - b.order);
+    }
+    
+    /**
+     * 모든 카테고리 목록 반환
+     */
+    getCategories() {
+        return [...this.data.categories].sort((a, b) => a.order - b.order);
     }
     
     /**

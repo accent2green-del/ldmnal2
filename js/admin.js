@@ -53,6 +53,23 @@ window.AdminManager = class {
             }
         }
         
+        // X 버튼 이벤트 리스너 추가
+        const closeBtn = document.getElementById('admin-modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                console.log('로그인 모달 X 버튼 클릭');
+                this.hideLoginModal();
+            };
+        }
+        
+        // 모달 외부 클릭 시 닫기
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                console.log('로그인 모달 외부 클릭');
+                this.hideLoginModal();
+            }
+        });
+        
         // 폼 제출 이벤트
         const form = document.getElementById('admin-login-form');
         if (form) {
@@ -1192,39 +1209,67 @@ window.AdminManager = class {
         
         const updateEditCategoryOptions = () => {
             const selectedDeptId = departmentSelect.value;
-            console.log('=== 수정 모달 카테고리 필터링 디버깅 ===');
-            console.log('선택된 부서 ID:', selectedDeptId);
-            console.log('현재 프로세스 카테고리 ID:', process.categoryId);
+            console.log('\n=== 프로세스 수정 카테고리 필터링 디버깅 ===');
+            console.log('1. 선택된 부서 ID:', `"${selectedDeptId}"`, '(관리자 패널 > 프로세스 관리 > 프로세스 수정)');
+            console.log('2. 현재 프로세스 카테고리 ID:', `"${process.categoryId}"`);
             
             const allDepartments = this.safeDepartments();
             const selectedDept = allDepartments.find(dept => dept.id === selectedDeptId);
-            console.log('선택된 부서 정보:', selectedDept);
+            
+            console.log('3. 선택된 부서 정보:');
+            if (selectedDept) {
+                console.log(`   - 부서명: "${selectedDept.name}"`);
+                console.log(`   - 부서 ID: "${selectedDept.id}"`);
+            } else {
+                console.log('   - 부서를 찾을 수 없음!');
+            }
             
             const currentCategories = this.safeCategories();
-            console.log('전체 카테고리 목록 (총 ' + currentCategories.length + '개):');
-            currentCategories.forEach((cat, idx) => {
-                console.log(`  ${idx + 1}. "${cat.name}" (ID: ${cat.id}, 부서ID: ${cat.departmentId})`);
+            console.log(`\n4. 전체 카테고리 목록 (총 ${currentCategories.length}개):`);
+            
+            // 부서별로 그룹화하여 표시
+            const deptGroups = {};
+            currentCategories.forEach(cat => {
+                const deptName = allDepartments.find(d => d.id === cat.departmentId)?.name || 'Unknown';
+                if (!deptGroups[deptName]) deptGroups[deptName] = [];
+                deptGroups[deptName].push(cat);
             });
             
+            Object.keys(deptGroups).forEach(deptName => {
+                console.log(`   [${deptName}] 부서:`);
+                deptGroups[deptName].forEach(cat => {
+                    const isCurrent = cat.id === process.categoryId ? ' ← 현재 프로세스' : '';
+                    console.log(`     - "${cat.name}" (ID: ${cat.id}, 부서ID: ${cat.departmentId})${isCurrent}`);
+                });
+            });
+            
+            console.log('\n5. 필터링 과정:');
             const filteredCategories = currentCategories.filter(cat => {
                 const isMatch = cat.departmentId === selectedDeptId;
-                console.log(`필터링 검사: "${cat.name}" (부서ID: "${cat.departmentId}") === 선택된 ID: "${selectedDeptId}" => ${isMatch}`);
+                const matchSymbol = isMatch ? '✓' : '✗';
+                const isCurrent = cat.id === process.categoryId ? ' [현재]' : '';
+                console.log(`   ${matchSymbol} "${cat.name}" - 부서ID "${cat.departmentId}" == 선택 "${selectedDeptId}" => ${isMatch}${isCurrent}`);
                 return isMatch;
             });
             
-            console.log('필터링 결과 (' + filteredCategories.length + '개 카테고리):');
-            filteredCategories.forEach(cat => {
-                console.log(`  - "${cat.name}" (ID: ${cat.id})`);
-            });
+            console.log(`\n6. 필터링 결과 (${filteredCategories.length}개 카테곣리):`);
+            if (filteredCategories.length === 0) {
+                console.log('   - 결과 없음');
+            } else {
+                filteredCategories.forEach((cat, idx) => {
+                    const isCurrent = cat.id === process.categoryId ? ' ← 자동 선택됨' : '';
+                    console.log(`   ${idx + 1}. "${cat.name}" (ID: ${cat.id})${isCurrent}`);
+                });
+            }
             
             const currentCategoryId = categorySelect.value;
             
+            // UI 업데이트
             if (filteredCategories.length === 0) {
                 const message = selectedDept ? 
                     `"${selectedDept.name}" 부서에 카테고리가 없습니다` : 
                     '선택된 부서에 카테고리가 없습니다';
-                categorySelect.innerHTML = `<option value="">${message}</option>`;
-                console.log('결과: 카테고리 없음 - ' + message);
+                categorySelect.innerHTML = `<option value="" disabled>${message}</option>`;
             } else {
                 categorySelect.innerHTML = '<option value="">카테고리를 선택하세요</option>' + 
                     filteredCategories.map(cat => 
@@ -1235,11 +1280,12 @@ window.AdminManager = class {
                 const currentCategory = filteredCategories.find(cat => cat.id === process.categoryId);
                 if (currentCategory) {
                     categorySelect.value = process.categoryId;
-                    console.log('현재 프로세스의 카테고리를 선택함:', currentCategory.name);
+                    console.log(`7. 현재 프로세스의 카테고리 "${currentCategory.name}" 자동 선택`);
                 }
-                console.log('결과: ' + filteredCategories.length + '개 카테고리 로드 완료');
             }
-            console.log('=== 수정 모달 카테고리 필터링 완료 ===');
+            
+            console.log('8. UI 업데이트 완료');
+            console.log('=== 프로세스 수정 카테고리 필터링 완료 ===\n');
         };
         
         departmentSelect.addEventListener('change', updateEditCategoryOptions);
@@ -2176,50 +2222,74 @@ window.AdminManager = class {
         
         const updateCategoryOptions = () => {
             const selectedDeptId = departmentSelect.value;
-            console.log('=== 카테고리 필터링 디버깅 ===');
-            console.log('선택된 부서 ID:', selectedDeptId);
+            console.log('\n=== 새 프로세스 카테고리 필터링 디버깅 ===');
+            console.log('1. 선택된 부서 ID:', `"${selectedDeptId}"`, '(관리자 패널 > 프로세스 관리 > 새 프로세스 추가)');
             
-            // 1. 전체 부서 목록 확인
+            // 데이터 가져오기
             const allDepartments = this.safeDepartments();
-            console.log('전체 부서 목록:', allDepartments);
-            
             const selectedDept = allDepartments.find(dept => dept.id === selectedDeptId);
-            console.log('선택된 부서 정보:', selectedDept);
             
-            // 2. 전체 카테고리 목록 확인
+            console.log('2. 선택된 부서 정보:');
+            if (selectedDept) {
+                console.log(`   - 부서명: "${selectedDept.name}"`);
+                console.log(`   - 부서 ID: "${selectedDept.id}"`);
+            } else {
+                console.log('   - 부서를 찾을 수 없음!');
+            }
+            
             const currentCategories = this.safeCategories();
-            console.log('전체 카테고리 목록 (총 ' + currentCategories.length + '개):');
-            currentCategories.forEach((cat, idx) => {
-                console.log(`  ${idx + 1}. "${cat.name}" (ID: ${cat.id}, 부서ID: ${cat.departmentId})`);
+            console.log(`\n3. 전체 카테고리 목록 (총 ${currentCategories.length}개):`);
+            
+            // 부서별로 그룹화하여 표시
+            const deptGroups = {};
+            currentCategories.forEach(cat => {
+                const deptName = allDepartments.find(d => d.id === cat.departmentId)?.name || 'Unknown';
+                if (!deptGroups[deptName]) deptGroups[deptName] = [];
+                deptGroups[deptName].push(cat);
             });
             
-            // 3. 직접 필터링 시도
+            Object.keys(deptGroups).forEach(deptName => {
+                console.log(`   [${deptName}] 부서:`);
+                deptGroups[deptName].forEach(cat => {
+                    console.log(`     - "${cat.name}" (ID: ${cat.id}, 부서ID: ${cat.departmentId})`);
+                });
+            });
+            
+            console.log('\n4. 필터링 과정:');
             const filteredCategories = currentCategories.filter(cat => {
                 const isMatch = cat.departmentId === selectedDeptId;
-                console.log(`필터링 검사: "${cat.name}" (부서ID: "${cat.departmentId}") === 선택된 ID: "${selectedDeptId}" => ${isMatch}`);
+                const matchSymbol = isMatch ? '✓' : '✗';
+                console.log(`   ${matchSymbol} "${cat.name}" - 부서ID "${cat.departmentId}" == 선택 "${selectedDeptId}" => ${isMatch}`);
                 return isMatch;
             });
             
-            console.log('필터링 결과 (' + filteredCategories.length + '개 카테고리):');
-            filteredCategories.forEach(cat => {
-                console.log(`  - "${cat.name}" (ID: ${cat.id})`);
-            });
+            console.log(`\n5. 필터링 결과 (${filteredCategories.length}개 카테고리):`);
+            if (filteredCategories.length === 0) {
+                console.log('   - 결과 없음: 선택한 부서에 속하는 카테고리가 없음');
+                if (selectedDept) {
+                    console.log('   - 번외: 이 부서에는 아직 카테고리가 생성되지 않음');
+                }
+            } else {
+                filteredCategories.forEach((cat, idx) => {
+                    console.log(`   ${idx + 1}. "${cat.name}" (ID: ${cat.id})`);
+                });
+            }
             
-            // 4. UI 업데이트
+            // UI 업데이트
             if (filteredCategories.length === 0) {
                 const message = selectedDept ? 
                     `"${selectedDept.name}" 부서에 카테고리가 없습니다` : 
                     '선택된 부서에 카테고리가 없습니다';
-                categorySelect.innerHTML = `<option value="">${message}</option>`;
-                console.log('결과: 카테고리 없음 - ' + message);
+                categorySelect.innerHTML = `<option value="" disabled>${message}</option>`;
             } else {
                 categorySelect.innerHTML = '<option value="">카테고리를 선택하세요</option>' + 
                     filteredCategories.map(cat => 
                         `<option value="${cat.id}">${cat.name}</option>`
                     ).join('');
-                console.log('결과: ' + filteredCategories.length + '개 카테고리 로드 완료');
             }
-            console.log('=== 카테고리 필터링 완료 ===');
+            
+            console.log('6. UI 업데이트 완료');
+            console.log('=== 새 프로세스 카테고리 필터링 완료 ===\n');
         };
         
         departmentSelect.addEventListener('change', updateCategoryOptions);

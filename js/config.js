@@ -9,7 +9,7 @@ window.AppConfig = {
     
     // 로컬 스토리지 키
     STORAGE_KEYS: {
-        MANUAL_DATA: 'manual_data',
+        MANUAL_DATA: 'koreanRoadManual_manualData',
         ADMIN_SESSION: 'admin_session',
         NAVIGATION_STATE: 'navigation_state',
         USER_PREFERENCES: 'user_preferences'
@@ -19,7 +19,7 @@ window.AppConfig = {
     API: {
         BASE_URL: '',
         ENDPOINTS: {
-            MANUAL_DATA: '/data/manual-data.json',
+            MANUAL_DATA: '/new-format-data.json',
             HEALTH_CHECK: '/api/health'
         }
     },
