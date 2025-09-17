@@ -332,13 +332,27 @@ class ContentRenderer {
                 </div>
                 
                 <div class="process-description mb-3">
-                    <h3>개요</h3>
+                    <h3>📋 업무 개요</h3>
                     <p>${Utils.escapeHtml(process.description)}</p>
                 </div>
                 
+                ${process.mainContent && process.mainContent.length > 0 ? `
+                    <div class="process-main-content mb-3">
+                        <h3>🎯 주요 업무 내용</h3>
+                        <div class="main-content-list">
+                            ${process.mainContent.map((content, index) => `
+                                <div class="main-content-item">
+                                    <div class="content-number">${index + 1}</div>
+                                    <div class="content-text">${Utils.escapeHtml(content)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
                 ${process.legalBasis && process.legalBasis.length > 0 ? `
                     <div class="process-legal mb-3">
-                        <h3>법적 근거</h3>
+                        <h3>⚖️ 법적 근거</h3>
                         <ul class="legal-list">
                             ${process.legalBasis.map(legal => `<li>${Utils.escapeHtml(legal)}</li>`).join('')}
                         </ul>
@@ -347,9 +361,9 @@ class ContentRenderer {
                 
                 ${process.outputs && process.outputs.length > 0 ? `
                     <div class="process-outputs mb-3">
-                        <h3>산출물</h3>
+                        <h3>📄 산출물 및 결과</h3>
                         <ul class="outputs-list">
-                            ${process.outputs.map(output => `<li>${Utils.escapeHtml(output)}</li>`).join('')}
+                            ${process.outputs.map(output => `<li><span class="output-icon">📝</span>${Utils.escapeHtml(output)}</li>`).join('')}
                         </ul>
                     </div>
                 ` : ''}
@@ -375,10 +389,10 @@ class ContentRenderer {
                 
                 ${process.references && process.references.length > 0 ? `
                     <div class="process-references mt-3">
-                        <h3>참고자료</h3>
-                        <ul class="references-list">
-                            ${process.references.map(ref => `<li>${Utils.escapeHtml(ref)}</li>`).join('')}
-                        </ul>
+                        <h3>📚 참고자료 및 관련 문서</h3>
+                        <div class="references-enhanced">
+                            ${process.references.map(ref => this.renderReferenceItem(ref)).join('')}
+                        </div>
                     </div>
                 ` : ''}
                 
@@ -627,6 +641,97 @@ class ContentRenderer {
     }
     
     /**
+     * 개선된 참고자료 아이템 렌더링
+     */
+    renderReferenceItem(reference) {
+        // 참고자료가 개선된 객체 형태인지 확인
+        if (typeof reference === 'object' && reference.text) {
+            const typeIcon = this.getReferenceTypeIcon(reference.type);
+            const priorityClass = this.getReferencePriorityClass(reference.priority);
+            
+            return `
+                <div class="reference-item ${priorityClass}">
+                    <div class="reference-header">
+                        <span class="reference-icon">${typeIcon}</span>
+                        <span class="reference-type">${this.getReferenceTypeName(reference.type)}</span>
+                        ${reference.priority <= 3 ? '<span class="priority-badge">중요</span>' : ''}
+                    </div>
+                    <div class="reference-text">
+                        ${reference.isUrl ? 
+                            `<a href="${reference.text}" target="_blank" class="reference-link">${Utils.escapeHtml(reference.text)}</a>` :
+                            Utils.escapeHtml(reference.text)
+                        }
+                    </div>
+                    ${reference.sections && reference.sections.length > 0 ? `
+                        <div class="reference-sections">
+                            ${reference.sections.map(section => `<span class="section-tag">${Utils.escapeHtml(section)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    ${reference.pages && reference.pages.length > 0 ? `
+                        <div class="reference-pages">
+                            페이지: ${reference.pages.join(', ')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } else {
+            // 기본 텍스트 참고자료
+            const referenceText = typeof reference === 'string' ? reference : reference.toString();
+            const isUrl = /https?:\/\//.test(referenceText);
+            
+            return `
+                <div class="reference-item basic">
+                    <div class="reference-header">
+                        <span class="reference-icon">📄</span>
+                        <span class="reference-type">문서</span>
+                    </div>
+                    <div class="reference-text">
+                        ${isUrl ? 
+                            `<a href="${referenceText}" target="_blank" class="reference-link">${Utils.escapeHtml(referenceText)}</a>` :
+                            Utils.escapeHtml(referenceText)
+                        }
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    /**
+     * 참고자료 유형 아이콘 반환
+     */
+    getReferenceTypeIcon(type) {
+        const icons = {
+            legal: '⚖️',
+            manual: '📖',
+            regulation: '📋',
+            document: '📄'
+        };
+        return icons[type] || '📄';
+    }
+    
+    /**
+     * 참고자료 유형명 반환
+     */
+    getReferenceTypeName(type) {
+        const names = {
+            legal: '법률',
+            manual: '매뉴얼',
+            regulation: '규정',
+            document: '문서'
+        };
+        return names[type] || '문서';
+    }
+    
+    /**
+     * 참고자료 우선순위 클래스 반환
+     */
+    getReferencePriorityClass(priority) {
+        if (priority <= 2) return 'priority-high';
+        if (priority <= 4) return 'priority-medium';
+        return 'priority-low';
+    }
+    
+    /**
      * 현재 표시 중인 콘텐츠 정보 반환
      */
     getCurrentContent() {
@@ -802,8 +907,200 @@ class ContentRenderer {
     }
 }
 
-// CSS 추가 스타일 (카드 스타일)
+// CSS 추가 스타일 (개선된 UI 스타일)
 const additionalStyles = `
+    /* 주요 업무 내용 스타일 */
+    .process-main-content {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        border-left: 4px solid #007bff;
+        margin-bottom: 1.5rem;
+    }
+    
+    .main-content-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .main-content-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+    
+    .content-number {
+        background: #007bff;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    
+    .content-text {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        flex: 1;
+    }
+    
+    /* 개선된 참고자료 스타일 */
+    .references-enhanced {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .reference-item {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+    }
+    
+    .reference-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: #007bff;
+    }
+    
+    .reference-item.priority-high {
+        border-left: 4px solid #dc3545;
+    }
+    
+    .reference-item.priority-medium {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .reference-item.priority-low {
+        border-left: 4px solid #6c757d;
+    }
+    
+    .reference-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .reference-icon {
+        font-size: 1.2rem;
+    }
+    
+    .reference-type {
+        font-size: 0.85rem;
+        color: #6c757d;
+        background: #f8f9fa;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+    
+    .priority-badge {
+        background: #dc3545;
+        color: white;
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        margin-left: auto;
+        font-weight: bold;
+    }
+    
+    .reference-text {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 0.5rem;
+    }
+    
+    .reference-link {
+        color: #007bff;
+        text-decoration: none;
+        border-bottom: 1px dotted #007bff;
+    }
+    
+    .reference-link:hover {
+        color: #0056b3;
+        text-decoration: none;
+        border-bottom-style: solid;
+    }
+    
+    .reference-sections {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .section-tag {
+        background: #e9ecef;
+        color: #495057;
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .reference-pages {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+    
+    /* 산출물 스타일 개선 */
+    .process-outputs .outputs-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .output-icon {
+        font-size: 1.1rem;
+    }
+    
+    /* 프로세스 헤더 개선 */
+    .process-header h2::before {
+        content: '⚡';
+        margin-right: 0.5rem;
+    }
+    
+    .process-description h3::before,
+    .process-main-content h3::before,
+    .process-legal h3::before,
+    .process-outputs h3::before,
+    .process-references h3::before {
+        margin-right: 0.5rem;
+    }
+    
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+        .main-content-item {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .content-number {
+            align-self: center;
+        }
+        
+        .reference-sections {
+            justify-content: center;
+        }
+    }
+    
     .category-cards, .process-cards {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

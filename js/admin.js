@@ -1973,6 +1973,18 @@ window.AdminManager = class {
                                   style="width: 100%; height: 80px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
                         
                         <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            📋 업무 정의 (상세)
+                        </label>
+                        <textarea id="dept-business-definition" placeholder="부서의 상세한 업무 정의와 법적 근거를 포함한 설명을 입력하세요..." 
+                                  style="width: 100%; height: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical; background: #f8f9fa;"></textarea>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
+                            ⚖️ 법적 근거
+                        </label>
+                        <textarea id="dept-legal-basis" placeholder="관련 법률, 시행령, 시행규칙 등을 한 줄씩 입력하세요&#10;예:&#10;「민원 처리에 관한 법률」&#10;「도로법」&#10;「건설기술 진흥법」" 
+                                  style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                        
+                        <label style="display: block; margin: 20px 0 8px 0; font-weight: bold; color: #333;">
                             담당자
                         </label>
                         <input type="text" id="dept-manager" placeholder="부서 담당자 이름" 

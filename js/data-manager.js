@@ -299,33 +299,85 @@ class DataManager {
             let score = 0;
             let matchedFields = [];
             
-            // 제목 검색
+            // 제목 검색 (최우선)
             if (process.title.toLowerCase().includes(searchQuery)) {
-                score += 10;
+                score += 15;
                 matchedFields.push('title');
             }
             
             // 설명 검색
-            if (process.description.toLowerCase().includes(searchQuery)) {
-                score += 5;
+            if (process.description && process.description.toLowerCase().includes(searchQuery)) {
+                score += 8;
                 matchedFields.push('description');
+            }
+            
+            // 주요 업무 내용 검색 (새로 추가)
+            if (process.mainContent && Array.isArray(process.mainContent)) {
+                process.mainContent.forEach(content => {
+                    if (content && content.toLowerCase().includes(searchQuery)) {
+                        score += 7;
+                        matchedFields.push('mainContent');
+                    }
+                });
+            }
+            
+            // 산출물 검색 (새로 추가)
+            if (process.outputs && Array.isArray(process.outputs)) {
+                process.outputs.forEach(output => {
+                    if (output && output.toLowerCase().includes(searchQuery)) {
+                        score += 6;
+                        matchedFields.push('outputs');
+                    }
+                });
+            }
+            
+            // 법적근거 검색 (새로 추가) 
+            if (process.legalBasis && Array.isArray(process.legalBasis)) {
+                process.legalBasis.forEach(legal => {
+                    if (legal && legal.toLowerCase().includes(searchQuery)) {
+                        score += 8; // 법적근거는 중요하므로 높은 점수
+                        matchedFields.push('legalBasis');
+                    }
+                });
+            }
+            
+            // 참고자료 검색 (개선된 버전)
+            if (process.references) {
+                if (Array.isArray(process.references)) {
+                    process.references.forEach(ref => {
+                        if (ref) {
+                            // 개선된 참고자료 객체인지 확인
+                            const refText = typeof ref === 'object' ? ref.text : ref;
+                            if (refText && refText.toLowerCase().includes(searchQuery)) {
+                                score += 5;
+                                matchedFields.push('references');
+                            }
+                        }
+                    });
+                }
             }
             
             // 태그 검색
             if (process.tags && process.tags.some(tag => tag.toLowerCase().includes(searchQuery))) {
-                score += 3;
+                score += 4;
                 matchedFields.push('tags');
             }
             
             // 단계별 내용 검색
             if (process.steps) {
                 process.steps.forEach(step => {
-                    if (step.title.toLowerCase().includes(searchQuery) || 
-                        step.description.toLowerCase().includes(searchQuery)) {
-                        score += 2;
+                    if ((step.title && step.title.toLowerCase().includes(searchQuery)) || 
+                        (step.description && step.description.toLowerCase().includes(searchQuery))) {
+                        score += 3;
                         matchedFields.push('steps');
                     }
                 });
+            }
+            
+            // 단계 설명 검색 (새로 추가)
+            if (process.stepDescription && process.stepDescription.toLowerCase().includes(searchQuery)) {
+                score += 6;
+                matchedFields.push('stepDescription');
             }
             
             if (score > 0) {
@@ -344,11 +396,40 @@ class DataManager {
             }
         });
         
-        // 카테고리에서 검색
+        // 카테고리에서 검색 (개선된 버전)
         this.data.categories.forEach(category => {
-            if (category.name.toLowerCase().includes(searchQuery) || 
-                category.description.toLowerCase().includes(searchQuery)) {
-                
+            let score = 0;
+            let matchedFields = [];
+            
+            // 카테고리명 검색
+            if (category.name.toLowerCase().includes(searchQuery)) {
+                score += 12;
+                matchedFields.push('name');
+            }
+            
+            // 카테고리 설명 검색
+            if (category.description && category.description.toLowerCase().includes(searchQuery)) {
+                score += 8;
+                matchedFields.push('description');
+            }
+            
+            // 업무정의 검색 (새로 추가)
+            if (category.businessDefinition && category.businessDefinition.toLowerCase().includes(searchQuery)) {
+                score += 10;
+                matchedFields.push('businessDefinition');
+            }
+            
+            // 법적근거 검색 (새로 추가)
+            if (category.legalBasis && Array.isArray(category.legalBasis)) {
+                category.legalBasis.forEach(legal => {
+                    if (legal && legal.toLowerCase().includes(searchQuery)) {
+                        score += 9;
+                        matchedFields.push('legalBasis');
+                    }
+                });
+            }
+            
+            if (score > 0) {
                 const department = this.getDepartmentById(category.departmentId);
                 
                 results.push({
@@ -357,8 +438,54 @@ class DataManager {
                     title: category.name,
                     description: category.description,
                     path: `${department?.name} > ${category.name}`,
-                    score: 8,
-                    matchedFields: ['name', 'description']
+                    score: score,
+                    matchedFields: [...new Set(matchedFields)]
+                });
+            }
+        });
+        
+        // 부서에서 검색 (새로 추가)
+        this.data.departments.forEach(department => {
+            let score = 0;
+            let matchedFields = [];
+            
+            // 부서명 검색
+            if (department.name.toLowerCase().includes(searchQuery)) {
+                score += 15;
+                matchedFields.push('name');
+            }
+            
+            // 부서 설명 검색
+            if (department.description && department.description.toLowerCase().includes(searchQuery)) {
+                score += 10;
+                matchedFields.push('description');
+            }
+            
+            // 업무정의 검색 (새로 추가)
+            if (department.businessDefinition && department.businessDefinition.toLowerCase().includes(searchQuery)) {
+                score += 12;
+                matchedFields.push('businessDefinition');
+            }
+            
+            // 법적근거 검색 (새로 추가)
+            if (department.legalBasis && Array.isArray(department.legalBasis)) {
+                department.legalBasis.forEach(legal => {
+                    if (legal && legal.toLowerCase().includes(searchQuery)) {
+                        score += 11;
+                        matchedFields.push('legalBasis');
+                    }
+                });
+            }
+            
+            if (score > 0) {
+                results.push({
+                    type: 'department',
+                    id: department.id,
+                    title: department.name,
+                    description: department.description,
+                    path: department.name,
+                    score: score,
+                    matchedFields: [...new Set(matchedFields)]
                 });
             }
         });
@@ -595,6 +722,8 @@ class DataManager {
                     id: departmentId,
                     name: departmentName,
                     description: this.extractBusinessDefinition(metaInfo.업무정의),
+                    businessDefinition: metaInfo.업무정의, // 완전한 업무정의 보존
+                    legalBasis: this.extractLegalBasis(metaInfo.법적근거), // 부서 레벨 법적근거
                     order: departmentOrder++,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
@@ -613,6 +742,8 @@ class DataManager {
                     name: categoryName,
                     departmentId: departmentId,
                     description: this.extractBusinessDefinition(metaInfo.업무정의) || `${categoryName} 관련 업무`,
+                    businessDefinition: metaInfo.업무정의, // 완전한 업무정의 보존
+                    legalBasis: this.extractLegalBasis(metaInfo.법적근거), // 카테고리 레벨 법적근거
                     order: categoryOrder++,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
@@ -649,8 +780,10 @@ class DataManager {
                         steps: this.convertToSteps(processDetails),
                         tags: this.extractTags(processDetails, metaInfo),
                         legalBasis: this.extractLegalBasis(metaInfo.법적근거),
-                        references: this.extractReferences(processDetails.참고자료),
+                        references: this.extractEnhancedReferences(processDetails.참고자료), // 개선된 참고자료 처리
                         outputs: processDetails.산출물 || [],
+                        mainContent: processDetails.주요내용 || [], // 주요 업무 내용 추가
+                        stepDescription: processDetails.단계설명, // 원본 단계설명 보존
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
                         order: processOrder++
@@ -819,7 +952,7 @@ class DataManager {
     }
     
     /**
-     * 참고자료 추출
+     * 참고자료 추출 (기본)
      */
     extractReferences(referencesArray) {
         if (!Array.isArray(referencesArray)) {
@@ -827,6 +960,94 @@ class DataManager {
         }
         
         return referencesArray.filter(item => item && typeof item === 'string').map(item => item.trim());
+    }
+    
+    /**
+     * 개선된 참고자료 추출 - 링크와 메타데이터 포함
+     */
+    extractEnhancedReferences(referencesArray) {
+        if (!Array.isArray(referencesArray)) {
+            return [];
+        }
+        
+        return referencesArray.filter(item => item && typeof item === 'string').map(item => {
+            const trimmedItem = item.trim();
+            
+            // 참고자료 구조 분석
+            const reference = {
+                text: trimmedItem,
+                type: this.classifyReferenceType(trimmedItem),
+                sections: this.extractReferenceSections(trimmedItem),
+                pages: this.extractPageNumbers(trimmedItem),
+                isUrl: this.isUrlReference(trimmedItem),
+                priority: this.calculateReferencePriority(trimmedItem)
+            };
+            
+            return reference;
+        });
+    }
+    
+    /**
+     * 참고자료 유형 분류
+     */
+    classifyReferenceType(reference) {
+        const text = reference.toLowerCase();
+        
+        if (text.includes('법률') || text.includes('법령') || text.includes('시행령') || text.includes('시행규칙')) {
+            return 'legal';
+        }
+        if (text.includes('매뉴얼') || text.includes('편람') || text.includes('지침')) {
+            return 'manual';
+        }
+        if (text.includes('조') && (text.includes('제') || text.includes('p.'))) {
+            return 'regulation';
+        }
+        return 'document';
+    }
+    
+    /**
+     * 참고자료에서 섹션 정보 추출
+     */
+    extractReferenceSections(reference) {
+        const sections = [];
+        
+        // 조문 추출 (예: 제4조, 제12조)
+        const articleMatches = reference.match(/제\d+조/g);
+        if (articleMatches) {
+            sections.push(...articleMatches);
+        }
+        
+        return sections;
+    }
+    
+    /**
+     * 페이지 번호 추출
+     */
+    extractPageNumbers(reference) {
+        const pageMatches = reference.match(/p\.\s*(\d+(?:-\d+)?)/g);
+        return pageMatches ? pageMatches.map(match => match.replace('p.', '').trim()) : [];
+    }
+    
+    /**
+     * URL 참고자료 확인
+     */
+    isUrlReference(reference) {
+        return /https?:\/\//.test(reference);
+    }
+    
+    /**
+     * 참고자료 우선순위 계산
+     */
+    calculateReferencePriority(reference) {
+        const text = reference.toLowerCase();
+        
+        if (text.includes('법률')) return 1;      // 최우선: 법률
+        if (text.includes('시행령')) return 2;    // 시행령
+        if (text.includes('시행규칙')) return 3;  // 시행규칙
+        if (text.includes('매뉴얼')) return 4;   // 매뉴얼
+        if (text.includes('편람')) return 5;     // 편람
+        
+        return 6; // 기타
     }
     
     /**
